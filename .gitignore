@@ -1,0 +1,35 @@
+# Gradle build
+.gradle/
+build/                        # compiled classes, JARs, reports
+
+# Gradle Wrapper caches (if you ever run wrapper tasks locally)
+**/gradle-wrapper.jar
+**/gradle-wrapper.properties
+
+# IntelliJ / Android Studio
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# VS Code
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# TestNG / JUnit reports
+test-output/
+reports/
+
+# Eclipse
+.project
+.classpath
+.settings/
+
+# Temporary files
+*.tmp
