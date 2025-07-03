@@ -1,6 +1,7 @@
 # Gradle build
 .gradle/
-build/                        # compiled classes, JARs, reports
+build/
+# compiled classes, JARs, reports
 
 # Gradle Wrapper caches (if you ever run wrapper tasks locally)
 **/gradle-wrapper.jar
