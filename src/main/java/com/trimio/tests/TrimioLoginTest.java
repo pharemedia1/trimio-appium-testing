@@ -9,6 +9,7 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 
 import java.net.URL;
 import java.time.Duration;
+import java.util.Map;
 
 public class TrimioLoginTest {
 
@@ -61,14 +62,16 @@ public class TrimioLoginTest {
                 WebElement emailField = wait.until(ExpectedConditions.elementToBeClickable(
                         AppiumBy.xpath("//*[@text='Email' or contains(@content-desc, 'Email')]")));
                 emailField.click();
-                emailField.sendKeys("test@example.com");
+                emailField.clear(); // Clear existing text
+                emailField.sendKeys("trimiotest+client_qa3@gmail.com");
                 System.out.println("✅ Email entered successfully");
 
                 // Find Password field
                 WebElement passwordField = driver.findElement(
                         AppiumBy.xpath("//*[@text='Password' or contains(@content-desc, 'Password')]"));
                 passwordField.click();
-                passwordField.sendKeys("password123");
+                passwordField.clear(); // Clear existing text
+                passwordField.sendKeys("Christopher1!");
                 System.out.println("✅ Password entered successfully");
 
                 // Find Login button
@@ -88,18 +91,94 @@ public class TrimioLoginTest {
                     if (textFields.size() >= 2) {
                         // First field - Email
                         textFields.get(0).click();
-                        textFields.get(0).sendKeys("test@example.com");
+                        textFields.get(0).clear(); // Clear existing text
+                        textFields.get(0).sendKeys("trimiotest+client_qa3@gmail.com");
                         System.out.println("✅ Email entered (method 2)");
 
                         // Second field - Password
                         textFields.get(1).click();
-                        textFields.get(1).sendKeys("password123");
+                        textFields.get(1).clear(); // Clear existing text
+                        textFields.get(1).sendKeys("Christopher1!");
                         System.out.println("✅ Password entered (method 2)");
 
-                        // Find button
-                        WebElement loginButton = driver.findElement(AppiumBy.className("android.widget.Button"));
-                        loginButton.click();
-                        System.out.println("✅ Login button pressed (method 2)");
+                        // Try multiple ways to find and click the login button (Flutter ElevatedButton)
+                        boolean buttonClicked = false;
+
+                        // Try 1: Find Flutter ElevatedButton by text "Login"
+                        try {
+                            WebElement loginButton = driver.findElement(AppiumBy.xpath("//*[@text='Login']"));
+                            loginButton.click();
+                            System.out.println("✅ Login button pressed by text (method 2)");
+                            buttonClicked = true;
+                        } catch (Exception e) {
+                            System.out.println("Button not found by text, trying Flutter semantic...");
+                        }
+
+                        // Try 2: Find by Flutter semantic label or accessibility
+                        if (!buttonClicked) {
+                            try {
+                                WebElement loginButton = driver.findElement(AppiumBy.xpath("//*[contains(@content-desc, 'Login') or contains(@content-desc, 'login')]"));
+                                loginButton.click();
+                                System.out.println("✅ Login button pressed by content-desc (method 2)");
+                                buttonClicked = true;
+                            } catch (Exception e) {
+                                System.out.println("Button not found by content-desc, trying class...");
+                            }
+                        }
+
+                        // Try 3: Find by Android View class (Flutter buttons often render as Views)
+                        if (!buttonClicked) {
+                            try {
+                                var buttons = driver.findElements(AppiumBy.className("android.view.View"));
+                                for (WebElement button : buttons) {
+                                    String text = button.getAttribute("text");
+                                    String contentDesc = button.getAttribute("content-desc");
+                                    if ((text != null && text.contains("Login")) ||
+                                            (contentDesc != null && contentDesc.contains("Login"))) {
+                                        button.click();
+                                        System.out.println("✅ Login button pressed by View class (method 2)");
+                                        buttonClicked = true;
+                                        break;
+                                    }
+                                }
+                            } catch (Exception e) {
+                                System.out.println("Button not found by View class, trying clickable elements...");
+                            }
+                        }
+
+                        // Try 4: Find any clickable element with "Login" text
+                        if (!buttonClicked) {
+                            try {
+                                WebElement loginButton = driver.findElement(AppiumBy.xpath("//*[@clickable='true' and (contains(@text, 'Login') or contains(@content-desc, 'Login'))]"));
+                                loginButton.click();
+                                System.out.println("✅ Login button pressed by clickable element (method 2)");
+                                buttonClicked = true;
+                            } catch (Exception e) {
+                                System.out.println("Button not found by clickable, trying tap coordinates...");
+                            }
+                        }
+
+                        // Try 5: Use tap coordinates (approximate location of login button)
+                        if (!buttonClicked) {
+                            try {
+                                // Get screen size and tap where login button should be
+                                var screenSize = driver.manage().window().getSize();
+                                int x = screenSize.width / 2; // Center horizontally
+                                int y = (int)(screenSize.height * 0.7); // About 70% down the screen
+
+                                driver.executeScript("mobile: tap", Map.of("x", x, "y", y));
+                                System.out.println("✅ Login button pressed by coordinates (method 2)");
+                                buttonClicked = true;
+                            } catch (Exception e) {
+                                System.out.println("Coordinate tap failed");
+                            }
+                        }
+
+                        if (!buttonClicked) {
+                            System.out.println("❌ Could not find or click login button");
+                            // Let's debug what elements are available
+                            debugFlutterElements();
+                        }
                     }
 
                 } catch (Exception e2) {
@@ -109,10 +188,12 @@ public class TrimioLoginTest {
                     try {
                         // These are common Flutter/Android patterns
                         WebElement emailField = driver.findElement(AppiumBy.xpath("//android.widget.EditText[1]"));
-                        emailField.sendKeys("test@example.com");
+                        emailField.clear(); // Clear existing text
+                        emailField.sendKeys("trimiotest+client_qa3@gmail.com");
 
                         WebElement passwordField = driver.findElement(AppiumBy.xpath("//android.widget.EditText[2]"));
-                        passwordField.sendKeys("password123");
+                        passwordField.clear(); // Clear existing text
+                        passwordField.sendKeys("Christopher1!");
 
                         WebElement loginButton = driver.findElement(AppiumBy.xpath("//android.widget.Button"));
                         loginButton.click();
@@ -121,7 +202,7 @@ public class TrimioLoginTest {
 
                     } catch (Exception e3) {
                         System.err.println("❌ All methods failed. Let's debug...");
-                        debugElements();
+                        debugFlutterElements();
                     }
                 }
             }
@@ -132,32 +213,37 @@ public class TrimioLoginTest {
 
         } catch (Exception e) {
             System.err.println("❌ Login failed: " + e.getMessage());
-            debugElements();
+            debugFlutterElements();
         }
     }
 
-    private void debugElements() {
+    private void debugFlutterElements() {
         try {
-            System.out.println("🔍 Debugging: Finding all elements on screen...");
+            System.out.println("🔍 Debugging Flutter elements...");
 
-            // Get page source to see the structure
-            String pageSource = driver.getPageSource();
-            System.out.println("Page source length: " + pageSource.length());
+            // Find all View elements (Flutter often renders as Views)
+            var views = driver.findElements(AppiumBy.className("android.view.View"));
+            System.out.println("Found " + views.size() + " android.view.View elements");
 
-            // Find all clickable elements
-            var clickableElements = driver.findElements(AppiumBy.xpath("//*[@clickable='true']"));
-            System.out.println("Found " + clickableElements.size() + " clickable elements");
+            // Check for elements with Login-related attributes
+            int count = 0;
+            for (WebElement view : views) {
+                String text = view.getAttribute("text");
+                String contentDesc = view.getAttribute("content-desc");
+                String clickable = view.getAttribute("clickable");
 
-            // Find all text fields
-            var textFields = driver.findElements(AppiumBy.className("android.widget.EditText"));
-            System.out.println("Found " + textFields.size() + " text fields");
+                if ((text != null && !text.isEmpty()) ||
+                        (contentDesc != null && !contentDesc.isEmpty()) ||
+                        "true".equals(clickable)) {
+                    count++;
+                    System.out.println("Element " + count + ": text='" + text + "', content-desc='" + contentDesc + "', clickable=" + clickable);
 
-            // Find all buttons
-            var buttons = driver.findElements(AppiumBy.className("android.widget.Button"));
-            System.out.println("Found " + buttons.size() + " buttons");
+                    if (count >= 10) break; // Limit output
+                }
+            }
 
         } catch (Exception e) {
-            System.err.println("Debug failed: " + e.getMessage());
+            System.err.println("Flutter debug failed: " + e.getMessage());
         }
     }
 
