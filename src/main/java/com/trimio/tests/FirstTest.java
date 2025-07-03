@@ -11,16 +11,20 @@ public class FirstTest {
         UiAutomator2Options options = new UiAutomator2Options();
         options.setPlatformName("Android");
         options.setDeviceName("emulator-5554");
-        options.setAutomationName("UiAutomator2");
-        options.setNoReset(true); // Don't reset the device state
+        UiAutomator2Options uiAutomator2 = options.setAutomationName("UiAutomator2");
 
-        // Connect to Appium Server
+        // Launch your trimio app (replace with your actual package/activity names)
+        options.setAppPackage("com.trimio.trimio");  // Your app's package name
+        options.setAppActivity("com.trimio.trimio.MainActivity");  // Your main activity
+        options.setNoReset(true); //
+
         AndroidDriver driver = new AndroidDriver(new URL("http://127.0.0.1:4723"), options);
 
         // Simple validation
         System.out.println("✅ Appium Session Started: " + driver.getSessionId());
         System.out.println("📱 Device Name: " + driver.getCapabilities().getCapability("deviceName"));
         System.out.println("🤖 Platform Version: " + driver.getCapabilities().getCapability("platformVersion"));
+        System.out.println("YAAAAY IT WORKSS!!!");
 
         // Clean up
         driver.quit();
