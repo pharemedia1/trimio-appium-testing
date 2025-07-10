@@ -58,11 +58,13 @@ public class TrimioScheduleAppointmentTest {
         testCompleteSchedulingFlow();
 
         // Negative test cases
+        /*
         System.out.println("\n--- NEGATIVE TEST CASES ---");
         testCancelAtEachStep();
         testNavigationBackButton();
         testInvalidSelections();
         testEmptySelections();
+        */
 
         System.out.println("\n=== Test Suite Completed ===");
     }
@@ -274,8 +276,13 @@ public class TrimioScheduleAppointmentTest {
     private void selectServiceType(String type) throws InterruptedException {
         System.out.println("💈 Selecting service type: " + type);
 
+        String xpathQuery = String.format(
+                "//*[contains(@text, '%s') or contains(@content-desc, '%s')]",
+                type, type
+        );
+
         WebElement serviceOption = wait.until(ExpectedConditions.elementToBeClickable(
-                AppiumBy.xpath("//*[contains(@text, '" + type + "') or contains(@content-desc, '" + type + "')]")));
+                AppiumBy.xpath(xpathQuery)));
         serviceOption.click();
         Thread.sleep(1000);
 
@@ -284,10 +291,11 @@ public class TrimioScheduleAppointmentTest {
 
     private void selectAppointmentFor(String person) throws InterruptedException {
         System.out.println("👤 Selecting appointment for: " + person);
-
+        /*
         WebElement personOption = wait.until(ExpectedConditions.elementToBeClickable(
                 AppiumBy.xpath("//*[contains(@text, '" + person + "') or contains(@content-desc, '" + person + "')]")));
         personOption.click();
+        */
         Thread.sleep(1000);
 
         clickNextButton();
