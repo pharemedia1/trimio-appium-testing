@@ -23,9 +23,8 @@ dependencies {
 // Specify the main class for the application plugin
 application {
     mainClass = 'com.trimio.tests.TrimioLoginTest'
-}
-application {
-    mainClass = 'com.trimio.tests.FirstTest'
+    //mainClass = 'com.trimio.tests.FirstTest'
+    //mainClass = 'com.trimio.tests.TrimioScheduleAppointmentTest'
 }
 
 test {
