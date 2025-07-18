@@ -11,6 +11,8 @@ import java.net.URL;
 import java.time.Duration;
 import java.util.Map;
 
+import javax.swing.PopupFactory;
+
 public class TrimioLoginTest {
 
     private AndroidDriver driver;
@@ -50,6 +52,8 @@ public class TrimioLoginTest {
     }
 
     public void performLogin() {
+        final String PROFESSIONAL_USERNAME = "trimiotest+professional_appium1@gmail.com";
+        final String PASSWORD = "AppiumTesting1$";
         try {
             System.out.println("Starting login test...");
 
@@ -63,7 +67,7 @@ public class TrimioLoginTest {
                         AppiumBy.xpath("//*[@text='Email' or contains(@content-desc, 'Email')]")));
                 emailField.click();
                 emailField.clear(); // Clear existing text
-                emailField.sendKeys("trimiotest+client_qa3@gmail.com");
+                emailField.sendKeys(PROFESSIONAL_USERNAME);
                 System.out.println("✅ Email entered successfully");
 
                 // Find Password field
@@ -71,7 +75,7 @@ public class TrimioLoginTest {
                         AppiumBy.xpath("//*[@text='Password' or contains(@content-desc, 'Password')]"));
                 passwordField.click();
                 passwordField.clear(); // Clear existing text
-                passwordField.sendKeys("Christopher1!");
+                passwordField.sendKeys(PASSWORD);
                 System.out.println("✅ Password entered successfully");
 
                 // Find Login button
@@ -92,13 +96,13 @@ public class TrimioLoginTest {
                         // First field - Email
                         textFields.get(0).click();
                         textFields.get(0).clear(); // Clear existing text
-                        textFields.get(0).sendKeys("trimiotest+client_qa3@gmail.com");
+                        textFields.get(0).sendKeys(PROFESSIONAL_USERNAME);
                         System.out.println("✅ Email entered (method 2)");
 
                         // Second field - Password
                         textFields.get(1).click();
                         textFields.get(1).clear(); // Clear existing text
-                        textFields.get(1).sendKeys("Christopher1!");
+                        textFields.get(1).sendKeys(PASSWORD);
                         System.out.println("✅ Password entered (method 2)");
 
                         // Try multiple ways to find and click the login button (Flutter ElevatedButton)
