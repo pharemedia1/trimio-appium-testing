@@ -1,4 +1,6 @@
-package com.trimio.tests;
+package com.trimio.tests.AppointmentFlow;
+
+import com.trimio.tests.ScreenOperations;
 
 import io.appium.java_client.android.AndroidDriver;
 import io.appium.java_client.android.options.UiAutomator2Options;
@@ -14,7 +16,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 
-public class TrimioScheduleAppointmentTest extends ScreenOperations{
+public class TrimioScheduleAppointmentTest extends ScreenOperations {
 
     private AndroidDriver driver;
     private WebDriverWait wait;

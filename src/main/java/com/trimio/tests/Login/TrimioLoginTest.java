@@ -1,20 +1,17 @@
-package com.trimio.tests;
+package com.trimio.tests.Login;
+
+import com.trimio.tests.ScreenOperations;
 
 import io.appium.java_client.android.AndroidDriver;
 import io.appium.java_client.android.options.UiAutomator2Options;
 import io.appium.java_client.AppiumBy;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.print.PrintOptions;
 import org.openqa.selenium.support.ui.WebDriverWait;
-import org.openqa.selenium.support.ui.ExpectedConditions;
 
 import java.net.URL;
 import java.time.Duration;
-import java.util.Map;
 
-import javax.swing.PopupFactory;
-
-public class TrimioLoginTest extends ScreenOperations{
+public class TrimioLoginTest extends ScreenOperations {
 
     private WebDriverWait wait;
     private static final String PROFESSIONAL_USERNAME = "trimiotest+professional_appium1@gmail.com";
