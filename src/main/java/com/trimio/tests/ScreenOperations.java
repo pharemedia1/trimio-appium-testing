@@ -1,16 +1,11 @@
 package com.trimio.tests;
 
 // Imports
-import io.appium.java_client.android.AndroidDriver;
-import io.appium.java_client.android.options.UiAutomator2Options;
-import io.appium.java_client.AppiumBy;
-import org.openqa.selenium.WebElement;
-import org.openqa.selenium.support.ui.WebDriverWait;
-import org.openqa.selenium.support.ui.ExpectedConditions;
 
-import java.net.URL;
-import java.time.Duration;
-import java.util.Map;
+import org.openqa.selenium.WebElement;
+
+import io.appium.java_client.AppiumBy;
+import io.appium.java_client.android.AndroidDriver;
 
 public abstract class ScreenOperations {
     protected AndroidDriver driver;
