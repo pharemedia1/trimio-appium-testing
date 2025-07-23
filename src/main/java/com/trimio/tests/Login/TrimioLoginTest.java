@@ -1,23 +1,21 @@
 package com.trimio.tests.Login;
 
 import com.trimio.tests.Base.AppiumBase;
-import com.trimio.tests.ScreenOperations;
 
-import io.appium.java_client.android.AndroidDriver;
-import io.appium.java_client.android.options.UiAutomator2Options;
 import io.appium.java_client.AppiumBy;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.support.ui.WebDriverWait;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.net.URL;
-import java.time.Duration;
 import java.util.List;
 
 public class TrimioLoginTest extends AppiumBase {
-
-    private WebDriverWait wait;
     private static final String PROFESSIONAL_USERNAME = "trimiotest+professional_appium1@gmail.com";
     private static final String PASSWORD = "AppiumTesting1$";
+    private static final String CLIENT_USERNAME = "trimiotest+client_appium@gmail.com";
+    private static final String ADMIN_USERNAME = "trimiotest+admin_appium1@gmail.com";
+    private static final Logger log = LoggerFactory.getLogger(TrimioLoginTest.class);
 
 
     public static void main(String[] args) {
@@ -34,13 +32,28 @@ public class TrimioLoginTest extends AppiumBase {
         }
     }
     @Override
-    public void executeTestSuite(){
-        performProfessionalLogin(PROFESSIONAL_USERNAME, PASSWORD);
-//        performClientLogin(CLIENT_USERNAME, CLIENT_PASSWORD);
-//        performAdminLogin(ADMIN_USERNAME, ADMIN_PASSWORD);
+    public void executeTestSuite() {
+        try {
+            performLogin(CLIENT_USERNAME);
+            Thread.sleep(5000);
+            performLogout();
+            Thread.sleep(5000);
+            performLogin(PROFESSIONAL_USERNAME);
+            Thread.sleep(5000);
+            performLogout();
+            Thread.sleep(5000);
+            performLogin(ADMIN_USERNAME);
+            performLogout();
+            Thread.sleep(5000);
+        } catch (Exception e) {
+            logError(e.getMessage());
+        }finally{
+            logInfo("Exited Test Suite");
+        }
     }
 
-    public void performProfessionalLogin(String user, String pass) {
+
+    public void performLogin(String user) {
         try {
             System.out.println("Locating text fields by android widgets");
             // Find text fields by class
@@ -56,7 +69,7 @@ public class TrimioLoginTest extends AppiumBase {
                 // Second field - Password
                 textFields.get(1).click();
                 textFields.get(1).clear(); // Clear existing text
-                textFields.get(1).sendKeys(pass);
+                textFields.get(1).sendKeys(PASSWORD);
                 System.out.println("✅ Password entered (method 2)");
 
                 // Check for Button
@@ -76,33 +89,97 @@ public class TrimioLoginTest extends AppiumBase {
         }
     }
 
-//    private void debugFlutterElements() {
-//        try {
-//            System.out.println("🔍 Debugging Flutter elements...");
-//
-//            // Find all View elements (Flutter often renders as Views)
-//            var views = androidDriver.findElements(AppiumBy.className("android.view.View"));
-//            System.out.println("Found " + views.size() + " android.view.View elements");
-//
-//            // Check for elements with Login-related attributes
-//            int count = 0;
-//            for (WebElement view : views) {
-//                String text = view.getAttribute("text");
-//                String contentDesc = view.getAttribute("content-desc");
-//                String clickable = view.getAttribute("clickable");
-//
-//                if ((text != null && !text.isEmpty()) ||
-//                        (contentDesc != null && !contentDesc.isEmpty()) ||
-//                        "true".equals(clickable)) {
-//                    count++;
-//                    System.out.println("Element " + count + ": text='" + text + "', content-desc='" + contentDesc + "', clickable=" + clickable);
-//
-//                    if (count >= 10) break; // Limit output
-//                }
-//            }
-//
-//        } catch (Exception e) {
-//            System.err.println("Flutter debug failed: " + e.getMessage());
-//        }
-//    }
+    /**
+     * Logs out the current user by navigating to Account tab and clicking Log Out
+     * Handles the logout confirmation dialog
+     */
+    protected void performLogout() {
+        try {
+            logInfo("Starting logout process...");
+
+            // Step 1: Click the Account tab in bottom navigation
+            WebElement accountTab = androidDriver.findElement(AppiumBy.xpath("//*[contains(@content-desc, 'Account') or contains(@content-desc, 'account')]"));
+            accountTab.click();
+            logInfo("✅ Clicked Account tab");
+
+            // Wait for Account page to load
+            Thread.sleep(2000);
+
+            // Step 2: Scroll down to find the LOG OUT button
+            scrollToBottomOfPage();
+
+            // Step 3: Click LOG OUT button
+            boolean isButtonClicked = false;
+            WebElement logOutButton = null;
+                try {
+                    logInfo("Method 1: Pressing Logout button by Content-desc");
+                    logOutButton = androidDriver.findElement(AppiumBy.xpath("//*[contains(@content-desc, 'LOG OUT') or contains(@content-desc, 'Log out')]"));
+                    isButtonClicked = true;
+                } catch (Exception e) {
+                    System.out.println("Method 1 Failed");
+                    logError(e.getMessage());
+                }
+
+            logOutButton.click();
+            logInfo("✅ Clicked LOG OUT button");
+
+            // Step 4: Handle logout confirmation dialog
+            handleLogoutConfirmation();
+
+            // Step 5: Wait for logout to complete
+            Thread.sleep(2000);
+
+            logInfo("✅ User logged out successfully");
+
+        } catch (Exception e) {
+            logError("Failed to log out user: " + e.getMessage());
+            throw new RuntimeException("Logout operation failed", e);
+        }
+    }
+
+    /**
+     * Handles the logout confirmation dialog
+     */
+    private void handleLogoutConfirmation() {
+        try {
+            // Wait for confirmation dialog to appear
+            Thread.sleep(2000);
+            WebElement confirmationTitle = androidDriver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Logout Confirmation']"));
+            logInfo("✅ Logout confirmation dialog appeared");
+
+            // Wait for confirmation message
+            waitForElement(AppiumBy.xpath("//android.widget.TextView[@text='Are you sure you want to log out?']"));
+
+            // Click the red "Logout" button to confirm
+            WebElement confirmLogoutButton = wait.until(ExpectedConditions.elementToBeClickable(
+                    AppiumBy.xpath("//android.widget.TextView[@text='Logout']")
+            ));
+            confirmLogoutButton.click();
+            logInfo("✅ Confirmed logout in dialog");
+
+        } catch (Exception e) {
+            logError("Failed to handle logout confirmation: " + e.getMessage());
+            throw new RuntimeException("Could not confirm logout", e);
+        }
+    }
+
+    /**
+     * Alternative method if you want to cancel the logout
+     */
+    protected void cancelLogout() {
+        try {
+            // Click Cancel button instead
+            WebElement cancelButton = wait.until(ExpectedConditions.elementToBeClickable(
+                    AppiumBy.xpath("//android.widget.TextView[@text='Cancel']")
+            ));
+            cancelButton.click();
+            logInfo("✅ Cancelled logout");
+
+        } catch (Exception e) {
+            logError("Failed to cancel logout: " + e.getMessage());
+            throw new RuntimeException("Could not cancel logout", e);
+        }
+    }
+
+
 }
