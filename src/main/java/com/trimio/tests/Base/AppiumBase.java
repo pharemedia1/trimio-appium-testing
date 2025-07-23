@@ -37,10 +37,10 @@ public abstract class AppiumBase {
                 androidDriver = new AndroidDriver(new URL("http://127.0.0.1:4723"), options);
                 webDriver = androidDriver; // Point generic driver to Android driver
 
-            } else if ("ios".equals(this.platform)) {
+            } else if ("ios".equals(this.platform)) { // No implementation yet
                 XCUITestOptions options = new XCUITestOptions();
                 options.setPlatformName("iOS");
-                options.setDeviceName("iPhone 15 Simulator");
+                options.setDeviceName("iPhone 16 Pro Max");
                 options.setAutomationName("XCUITest");
                 options.setBundleId("com.trimio.tests");
                 options.setNoReset(true);
