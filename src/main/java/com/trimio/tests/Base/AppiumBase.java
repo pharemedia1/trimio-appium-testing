@@ -21,6 +21,10 @@ public abstract class AppiumBase extends Assertion{
     protected WebDriver webDriver; // Generic reference for common operations
     protected WebDriverWait wait;
     protected String platform;
+    protected final String PROFESSIONAL_USERNAME = "trimiotest+professional_appium1@gmail.com";
+    protected final String PASSWORD = "AppiumTesting1$";
+    protected final String CLIENT_USERNAME = "trimiotest+client_appium@gmail.com";
+    protected final String ADMIN_USERNAME = "trimiotest+admin_appium1@gmail.com";
 
     public void setUp() {
         setUp("android");

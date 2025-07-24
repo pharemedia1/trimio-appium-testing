@@ -11,10 +11,7 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 
 public class TrimioLoginTest extends AppiumBase {
-    private static final String PROFESSIONAL_USERNAME = "trimiotest+professional_appium1@gmail.com";
-    private static final String PASSWORD = "AppiumTesting1$";
-    private static final String CLIENT_USERNAME = "trimiotest+client_appium@gmail.com";
-    private static final String ADMIN_USERNAME = "trimiotest+admin_appium1@gmail.com";
+
     private static final Logger log = LoggerFactory.getLogger(TrimioLoginTest.class);
 
 

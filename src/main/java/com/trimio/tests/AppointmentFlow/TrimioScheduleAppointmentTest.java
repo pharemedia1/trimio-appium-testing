@@ -1,7 +1,5 @@
 package com.trimio.tests.AppointmentFlow;
 
-import com.trimio.tests.ScreenOperations;
-
 import io.appium.java_client.android.AndroidDriver;
 import io.appium.java_client.android.options.UiAutomator2Options;
 import io.appium.java_client.AppiumBy;
@@ -16,16 +14,11 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 
-public class TrimioScheduleAppointmentTest extends ScreenOperations {
+public class TrimioScheduleAppointmentTest {
 
     private AndroidDriver driver;
     private WebDriverWait wait;
-    private static final String EMAIL = "trimiotest+client_qa3@gmail.com";
-    private static final String PASSWORD = "Christopher1!";
 
-    public TrimioScheduleAppointmentTest(){
-        super(null);
-    }
 
     public static void main(String[] args) {
         TrimioScheduleAppointmentTest test = new TrimioScheduleAppointmentTest();
@@ -43,7 +36,6 @@ public class TrimioScheduleAppointmentTest extends ScreenOperations {
         }
     }
 
-    @Override
     public void setUp() throws Exception {
         UiAutomator2Options options = new UiAutomator2Options();
         options.setPlatformName("Android");
