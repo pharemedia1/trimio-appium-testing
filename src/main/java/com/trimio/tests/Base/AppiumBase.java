@@ -15,7 +15,7 @@ import java.net.URI;
 import java.net.URL;
 import java.time.Duration;
 
-public abstract class AppiumBase {
+public abstract class AppiumBase extends Assertion{
     protected AndroidDriver androidDriver;
     protected IOSDriver iosDriver;
     protected WebDriver webDriver; // Generic reference for common operations
@@ -105,13 +105,6 @@ public abstract class AppiumBase {
             logError("Could not scroll to bottom: " + e.getMessage());
             // If scrolling fails, continue anyway
         }
-    }
-    protected void logInfo(String message) {
-        System.out.println("[INFO] " + message);
-    }
-
-    protected void logError(String message) {
-        System.err.println("[ERROR] " + message);
     }
 
     public abstract void executeTestSuite();
