@@ -63,6 +63,7 @@ public abstract class AppiumBase {
     public void tearDown() {
         if (webDriver != null) {
             try {
+                logInfo("Beginning teardown . . .");
                 webDriver.quit();
             } catch (Exception e) {
                 System.err.println("Error during teardown: " + e.getMessage());
@@ -70,15 +71,6 @@ public abstract class AppiumBase {
         }
     }
 
-    // Common operations using the generic webDriver
-    protected void clickElement(By locator) {
-        try {
-            WebElement element = wait.until(ExpectedConditions.elementToBeClickable(locator));
-            element.click();
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to click element: " + locator, e);
-        }
-    }
 
     // Platform-specific operations available when needed
     protected void swipeUp() {
@@ -125,15 +117,17 @@ public abstract class AppiumBase {
     public abstract void executeTestSuite();
 
     // DEBUGGING HELP TO FIND ELEMENTS
-    private void debugFlutterElements() {
+    protected void debugFlutterElements() {
         try {
             System.out.println("🔍 Debugging Flutter elements...");
 
             // Find all View elements (Flutter often renders as Views)
+            logInfo("Searching for all Flutter View elements");
             var views = androidDriver.findElements(AppiumBy.className("android.view.View"));
             System.out.println("Found " + views.size() + " android.view.View elements");
 
             // Check for elements with Login-related attributes
+            logInfo("Searching for all clickable attributes, and retrieving content descriptions");
             int count = 0;
             for (WebElement view : views) {
                 String text = view.getAttribute("text");
@@ -144,9 +138,53 @@ public abstract class AppiumBase {
                         (contentDesc != null && !contentDesc.isEmpty()) ||
                         "true".equals(clickable)) {
                     count++;
-                    System.out.println("Element " + count + ": text='" + text + "', content-desc='" + contentDesc + "', clickable=" + clickable);
+                    System.out.println("Flutter Element " + count + ": text='" + text + "', content-desc='" + contentDesc + "', clickable=" + clickable);
 
-                    if (count >= 10) break; // Limit output
+                    if (count >= 10) break;
+                }
+            }
+
+            // Add Android widget debugging
+            logInfo("Searching for all Android widgets");
+            String[] androidWidgets = {
+                    "android.widget.TextView",
+                    "android.widget.Button",
+                    "android.widget.EditText",
+                    "android.widget.ImageView",
+                    "android.widget.LinearLayout",
+                    "android.widget.RelativeLayout",
+                    "android.widget.FrameLayout",
+                    "android.widget.ScrollView"
+            };
+
+            for (String widgetClass : androidWidgets) {
+                try {
+                    var widgets = androidDriver.findElements(AppiumBy.className(widgetClass));
+                    if (!widgets.isEmpty()) {
+                        System.out.println("\nFound " + widgets.size() + " " + widgetClass + " elements");
+
+                        int widgetCount = 0;
+                        for (WebElement widget : widgets) {
+                            String text = widget.getAttribute("text");
+                            String contentDesc = widget.getAttribute("content-desc");
+                            String clickable = widget.getAttribute("clickable");
+                            String resourceId = widget.getAttribute("resource-id");
+
+                            if ((text != null && !text.isEmpty()) ||
+                                    (contentDesc != null && !contentDesc.isEmpty()) ||
+                                    (resourceId != null && !resourceId.isEmpty()) ||
+                                    "true".equals(clickable)) {
+                                widgetCount++;
+                                System.out.println("Widget " + widgetCount + " (" + widgetClass + "): text='" + text +
+                                        "', content-desc='" + contentDesc + "', resource-id='" + resourceId +
+                                        "', clickable=" + clickable);
+
+                                if (widgetCount >= 5) break;
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    System.out.println("No " + widgetClass + " elements found");
                 }
             }
 

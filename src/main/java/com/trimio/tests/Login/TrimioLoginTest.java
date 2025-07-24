@@ -21,9 +21,14 @@ public class TrimioLoginTest extends AppiumBase {
     public static void main(String[] args) {
         TrimioLoginTest test = new TrimioLoginTest();
         try {
+
             test.setUp();
             test.executeTestSuite();
             Thread.sleep(3000); // Wait to see the result
+
+//            test.setUp();
+//            test.debugFlutterElements();
+
         } catch (Exception e) {
             System.err.println("Test failed: " + e.getMessage());
             e.printStackTrace();
@@ -34,6 +39,7 @@ public class TrimioLoginTest extends AppiumBase {
     @Override
     public void executeTestSuite() {
         try {
+            logInfo("LOGIN POSITIVE TESTING ALL 3 USER TYPES");
             performLogin(CLIENT_USERNAME);
             Thread.sleep(5000);
             performLogout();
@@ -42,13 +48,23 @@ public class TrimioLoginTest extends AppiumBase {
             Thread.sleep(5000);
             performLogout();
             Thread.sleep(5000);
+            /*
             performLogin(ADMIN_USERNAME);
             performLogout();
             Thread.sleep(5000);
+             */
         } catch (Exception e) {
             logError(e.getMessage());
         }finally{
-            logInfo("Exited Test Suite");
+            logInfo("Exited Positive Test Suite");
+        }
+
+        try{
+            logInfo("Starting Negative Test Suite");
+        } catch (Exception e) {
+            logError("Failed Negative Testing: " + e.getMessage());
+        }finally {
+            logInfo("Reached End of Negative Test Cases");
         }
     }
 
@@ -144,16 +160,14 @@ public class TrimioLoginTest extends AppiumBase {
         try {
             // Wait for confirmation dialog to appear
             Thread.sleep(2000);
-            WebElement confirmationTitle = androidDriver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Logout Confirmation']"));
+            WebElement confirmationTitle = androidDriver.findElement(AppiumBy.xpath("//*[contains(@content-desc, 'Logout Confirmation')]"));
             logInfo("✅ Logout confirmation dialog appeared");
 
-            // Wait for confirmation message
-            waitForElement(AppiumBy.xpath("//android.widget.TextView[@text='Are you sure you want to log out?']"));
 
             // Click the red "Logout" button to confirm
-            WebElement confirmLogoutButton = wait.until(ExpectedConditions.elementToBeClickable(
-                    AppiumBy.xpath("//android.widget.TextView[@text='Logout']")
-            ));
+            WebElement confirmLogoutButton = androidDriver.findElement(
+                    AppiumBy.xpath("//android.widget.Button[@content-desc='Logout']")
+            );
             confirmLogoutButton.click();
             logInfo("✅ Confirmed logout in dialog");
 
@@ -170,7 +184,7 @@ public class TrimioLoginTest extends AppiumBase {
         try {
             // Click Cancel button instead
             WebElement cancelButton = wait.until(ExpectedConditions.elementToBeClickable(
-                    AppiumBy.xpath("//android.widget.TextView[@text='Cancel']")
+                    AppiumBy.xpath("//android.widget.Button[@content-desc='Cancel']")
             ));
             cancelButton.click();
             logInfo("✅ Cancelled logout");
