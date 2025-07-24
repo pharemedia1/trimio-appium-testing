@@ -1,5 +1,7 @@
 package com.trimio.tests.Base;
 
+
+
 public abstract class Assertion {
     // Basic Assertions
     protected void assertTrue(boolean condition, String message) {
@@ -36,4 +38,5 @@ public abstract class Assertion {
     protected void logError(String message) {
         System.err.println("[ERROR] " + message);
     }
+
 }

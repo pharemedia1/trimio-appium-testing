@@ -185,4 +185,42 @@ public abstract class AppiumBase extends Assertion{
             System.err.println("Flutter debug failed: " + e.getMessage());
         }
     }
+
+    // Advanced Assertion Methods
+    protected void assertElementPresent(By locator, String message) {
+        try {
+            WebElement element = webDriver.findElement(locator);
+            assertNotNull(element, message);
+        } catch (Exception e) {
+            throw new AssertionError(message + " - Element not found: " + locator);
+        }
+    }
+
+    protected void assertElementVisible(By locator, String message) {
+        try {
+            WebElement element = wait.until(ExpectedConditions.visibilityOfElementLocated(locator));
+            assertTrue(element.isDisplayed(), message);
+        } catch (Exception e) {
+            throw new AssertionError(message + " - Element not visible: " + locator);
+        }
+    }
+
+    protected void assertElementText(By locator, String expectedText, String message) {
+        try {
+            WebElement element = webDriver.findElement(locator);
+            String actualText = element.getText();
+            assertEquals(expectedText, actualText, message);
+        } catch (Exception e) {
+            throw new AssertionError(message + " - Could not get element text: " + locator);
+        }
+    }
+
+    protected void assertElementClickable(By locator, String message) {
+        try {
+            WebElement element = wait.until(ExpectedConditions.elementToBeClickable(locator));
+            assertTrue(element.isEnabled(), message);
+        } catch (Exception e) {
+            throw new AssertionError(message + " - Element not clickable: " + locator);
+        }
+    }
 }
