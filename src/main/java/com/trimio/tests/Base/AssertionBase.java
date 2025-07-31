@@ -42,7 +42,7 @@ public abstract class AssertionBase {
 
     protected void returnFails(String testSuite){
         if(!failedAssertions.isEmpty()) {
-            try(PrintWriter writer = new PrintWriter(new FileWriter("/Reports/reports.txt", true))) {
+            try(PrintWriter writer = new PrintWriter(new FileWriter("/TestCaseReports/test-case-reports.txt", true))) {
                 String fails = String.join("\n", failedAssertions);
                 LocalDate today = LocalDate.now();
                 writer.println("===============================================");
