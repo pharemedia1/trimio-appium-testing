@@ -40,13 +40,13 @@ public abstract class AssertionBase {
         }
     }
 
-    protected void returnFails(){
+    protected void returnFails(String testSuite){
         if(!failedAssertions.isEmpty()) {
             try(PrintWriter writer = new PrintWriter(new FileWriter("/Reports/reports.txt", true))) {
                 String fails = String.join("\n", failedAssertions);
                 LocalDate today = LocalDate.now();
                 writer.println("===============================================");
-                writer.println("Failed Assertions | " + today);
+                writer.println("Failed Assertions | " + today + " | " + testSuite);
                 writer.println("===============================================");
                 writer.println(fails);
                 throw new AssertionError(fails);

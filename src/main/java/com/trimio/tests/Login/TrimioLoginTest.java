@@ -3,6 +3,8 @@ package com.trimio.tests.Login;
 import com.trimio.tests.Base.AppiumBase;
 
 import io.appium.java_client.AppiumBy;
+import io.netty.channel.PreferHeapByteBufAllocator;
+
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.slf4j.Logger;
@@ -12,8 +14,7 @@ import java.util.List;
 
 public class TrimioLoginTest extends AppiumBase {
 
-    private static final Logger log = LoggerFactory.getLogger(TrimioLoginTest.class);
-
+    boolean onLoginPage;
 
     public static void main(String[] args) {
         TrimioLoginTest test = new TrimioLoginTest();
@@ -22,6 +23,7 @@ public class TrimioLoginTest extends AppiumBase {
             test.setUp();
             test.executeTestSuite();
             Thread.sleep(3000); // Wait to see the result
+            test.returnFails("LoginTestSuite");
 
 //            test.setUp();
 //            test.debugFlutterElements();
@@ -68,9 +70,18 @@ public class TrimioLoginTest extends AppiumBase {
 
     public void performLogin(String user) {
         try {
+            onLoginPage = false;
+
+            WebElement title = webDriver.findElement((AppiumBy.xpath("//*[contains(@content-desc, 'Welcome') or contains(@content-desc, 'Luxury beauty')]")));
+            if(!(title == null))
+                onLoginPage = true;
+            assertTrue(onLoginPage, "On Login Page");
             System.out.println("Locating text fields by android widgets");
             // Find text fields by class
             List<WebElement> textFields = androidDriver.findElements(AppiumBy.className("android.widget.EditText"));
+
+
+
 
             if (textFields.size() >= 2) {
                 // First field - Email
@@ -107,6 +118,7 @@ public class TrimioLoginTest extends AppiumBase {
      * Handles the logout confirmation dialog
      */
     protected void performLogout() {
+        onLoginPage = false;
         try {
             logInfo("Starting logout process...");
 
@@ -142,6 +154,11 @@ public class TrimioLoginTest extends AppiumBase {
             // Step 5: Wait for logout to complete
             Thread.sleep(2000);
 
+            WebElement title = webDriver.findElement((AppiumBy.xpath("//*[contains(@content-desc, 'Welcome') or contains(@content-desc, 'Luxury beauty')]")));
+            if(!(title==null)){
+                onLoginPage = true;
+            }
+            assertTrue(onLoginPage, "User logout");
             logInfo("✅ User logged out successfully");
 
         } catch (Exception e) {
