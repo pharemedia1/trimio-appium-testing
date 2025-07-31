@@ -160,6 +160,7 @@ public class TrimioLoginTest extends AppiumBase {
             }
             assertTrue(onLoginPage, "User logout");
             logInfo("✅ User logged out successfully");
+            assertTrue(false, "Test assertion 1");
 
         } catch (Exception e) {
             logError("Failed to log out user: " + e.getMessage());
@@ -167,7 +168,7 @@ public class TrimioLoginTest extends AppiumBase {
         }
     }
 
-    /**
+    /*
      * Handles the logout confirmation dialog
      */
     private void handleLogoutConfirmation() {
@@ -191,8 +192,8 @@ public class TrimioLoginTest extends AppiumBase {
         }
     }
 
-    /**
-     * Alternative method if you want to cancel the logout
+    /*
+     * Alternative method to test logout cancel
      */
     protected void cancelLogout() {
         try {
