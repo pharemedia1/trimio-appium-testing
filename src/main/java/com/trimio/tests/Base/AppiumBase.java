@@ -1,5 +1,6 @@
 package com.trimio.tests.Base;
 
+import com.trimio.tests.util.TestLogger;
 import io.appium.java_client.android.AndroidDriver;
 import io.appium.java_client.ios.IOSDriver;
 import io.appium.java_client.android.options.UiAutomator2Options;
@@ -10,21 +11,51 @@ import org.openqa.selenium.By;
 import io.appium.java_client.AppiumBy;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.openqa.selenium.support.ui.ExpectedConditions;
-
+import org.testng.annotations.*;
 import java.net.URI;
-import java.net.URL;
 import java.time.Duration;
 
-public abstract class AppiumBase extends AssertionBase{
+
+public abstract class AppiumBase {
     protected AndroidDriver androidDriver;
     protected IOSDriver iosDriver;
-    protected WebDriver webDriver; // Generic reference for common operations
+    protected WebDriver webDriver;
     protected WebDriverWait wait;
     protected String platform;
+    protected TestLogger testLogger;
+
     protected final String PROFESSIONAL_USERNAME = "trimiotest+professional_appium1@gmail.com";
     protected final String PASSWORD = "AppiumTesting1$";
     protected final String CLIENT_USERNAME = "trimiotest+client_appium@gmail.com";
     protected final String ADMIN_USERNAME = "trimiotest+admin_appium1@gmail.com";
+
+    @BeforeClass
+    public void setUpClass() {
+        String testSuiteName = this.getClass().getSimpleName();
+        testLogger = new TestLogger(testSuiteName);
+        logInfo("🚀 Starting test class: " + testSuiteName);
+    }
+
+    @BeforeMethod
+    public void setUpMethod() {
+        setUp("android");
+    }
+
+    @AfterMethod
+    public void tearDownMethod() {
+        tearDown();
+        testLogger.assertAll();
+    }
+
+    @AfterClass
+    public void tearDownClass() {
+        logInfo("🏁 Finished test class: " + this.getClass().getSimpleName());
+    }
+
+    @AfterSuite
+    public void tearDownSuite() {
+        TestLogger.closeLogger();
+    }
 
     public void setUp() {
         setUp("android");
@@ -38,13 +69,12 @@ public abstract class AppiumBase extends AssertionBase{
                 options.setPlatformName("Android");
                 options.setDeviceName("emulator-5554");
                 options.setAutomationName("UiAutomator2");
-                //options.setAppPackage("com.android.trimio");
                 options.setNoReset(true);
 
                 androidDriver = new AndroidDriver(URI.create("http://127.0.0.1:4723").toURL(), options);
-                webDriver = androidDriver; // Point generic driver to Android driver
+                webDriver = androidDriver;
 
-            } else if ("ios".equals(this.platform)) { // No implementation yet
+            } else if ("ios".equals(this.platform)) {
                 XCUITestOptions options = new XCUITestOptions();
                 options.setPlatformName("iOS");
                 options.setDeviceName("iPhone 16 Pro Max");
@@ -53,13 +83,14 @@ public abstract class AppiumBase extends AssertionBase{
                 options.setNoReset(true);
 
                 iosDriver = new IOSDriver(URI.create("http://127.0.0.1:4723").toURL(), options);
-                webDriver = iosDriver; // Point generic driver to iOS driver
+                webDriver = iosDriver;
             }
 
             wait = new WebDriverWait(webDriver, Duration.ofSeconds(10));
+            logInfo("✅ Driver initialized successfully");
 
         } catch (Exception e) {
-            System.err.println("Failed to initialize driver: " + e.getMessage());
+            logError("Failed to initialize driver: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -67,39 +98,104 @@ public abstract class AppiumBase extends AssertionBase{
     public void tearDown() {
         if (webDriver != null) {
             try {
-                logInfo("Beginning teardown . . .");
+                logInfo("Beginning teardown...");
                 webDriver.quit();
+                logInfo("✅ Driver closed successfully");
             } catch (Exception e) {
-                System.err.println("Error during teardown: " + e.getMessage());
+                logError("Error during teardown: " + e.getMessage());
             }
         }
     }
 
+    protected void assertElementPresent(By locator, String description) {
+        boolean isPresent = isElementPresent(locator);
+        testLogger.softAssertTrue(isPresent, description);
+    }
 
-    // Platform-specific operations available when needed
-    protected void swipeUp() {
-        if ("android".equals(platform) && androidDriver != null) {
-            // Android-specific swipe using androidDriver
-            // androidDriver.findElement(AppiumBy.androidUIAutomator("new UiScrollable..."));
-        } else if ("ios".equals(platform) && iosDriver != null) {
-            // iOS-specific swipe using iosDriver
+    protected void assertElementText(By locator, String expectedText, String description) {
+        String actualText = getElementText(locator);
+        testLogger.softAssertEquals(actualText, expectedText, description);
+    }
+
+    protected void assertElementVisible(By locator, String description) {
+        boolean isVisible = false;
+        try {
+            WebElement element = wait.until(ExpectedConditions.visibilityOfElementLocated(locator));
+            isVisible = element.isDisplayed();
+        } catch (Exception e) {
+            // Element not visible
+        }
+        testLogger.softAssertTrue(isVisible, description);
+    }
+
+    protected void assertElementClickable(By locator, String description) {
+        boolean isClickable = false;
+        try {
+            WebElement element = wait.until(ExpectedConditions.elementToBeClickable(locator));
+            isClickable = element.isEnabled();
+        } catch (Exception e) {
+            // Element not clickable
+        }
+        testLogger.softAssertTrue(isClickable, description);
+    }
+
+    protected void assertLoginSuccess() {
+        assertElementPresent(AppiumBy.accessibilityId("Dashboard"),
+                "Should navigate to dashboard after successful login");
+        assertElementPresent(AppiumBy.xpath("//android.widget.TextView[contains(@text, 'Supreme Barber')]"),
+                "User profile should be visible on dashboard");
+    }
+
+    protected void assertLoginFailure() {
+        assertElementPresent(AppiumBy.accessibilityId("Login Button"),
+                "Should remain on login screen after failed login");
+        assertElementPresent(AppiumBy.accessibilityId("Error Message"),
+                "Error message should appear for invalid credentials");
+    }
+
+    protected boolean isElementPresent(By locator) {
+        try {
+            webDriver.findElement(locator);
+            return true;
+        } catch (Exception e) {
+            return false;
         }
     }
 
-    protected void hideKeyboard() {
-        if ("android".equals(platform) && androidDriver != null) {
-            androidDriver.hideKeyboard();
-        } else if ("ios".equals(platform) && iosDriver != null) {
-            iosDriver.hideKeyboard();
+    protected String getElementText(By locator) {
+        try {
+            WebElement element = wait.until(ExpectedConditions.visibilityOfElementLocated(locator));
+            return element.getText();
+        } catch (Exception e) {
+            logError("Failed to get text from element: " + locator);
+            return "";
         }
     }
-    protected void waitForElement(By locator) {
-        wait.until(ExpectedConditions.visibilityOfElementLocated(locator));
+
+    protected void clickElement(By locator) {
+        try {
+            WebElement element = wait.until(ExpectedConditions.elementToBeClickable(locator));
+            element.click();
+        } catch (Exception e) {
+            logError("Failed to click element: " + locator);
+            throw new RuntimeException("Could not click element: " + locator, e);
+        }
     }
+
+    protected void enterText(By locator, String text) {
+        try {
+            WebElement element = wait.until(ExpectedConditions.visibilityOfElementLocated(locator));
+            element.clear();
+            element.sendKeys(text);
+        } catch (Exception e) {
+            logError("Failed to enter text in element: " + locator);
+            throw new RuntimeException("Could not enter text: " + locator, e);
+        }
+    }
+
     protected void scrollToBottomOfPage() {
         try {
             if ("android".equals(platform) && androidDriver != null) {
-                // Scroll down using UiAutomator2
                 androidDriver.findElement(AppiumBy.androidUIAutomator(
                         "new UiScrollable(new UiSelector().scrollable(true)).scrollToEnd(10)"
                 ));
@@ -107,23 +203,25 @@ public abstract class AppiumBase extends AssertionBase{
             }
         } catch (Exception e) {
             logError("Could not scroll to bottom: " + e.getMessage());
-            // If scrolling fails, continue anyway
         }
     }
 
-    public abstract void executeTestSuite();
+    protected void logInfo(String msg) {
+        System.out.println("[INFO] " + msg);
+    }
 
-    // DEBUGGING HELP TO FIND ELEMENTS
+    protected void logError(String msg) {
+        System.err.println("[ERROR] " + msg);
+    }
+
     protected void debugFlutterElements() {
         try {
             System.out.println("🔍 Debugging Flutter elements...");
 
-            // Find all View elements (Flutter often renders as Views)
             logInfo("Searching for all Flutter View elements");
             var views = androidDriver.findElements(AppiumBy.className("android.view.View"));
             System.out.println("Found " + views.size() + " android.view.View elements");
 
-            // Check for elements with Login-related attributes
             logInfo("Searching for all clickable attributes, and retrieving content descriptions");
             int count = 0;
             for (WebElement view : views) {
@@ -141,7 +239,6 @@ public abstract class AppiumBase extends AssertionBase{
                 }
             }
 
-            // Add Android widget debugging
             logInfo("Searching for all Android widgets");
             String[] androidWidgets = {
                     "android.widget.TextView",
@@ -186,7 +283,7 @@ public abstract class AppiumBase extends AssertionBase{
             }
 
         } catch (Exception e) {
-            System.err.println("Flutter debug failed: " + e.getMessage());
+            logError("Flutter debug failed: " + e.getMessage());
         }
     }
 }

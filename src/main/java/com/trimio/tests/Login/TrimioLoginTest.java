@@ -1,185 +1,242 @@
 package com.trimio.tests.Login;
 
 import com.trimio.tests.Base.AppiumBase;
-
 import io.appium.java_client.AppiumBy;
-import io.netty.channel.PreferHeapByteBufAllocator;
-
+import org.testng.annotations.*;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.List;
 
 public class TrimioLoginTest extends AppiumBase {
 
-    boolean onLoginPage;
-
-    public static void main(String[] args) {
-        TrimioLoginTest test = new TrimioLoginTest();
-        try {
-
-            test.setUp();
-            test.executeTestSuite();
-            Thread.sleep(3000); // Wait to see the result
-            test.returnFails("LoginTestSuite");
-
-//            test.setUp();
-//            test.debugFlutterElements();
-
-        } catch (Exception e) {
-            System.err.println("Test failed: " + e.getMessage());
-            e.printStackTrace();
-        } finally {
-            test.tearDown();
-        }
-    }
-    @Override
-    public void executeTestSuite() {
+    @Test(description = "Test successful login for all user types", priority = 1)
+    public void testPositiveLoginAllUserTypes() {
         try {
             logInfo("LOGIN POSITIVE TESTING ALL 3 USER TYPES");
+
+            // Test Client Login
+            logInfo("Testing CLIENT login");
             performLogin(CLIENT_USERNAME);
             Thread.sleep(5000);
+            assertLoginSuccess();
             performLogout();
-            Thread.sleep(5000);
+            Thread.sleep(3000);
+
+            // Test Professional Login
+            logInfo("Testing PROFESSIONAL login");
             performLogin(PROFESSIONAL_USERNAME);
             Thread.sleep(5000);
+            assertLoginSuccess();
             performLogout();
-            Thread.sleep(5000);
-            /*
-            performLogin(ADMIN_USERNAME);
-            performLogout();
-            Thread.sleep(5000);
-             */
-        } catch (Exception e) {
-            logError(e.getMessage());
-        }finally{
-            logInfo("Exited Positive Test Suite");
-        }
+            Thread.sleep(3000);
 
-        try{
-            logInfo("Starting Negative Test Suite");
+            /* Uncomment when ready to test admin
+            logInfo("Testing ADMIN login");
+            performLogin(ADMIN_USERNAME);
+            Thread.sleep(5000);
+            assertLoginSuccess();
+            performLogout();
+            Thread.sleep(3000);
+            */
+
         } catch (Exception e) {
-            logError("Failed Negative Testing: " + e.getMessage());
-        }finally {
-            logInfo("Reached End of Negative Test Cases");
+            logError("Positive login test failed: " + e.getMessage());
+            throw new RuntimeException("Positive login test failed", e);
         }
     }
 
+    @Test(description = "Test login with invalid credentials", priority = 2)
+    public void testNegativeLogin() {
+        try {
+            logInfo("Starting Negative Test Suite");
+
+            // Test with invalid email
+            performInvalidLogin("invalid@email.com", PASSWORD);
+            assertLoginFailure();
+
+            // Test with invalid password
+            performInvalidLogin(CLIENT_USERNAME, "wrongpassword");
+            assertLoginFailure();
+
+            // Test with empty credentials
+            performInvalidLogin("", "");
+            assertLoginFailure();
+
+        } catch (Exception e) {
+            logError("Failed Negative Testing: " + e.getMessage());
+            throw new RuntimeException("Negative login test failed", e);
+        }
+    }
+
+    @Test(description = "Test logout cancellation functionality", priority = 3)
+    public void testLogoutCancellation() {
+        try {
+            logInfo("Testing logout cancellation");
+
+            // Login first
+            performLogin(CLIENT_USERNAME);
+            Thread.sleep(3000);
+            assertLoginSuccess();
+
+            // Try to logout but cancel
+            performLogoutCancel();
+
+            // Should still be logged in
+            assertElementPresent(AppiumBy.xpath("//*[contains(@content-desc, 'Dashboard')]"),
+                    "Should still be on dashboard after canceling logout");
+
+        } catch (Exception e) {
+            logError("Logout cancellation test failed: " + e.getMessage());
+            throw new RuntimeException("Logout cancellation test failed", e);
+        }
+    }
 
     public void performLogin(String user) {
         try {
-            onLoginPage = false;
+            // Check if on login page
+            assertElementPresent(AppiumBy.xpath("//*[contains(@content-desc, 'Welcome') or contains(@content-desc, 'Luxury beauty')]"),
+                    "Should be on login page before attempting login");
 
-            WebElement title = webDriver.findElement((AppiumBy.xpath("//*[contains(@content-desc, 'Welcome') or contains(@content-desc, 'Luxury beauty')]")));
-            if(!(title == null))
-                onLoginPage = true;
-            assertTrue(onLoginPage, "On Login Page");
-            System.out.println("Locating text fields by android widgets");
-            // Find text fields by class
+            logInfo("Locating text fields by android widgets");
             List<WebElement> textFields = androidDriver.findElements(AppiumBy.className("android.widget.EditText"));
-
-
-
 
             if (textFields.size() >= 2) {
                 // First field - Email
                 textFields.get(0).click();
-                textFields.get(0).clear(); // Clear existing text
+                textFields.get(0).clear();
                 textFields.get(0).sendKeys(user);
-                System.out.println("✅ Email entered (method 2)");
+                logInfo("✅ Email entered: " + user);
 
                 // Second field - Password
                 textFields.get(1).click();
-                textFields.get(1).clear(); // Clear existing text
+                textFields.get(1).clear();
                 textFields.get(1).sendKeys(PASSWORD);
-                System.out.println("✅ Password entered (method 2)");
+                logInfo("✅ Password entered");
 
-                // Check for Button
-                try {
-                    WebElement loginButton = androidDriver.findElement(AppiumBy.xpath("//*[contains(@content-desc, 'Login') or contains(@content-desc, 'login')]"));
-                    loginButton.click();
-                    System.out.println("✅ Login button pressed by content-desc");
-                } catch (Exception e) {
-                    System.out.println("Button not found by content-desc");
-                    System.out.println("Error message: " + e.getMessage());
-                }
+                // Click login button
+                WebElement loginButton = androidDriver.findElement(
+                        AppiumBy.xpath("//*[contains(@content-desc, 'Login') or contains(@content-desc, 'login')]")
+                );
+                loginButton.click();
+                logInfo("✅ Login button pressed");
+
+                // Wait for login to process
+                Thread.sleep(3000);
+
+            } else {
+                testLogger.softAssertTrue(false, "Could not find email and password text fields");
             }
-        }catch (Exception e){
-            System.out.println("Exception caught: " + e.getMessage());
-        }catch (Throwable e){
-            System.out.println("Throwable caught: " + e.getMessage());
+
+        } catch (Exception e) {
+            testLogger.softAssertTrue(false, "Login failed with exception: " + e.getMessage());
+            logError("Exception during login: " + e.getMessage());
         }
     }
 
-    /**
-     * Logs out the current user by navigating to Account tab and clicking Log Out
-     * Handles the logout confirmation dialog
-     */
+    public void performInvalidLogin(String user, String password) {
+        try {
+            logInfo("Attempting invalid login with: " + user);
+
+            List<WebElement> textFields = androidDriver.findElements(AppiumBy.className("android.widget.EditText"));
+
+            if (textFields.size() >= 2) {
+                textFields.get(0).click();
+                textFields.get(0).clear();
+                textFields.get(0).sendKeys(user);
+
+                textFields.get(1).click();
+                textFields.get(1).clear();
+                textFields.get(1).sendKeys(password);
+
+                WebElement loginButton = androidDriver.findElement(
+                        AppiumBy.xpath("//*[contains(@content-desc, 'Login') or contains(@content-desc, 'login')]")
+                );
+                loginButton.click();
+
+                Thread.sleep(3000); // Wait for error to appear
+
+            }
+        } catch (Exception e) {
+            logError("Exception during invalid login: " + e.getMessage());
+        }
+    }
+
     protected void performLogout() {
-        onLoginPage = false;
         try {
             logInfo("Starting logout process...");
 
-            // Step 1: Click the Account tab in bottom navigation
-            WebElement accountTab = androidDriver.findElement(AppiumBy.xpath("//*[contains(@content-desc, 'Account') or contains(@content-desc, 'account')]"));
+            // Click the Account tab
+            WebElement accountTab = androidDriver.findElement(
+                    AppiumBy.xpath("//*[contains(@content-desc, 'Account') or contains(@content-desc, 'account')]")
+            );
             accountTab.click();
             logInfo("✅ Clicked Account tab");
 
-            // Wait for Account page to load
             Thread.sleep(2000);
-
-            // Step 2: Scroll down to find the LOG OUT button
             scrollToBottomOfPage();
 
-            // Step 3: Click LOG OUT button
-            boolean isButtonClicked = false;
-            WebElement logOutButton = null;
-                try {
-                    logInfo("Method 1: Pressing Logout button by Content-desc");
-                    logOutButton = androidDriver.findElement(AppiumBy.xpath("//*[contains(@content-desc, 'LOG OUT') or contains(@content-desc, 'Log out')]"));
-                    isButtonClicked = true;
-                } catch (Exception e) {
-                    System.out.println("Method 1 Failed");
-                    logError(e.getMessage());
-                }
-
+            // Click LOG OUT button
+            WebElement logOutButton = androidDriver.findElement(
+                    AppiumBy.xpath("//*[contains(@content-desc, 'LOG OUT') or contains(@content-desc, 'Log out')]")
+            );
             logOutButton.click();
             logInfo("✅ Clicked LOG OUT button");
 
-            // Step 4: Handle logout confirmation dialog
+            // Handle logout confirmation
             handleLogoutConfirmation();
-
-            // Step 5: Wait for logout to complete
             Thread.sleep(2000);
 
-            WebElement title = webDriver.findElement((AppiumBy.xpath("//*[contains(@content-desc, 'Welcome') or contains(@content-desc, 'Luxury beauty')]")));
-            if(!(title==null)){
-                onLoginPage = true;
-            }
-            assertTrue(onLoginPage, "User logout");
+            // Verify we're back on login page
+            assertElementPresent(AppiumBy.xpath("//*[contains(@content-desc, 'Welcome') or contains(@content-desc, 'Luxury beauty')]"),
+                    "Should return to login page after successful logout");
+
             logInfo("✅ User logged out successfully");
-            assertTrue(false, "Test assertion 1");
 
         } catch (Exception e) {
+            testLogger.softAssertTrue(false, "Logout failed: " + e.getMessage());
             logError("Failed to log out user: " + e.getMessage());
-            throw new RuntimeException("Logout operation failed", e);
         }
     }
 
-    /*
-     * Handles the logout confirmation dialog
-     */
+    protected void performLogoutCancel() {
+        try {
+            logInfo("Starting logout cancellation test...");
+
+            // Navigate to logout but cancel
+            WebElement accountTab = androidDriver.findElement(
+                    AppiumBy.xpath("//*[contains(@content-desc, 'Account') or contains(@content-desc, 'account')]")
+            );
+            accountTab.click();
+
+            Thread.sleep(2000);
+            scrollToBottomOfPage();
+
+            WebElement logOutButton = androidDriver.findElement(
+                    AppiumBy.xpath("//*[contains(@content-desc, 'LOG OUT') or contains(@content-desc, 'Log out')]")
+            );
+            logOutButton.click();
+
+            // Cancel instead of confirming
+            cancelLogout();
+
+        } catch (Exception e) {
+            testLogger.softAssertTrue(false, "Logout cancellation failed: " + e.getMessage());
+            logError("Failed logout cancellation: " + e.getMessage());
+        }
+    }
+
     private void handleLogoutConfirmation() {
         try {
-            // Wait for confirmation dialog to appear
             Thread.sleep(2000);
-            WebElement confirmationTitle = androidDriver.findElement(AppiumBy.xpath("//*[contains(@content-desc, 'Logout Confirmation')]"));
-            logInfo("✅ Logout confirmation dialog appeared");
 
+            // Verify confirmation dialog appears
+            WebElement confirmationTitle = androidDriver.findElement(
+                    AppiumBy.xpath("//*[contains(@content-desc, 'Logout Confirmation')]")
+            );
+            testLogger.softAssertTrue(confirmationTitle.isDisplayed(),
+                    "Logout confirmation dialog should appear");
 
-            // Click the red "Logout" button to confirm
+            // Click confirm logout
             WebElement confirmLogoutButton = androidDriver.findElement(
                     AppiumBy.xpath("//android.widget.Button[@content-desc='Logout']")
             );
@@ -187,28 +244,34 @@ public class TrimioLoginTest extends AppiumBase {
             logInfo("✅ Confirmed logout in dialog");
 
         } catch (Exception e) {
+            testLogger.softAssertTrue(false, "Failed to handle logout confirmation: " + e.getMessage());
             logError("Failed to handle logout confirmation: " + e.getMessage());
-            throw new RuntimeException("Could not confirm logout", e);
         }
     }
 
-    /*
-     * Alternative method to test logout cancel
-     */
     protected void cancelLogout() {
         try {
-            // Click Cancel button instead
+            Thread.sleep(1000);
             WebElement cancelButton = wait.until(ExpectedConditions.elementToBeClickable(
                     AppiumBy.xpath("//android.widget.Button[@content-desc='Cancel']")
             ));
+
+            testLogger.softAssertTrue(cancelButton.isEnabled(), "Cancel button should be enabled");
             cancelButton.click();
             logInfo("✅ Cancelled logout");
 
         } catch (Exception e) {
+            testLogger.softAssertTrue(false, "Failed to cancel logout: " + e.getMessage());
             logError("Failed to cancel logout: " + e.getMessage());
-            throw new RuntimeException("Could not cancel logout", e);
         }
     }
 
+    // Override the assertLoginFailure method for more specific error checking
+    protected void assertLoginFailure() {
+        super.assertLoginFailure();
 
+        // Additional login failure checks
+        assertElementPresent(AppiumBy.xpath("//*[contains(@content-desc, 'Welcome') or contains(@content-desc, 'Luxury beauty')]"),
+                "Should remain on login page after failed login");
+    }
 }

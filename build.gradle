@@ -2,6 +2,18 @@ plugins {
     id 'java'
     id 'application'
 }
+sourceSets {
+    main {
+        java {
+            srcDirs = ['src/main/java']
+        }
+    }
+    test {
+        java {
+            srcDirs = ['src/test/java']
+        }
+    }
+}
 
 group = 'com.trimio.tests'
 version = '1.0-SNAPSHOT'
@@ -14,10 +26,10 @@ repositories {
 
 dependencies {
     // Appium Java client (includes the necessary Selenium bits transitively)
-    implementation 'io.appium:java-client:8.6.0'
+    implementation 'io.appium:java-client:9.5.0'
 
     // Test framework of your choice
-    testImplementation 'org.testng:testng:7.7.1'
+    implementation 'org.testng:testng:7.11.0'
 }
 
 // Specify the main class for the application plugin
