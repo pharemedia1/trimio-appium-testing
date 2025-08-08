@@ -11,7 +11,7 @@ import java.util.List;
 
 public class TestLogger {
     private static PrintWriter logWriter;
-    private static final String LOG_FILE = "src/main/java/com/trimio/tests/TestCaseReports/test-logs.txt";
+    private static final String LOG_FILE = "src/test/java/com/trimio/tests/TestCaseReports/test-logs.txt";
     private static final DateTimeFormatter TIMESTAMP_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     private SoftAssert softAssert;

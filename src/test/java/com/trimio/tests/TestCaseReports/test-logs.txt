@@ -1,0 +1,17 @@
+================================================================================
+TEST SUITE: TrimioLoginTest
+TIMESTAMP: 2025-08-08 15:52:24
+================================================================================
+  Should be on login page before attempting login - PASSED
+  Should navigate to dashboard after successful login - FAILED
+  User profile should be visible on dashboard - FAILED
+  Logout confirmation dialog should appear - PASSED
+  Should return to login page after successful logout - PASSED
+  Should be on login page before attempting login - PASSED
+  Should navigate to dashboard after successful login - FAILED
+  User profile should be visible on dashboard - FAILED
+  Logout confirmation dialog should appear - PASSED
+  Should return to login page after successful logout - PASSED
+----------------------------------------
+SUMMARY: 6 PASSED, 4 FAILED
+----------------------------------------
