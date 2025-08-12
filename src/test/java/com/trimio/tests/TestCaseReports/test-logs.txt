@@ -1,109 +1,6 @@
 ================================================================================
 TEST SUITE: TrimioLoginTest
-TIMESTAMP: 2025-08-08 15:52:24
-================================================================================
-  Should be on login page before attempting login - PASSED
-  Should navigate to dashboard after successful login - FAILED
-  User profile should be visible on dashboard - FAILED
-  Logout confirmation dialog should appear - PASSED
-  Should return to login page after successful logout - PASSED
-  Should be on login page before attempting login - PASSED
-  Should navigate to dashboard after successful login - FAILED
-  User profile should be visible on dashboard - FAILED
-  Logout confirmation dialog should appear - PASSED
-  Should return to login page after successful logout - PASSED
-----------------------------------------
-SUMMARY: 6 PASSED, 4 FAILED
-----------------------------------------
-** TO-DO: Fix Assertion Fails with improved assertion testing
-================================================================================
-TEST SUITE: TrimioLoginTest
-TIMESTAMP: 2025-08-12 15:44:38
-================================================================================
-  Should be on login page before attempting login - PASSED
-  Should navigate to dashboard after successful login - FAILED
-  User profile should be visible on dashboard - FAILED
-  Logout confirmation dialog should appear - PASSED
-  Should return to login page after successful logout - PASSED
-  Should be on login page before attempting login - PASSED
-  Should navigate to dashboard after successful login - FAILED
-  User profile should be visible on dashboard - FAILED
-  Logout confirmation dialog should appear - PASSED
-  Should return to login page after successful logout - PASSED
-----------------------------------------
-SUMMARY: 6 PASSED, 4 FAILED
-----------------------------------------
-
-================================================================================
-TEST SUITE: TrimioLoginTest
-TIMESTAMP: 2025-08-12 16:12:02
-================================================================================
-  Should be on login page before attempting login - FAILED
-  Could not find email and password text fields - FAILED
-  Should navigate to dashboard after successful login - FAILED
-  User profile should be visible on dashboard - PASSED
-  Logout confirmation dialog should appear - PASSED
-  Should return to login page after successful logout - PASSED
-  Should be on login page before attempting login - PASSED
-  Should navigate to dashboard after successful login - FAILED
-  User profile should be visible on dashboard - FAILED
-  Logout confirmation dialog should appear - PASSED
-  Should return to login page after successful logout - PASSED
-----------------------------------------
-SUMMARY: 6 PASSED, 5 FAILED
-----------------------------------------
-
-================================================================================
-TEST SUITE: TrimioLoginTest
-TIMESTAMP: 2025-08-12 16:17:18
-================================================================================
-  Should be on login page before attempting login - PASSED
-  Should navigate to dashboard after successful login - FAILED
-  User Profile should be visible upon login - FAILED
-  Logout confirmation dialog should appear - PASSED
-  Should return to login page after successful logout - PASSED
-  Should be on login page before attempting login - PASSED
-  Should navigate to dashboard after successful login - FAILED
-  User Profile should be visible upon login - FAILED
-  Logout confirmation dialog should appear - PASSED
-  Should return to login page after successful logout - PASSED
-----------------------------------------
-SUMMARY: 6 PASSED, 4 FAILED
-----------------------------------------
-
-================================================================================
-TEST SUITE: TrimioLoginTest
-TIMESTAMP: 2025-08-12 16:29:45
-================================================================================
-  Should be on login page before attempting login - FAILED
-  Could not find email and password text fields - FAILED
-  Should navigate to dashboard after successful login - FAILED
-  Account Tab should be visible upon login - FAILED
-  Logout failed: An element could not be located on the page using the given search parameters.
-For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#no-such-element-exception
-Build info: version: '4.34.0', revision: '707dcb4246*'
-System info: os.name: 'Mac OS X', os.arch: 'aarch64', os.version: '15.1.1', java.version: '17.0.15'
-Driver info: io.appium.java_client.android.AndroidDriver
-Command: [f53ee99d-b5b7-44db-8793-6142b6169fea, findElement {using=xpath, value=//*[contains(@content-desc, 'Account') or contains(@content-desc, 'account')]}]
-Capabilities {appium:automationName: UiAutomator2, appium:databaseEnabled: false, appium:desired: {automationName: UiAutomator2, deviceName: emulator-5554, noReset: true, platformName: ANDROID}, appium:deviceApiLevel: 35, appium:deviceManufacturer: Google, appium:deviceModel: sdk_gphone64_arm64, appium:deviceName: emulator-5554, appium:deviceScreenDensity: 420, appium:deviceScreenSize: 1080x2400, appium:deviceUDID: emulator-5554, appium:javascriptEnabled: true, appium:locationContextEnabled: false, appium:networkConnectionEnabled: true, appium:noReset: true, appium:pixelRatio: 2.625, appium:platformVersion: 15, appium:statBarHeight: 136, appium:takesScreenshot: true, appium:viewportRect: {height: 2264, left: 0, top: 136, width: 1080}, appium:warnings: {}, appium:webStorageEnabled: false, platformName: ANDROID}
-Session ID: f53ee99d-b5b7-44db-8793-6142b6169fea - FAILED
-  Should be on login page before attempting login - PASSED
-  Should navigate to dashboard after successful login - FAILED
-  Account Tab should be visible upon login - PASSED
-  Logout failed: An unknown server-side error occurred while processing the command. Original error: 'POST /element' cannot be proxied to UiAutomator2 server because the instrumentation process is not running (probably crashed). Check the server log and/or the logcat output for more details
-Build info: version: '4.34.0', revision: '707dcb4246*'
-System info: os.name: 'Mac OS X', os.arch: 'aarch64', os.version: '15.1.1', java.version: '17.0.15'
-Driver info: io.appium.java_client.android.AndroidDriver
-Command: [f53ee99d-b5b7-44db-8793-6142b6169fea, findElement {using=xpath, value=//*[contains(@content-desc, 'LOG OUT') or contains(@content-desc, 'Log out')]}]
-Capabilities {appium:automationName: UiAutomator2, appium:databaseEnabled: false, appium:desired: {automationName: UiAutomator2, deviceName: emulator-5554, noReset: true, platformName: ANDROID}, appium:deviceApiLevel: 35, appium:deviceManufacturer: Google, appium:deviceModel: sdk_gphone64_arm64, appium:deviceName: emulator-5554, appium:deviceScreenDensity: 420, appium:deviceScreenSize: 1080x2400, appium:deviceUDID: emulator-5554, appium:javascriptEnabled: true, appium:locationContextEnabled: false, appium:networkConnectionEnabled: true, appium:noReset: true, appium:pixelRatio: 2.625, appium:platformVersion: 15, appium:statBarHeight: 136, appium:takesScreenshot: true, appium:viewportRect: {height: 2264, left: 0, top: 136, width: 1080}, appium:warnings: {}, appium:webStorageEnabled: false, platformName: ANDROID}
-Session ID: f53ee99d-b5b7-44db-8793-6142b6169fea - FAILED
-----------------------------------------
-SUMMARY: 2 PASSED, 7 FAILED
-----------------------------------------
-
-================================================================================
-TEST SUITE: TrimioLoginTest
-TIMESTAMP: 2025-08-12 16:30:53
+TIMESTAMP: 2025-08-12 16:59:04
 ================================================================================
   Should be on login page before attempting login - PASSED
   Should navigate to dashboard after successful login - PASSED
@@ -111,17 +8,44 @@ TIMESTAMP: 2025-08-12 16:30:53
   Logout confirmation dialog should appear - PASSED
   Should return to login page after successful logout - PASSED
   Should be on login page before attempting login - PASSED
-  Should navigate to dashboard after successful login - FAILED
+  Should navigate to dashboard after successful login - FAILED [Screenshot: assertion-fail-1_20250812_165851.png]
   Account Tab should be visible upon login - PASSED
   Logout confirmation dialog should appear - PASSED
   Should return to login page after successful logout - PASSED
 ----------------------------------------
-SUMMARY: 9 PASSED, 1 FAILED
+SUMMARY: 9 PASSED, 1 FAILED, 1 SCREENSHOTS
 ----------------------------------------
-cvb
-cvb
-vcb
-cb
-cvb
-cb
-c
+================================================================================
+TEST SUITE: TrimioLoginTest
+TIMESTAMP: 2025-08-12 17:00:54
+================================================================================
+  Should be on login page before attempting login - PASSED
+  Should navigate to dashboard after successful login - PASSED
+  Account Tab should be visible upon login - PASSED
+  Logout confirmation dialog should appear - PASSED
+  Should return to login page after successful logout - PASSED
+  Should be on login page before attempting login - PASSED
+  Should navigate to dashboard after successful login - PASSED
+  Account Tab should be visible upon login - PASSED
+  Logout confirmation dialog should appear - PASSED
+  Should return to login page after successful logout - PASSED
+----------------------------------------
+SUMMARY: 10 PASSED, 0 FAILED, 0 SCREENSHOTS
+----------------------------------------
+
+================================================================================
+TEST SUITE: TrimioLoginTest
+TIMESTAMP: 2025-08-12 17:01:14
+================================================================================
+  Should remain on login screen after failed login - PASSED
+  Error message should appear for invalid credentials - FAILED [Screenshot: assertion-fail-1_20250812_170101.png]
+  Should remain on login page after failed login - PASSED
+  Should remain on login screen after failed login - PASSED
+  Error message should appear for invalid credentials - FAILED [Screenshot: assertion-fail-2_20250812_170107.png]
+  Should remain on login page after failed login - PASSED
+  Should remain on login screen after failed login - PASSED
+  Error message should appear for invalid credentials - FAILED [Screenshot: assertion-fail-3_20250812_170114.png]
+  Should remain on login page after failed login - PASSED
+----------------------------------------
+SUMMARY: 6 PASSED, 3 FAILED, 3 SCREENSHOTS
+----------------------------------------

@@ -142,7 +142,7 @@ public abstract class AppiumBase {
     }
 
     protected void assertLoginSuccess() {
-        assertElementPresent(AppiumBy.xpath("//*[contains(@content-desc, 'Schedule') or contains(@content-desc, 'Notifications')]"),
+        assertElementPresent(AppiumBy.xpath("//*[contains(@content-desc, 'Schedule') or contains(@content-desc, 'Notification')]"),
                 "Should navigate to dashboard after successful login");
         assertElementPresent(AppiumBy.xpath("//*[contains(@content-desc, 'Account') or contains(@content-desc, 'account')]"),
                 "Account Tab should be visible upon login");
