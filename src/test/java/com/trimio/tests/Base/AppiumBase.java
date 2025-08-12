@@ -88,6 +88,7 @@ public abstract class AppiumBase {
 
             wait = new WebDriverWait(webDriver, Duration.ofSeconds(10));
             logInfo("✅ Driver initialized successfully");
+            TestLogger.setDriver(webDriver); // Sets driver to whatever is being used in AppiumBase
 
         } catch (Exception e) {
             logError("Failed to initialize driver: " + e.getMessage());
@@ -107,6 +108,7 @@ public abstract class AppiumBase {
         }
     }
 
+    // Assertion Helpers
     protected void assertElementPresent(By locator, String description) {
         boolean isPresent = isElementPresent(locator);
         testLogger.softAssertTrue(isPresent, description);
@@ -140,14 +142,14 @@ public abstract class AppiumBase {
     }
 
     protected void assertLoginSuccess() {
-        assertElementPresent(AppiumBy.accessibilityId("Dashboard"),
+        assertElementPresent(AppiumBy.xpath("//*[contains(@content-desc, 'Schedule') or contains(@content-desc, 'Notifications')]"),
                 "Should navigate to dashboard after successful login");
-        assertElementPresent(AppiumBy.xpath("//android.widget.TextView[contains(@text, 'Supreme Barber')]"),
-                "User profile should be visible on dashboard");
+        assertElementPresent(AppiumBy.xpath("//*[contains(@content-desc, 'Account') or contains(@content-desc, 'account')]"),
+                "Account Tab should be visible upon login");
     }
 
     protected void assertLoginFailure() {
-        assertElementPresent(AppiumBy.accessibilityId("Login Button"),
+        assertElementPresent(AppiumBy.xpath("//*[contains(@content-desc, 'Welcome') or contains(@content-desc, 'Luxury beauty')]"),
                 "Should remain on login screen after failed login");
         assertElementPresent(AppiumBy.accessibilityId("Error Message"),
                 "Error message should appear for invalid credentials");

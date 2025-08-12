@@ -1,0 +1,89 @@
+
+================================================================================
+TEST SUITE: TrimioLoginTest
+TIMESTAMP: 2025-08-12 16:45:20
+================================================================================
+  Should be on login page before attempting login - PASSED
+  Should navigate to dashboard after successful login - PASSED
+  Account Tab should be visible upon login - PASSED
+  Logout confirmation dialog should appear - PASSED
+  Should return to login page after successful logout - PASSED
+  Should be on login page before attempting login - PASSED
+  Should navigate to dashboard after successful login - FAILED
+  Account Tab should be visible upon login - PASSED
+  Logout confirmation dialog should appear - PASSED
+  Should return to login page after successful logout - PASSED
+----------------------------------------
+SUMMARY: 9 PASSED, 1 FAILED, 0 SCREENSHOTS
+----------------------------------------
+
+================================================================================
+TEST SUITE: TrimioLoginTest
+TIMESTAMP: 2025-08-12 16:48:25
+================================================================================
+  Should be on login page before attempting login - PASSED
+  Should navigate to dashboard after successful login - PASSED
+  Account Tab should be visible upon login - PASSED
+  Logout confirmation dialog should appear - PASSED
+  Should return to login page after successful logout - PASSED
+  Should be on login page before attempting login - PASSED
+  Should navigate to dashboard after successful login - PASSED
+  Account Tab should be visible upon login - PASSED
+  Logout confirmation dialog should appear - PASSED
+  Should return to login page after successful logout - PASSED
+----------------------------------------
+SUMMARY: 10 PASSED, 0 FAILED, 0 SCREENSHOTS
+----------------------------------------
+
+================================================================================
+TEST SUITE: TrimioLoginTest
+TIMESTAMP: 2025-08-12 16:48:45
+================================================================================
+  Should remain on login screen after failed login - PASSED
+  Error message should appear for invalid credentials - FAILED [Screenshot: assertion-fail-1_20250812_164833.png]
+  Should remain on login page after failed login - PASSED
+  Should remain on login screen after failed login - PASSED
+  Error message should appear for invalid credentials - FAILED [Screenshot: assertion-fail-2_20250812_164840.png]
+  Should remain on login page after failed login - PASSED
+  Should remain on login screen after failed login - PASSED
+  Error message should appear for invalid credentials - FAILED [Screenshot: assertion-fail-3_20250812_164845.png]
+  Should remain on login page after failed login - PASSED
+----------------------------------------
+SUMMARY: 6 PASSED, 3 FAILED, 3 SCREENSHOTS
+----------------------------------------
+
+================================================================================
+TEST SUITE: TrimioLoginTest
+TIMESTAMP: 2025-08-12 16:51:49
+================================================================================
+  Should be on login page before attempting login - PASSED
+  Should navigate to dashboard after successful login - PASSED
+  Account Tab should be visible upon login - PASSED
+  Logout confirmation dialog should appear - PASSED
+  Should return to login page after successful logout - PASSED
+  Should be on login page before attempting login - PASSED
+  Should navigate to dashboard after successful login - FAILED [Screenshot: assertion-fail-1_20250812_165136.png]
+  Account Tab should be visible upon login - PASSED
+  Logout confirmation dialog should appear - PASSED
+  Should return to login page after successful logout - PASSED
+----------------------------------------
+SUMMARY: 9 PASSED, 1 FAILED, 1 SCREENSHOTS
+----------------------------------------
+
+================================================================================
+TEST SUITE: TrimioLoginTest
+TIMESTAMP: 2025-08-12 16:55:07
+================================================================================
+  Should be on login page before attempting login - PASSED
+  Should navigate to dashboard after successful login - PASSED
+  Account Tab should be visible upon login - PASSED
+  Logout confirmation dialog should appear - PASSED
+  Should return to login page after successful logout - PASSED
+  Should be on login page before attempting login - PASSED
+  Should navigate to dashboard after successful login - FAILED [Screenshot: assertion-fail-1_20250812_165453.png]
+  Account Tab should be visible upon login - PASSED
+  Logout confirmation dialog should appear - PASSED
+  Should return to login page after successful logout - PASSED
+----------------------------------------
+SUMMARY: 9 PASSED, 1 FAILED, 1 SCREENSHOTS
+----------------------------------------

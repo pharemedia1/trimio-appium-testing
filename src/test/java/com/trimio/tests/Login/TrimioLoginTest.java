@@ -12,6 +12,7 @@ public class TrimioLoginTest extends AppiumBase {
     @Test(description = "Test successful login for all user types", priority = 1)
     public void testPositiveLoginAllUserTypes() {
         try {
+            //debugFlutterElements();
             logInfo("LOGIN POSITIVE TESTING ALL 3 USER TYPES");
 
             // Test Client Login
@@ -41,6 +42,7 @@ public class TrimioLoginTest extends AppiumBase {
 
         } catch (Exception e) {
             logError("Positive login test failed: " + e.getMessage());
+            debugFlutterElements();
             throw new RuntimeException("Positive login test failed", e);
         }
     }
