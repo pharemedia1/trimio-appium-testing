@@ -18,8 +18,8 @@ import java.util.List;
 public class TestLogger {
     private static PrintWriter logWriter;
     private static WebDriver driver;
-    private static final String LOG_FILE = "src/main/java/com/trimio/tests/TestCaseReports/test-logs.txt";
-    private static final String SCREENSHOT_DIR = "src/main/java/com/trimio/tests/TestCaseReports/screenshots";
+    private static final String LOG_FILE = "src/test/java/com/trimio/tests/TestCaseReports/test-logs.txt";
+    private static final String SCREENSHOT_DIR = "src/test/java/com/trimio/tests/TestCaseReports/screenshots";
     private static final DateTimeFormatter TIMESTAMP_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private static final DateTimeFormatter FILE_TIMESTAMP_FORMAT = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
 
