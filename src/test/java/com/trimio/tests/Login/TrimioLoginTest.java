@@ -117,7 +117,7 @@ public class TrimioLoginTest extends AppiumBase {
 
                 // Click login button
                 WebElement loginButton = androidDriver.findElement(
-                        AppiumBy.xpath("//*[contains(@content-desc, 'Login') or contains(@content-desc, 'login')]")
+                        AppiumBy.accessibilityId("login_button")
                 );
                 loginButton.click();
                 logInfo("✅ Login button pressed");

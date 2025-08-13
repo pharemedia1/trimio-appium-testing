@@ -151,7 +151,7 @@ public abstract class AppiumBase {
     protected void assertLoginFailure() {
         assertElementPresent(AppiumBy.xpath("//*[contains(@content-desc, 'Welcome') or contains(@content-desc, 'Luxury beauty')]"),
                 "Should remain on login screen after failed login");
-        assertElementPresent(AppiumBy.accessibilityId("Error Message"),
+        assertElementPresent(AppiumBy.accessibilityId("login_error_message"),
                 "Error message should appear for invalid credentials");
     }
 
