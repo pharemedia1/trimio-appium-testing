@@ -12,32 +12,29 @@ public class TrimioLoginTest extends AppiumBase {
     @Test(description = "Test successful login for all user types", priority = 1)
     public void testPositiveLoginAllUserTypes() {
         try {
-            //debugFlutterElements();
+//            debugFlutterElements();
             logInfo("LOGIN POSITIVE TESTING ALL 3 USER TYPES");
 
             // Test Client Login
             logInfo("Testing CLIENT login");
             performLogin(CLIENT_USERNAME);
-            Thread.sleep(5000);
             assertLoginSuccess();
             performLogout();
-            Thread.sleep(3000);
+            Thread.sleep(2000);
 
             // Test Professional Login
             logInfo("Testing PROFESSIONAL login");
             performLogin(PROFESSIONAL_USERNAME);
-            Thread.sleep(5000);
             assertLoginSuccess();
             performLogout();
-            Thread.sleep(3000);
+            Thread.sleep(2000);
 
             /* Uncomment when ready to test admin
             logInfo("Testing ADMIN login");
             performLogin(ADMIN_USERNAME);
-            Thread.sleep(5000);
             assertLoginSuccess();
             performLogout();
-            Thread.sleep(3000);
+            Thread.sleep(2000);
             */
 
         } catch (Exception e) {
@@ -62,7 +59,7 @@ public class TrimioLoginTest extends AppiumBase {
 
             // Test with empty credentials
             performInvalidLogin("", "");
-            assertLoginFailure();
+            assertEmptyFieldLoginError();
 
         } catch (Exception e) {
             logError("Failed Negative Testing: " + e.getMessage());
@@ -77,15 +74,15 @@ public class TrimioLoginTest extends AppiumBase {
 
             // Login first
             performLogin(CLIENT_USERNAME);
-            Thread.sleep(3000);
             assertLoginSuccess();
 
             // Try to logout but cancel
             performLogoutCancel();
 
             // Should still be logged in
-            assertElementPresent(AppiumBy.xpath("//*[contains(@content-desc, 'Dashboard')]"),
-                    "Should still be on dashboard after canceling logout");
+            Thread.sleep(1000); // Wait a bit for the confirmation screen to go away
+            assertElementPresent(AppiumBy.xpath("//*[contains(@content-desc, 'Profile') or contains(@content-desc, 'Member Since']"),
+                    "Should still be on Account Page after canceling logout");
 
         } catch (Exception e) {
             logError("Logout cancellation test failed: " + e.getMessage());

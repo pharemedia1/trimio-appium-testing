@@ -284,6 +284,13 @@ public abstract class AppiumBase {
                 "Error message should appear for invalid credentials");
     }
 
+    protected void assertEmptyFieldLoginError() {
+        assertElementPresent(AppiumBy.xpath("//*[contains(@content-desc, 'Welcome') or contains(@content-desc, 'Luxury beauty')]"),
+                "Should remain on login screen after failed login");
+        assertElementPresent(AppiumBy.xpath("//*[contains(@content-desc, 'Please') or contains(@content-desc, 'enter')]"),
+        "Inline error message should appear for empty required field");
+    }
+
     protected boolean isElementPresent(By locator) {
         try {
             webDriver.findElement(locator);

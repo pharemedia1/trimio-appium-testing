@@ -1,0 +1,248 @@
+
+================================================================================
+TEST SUITE: TrimioLoginTest
+TEST METHOD: testPositiveLoginAllUserTypes
+TIMESTAMP: 2025-08-19 15:51:23
+================================================================================
+  Should be on login page before attempting login - PASSED
+  Should navigate to dashboard after successful login - PASSED
+  Account Tab should be visible upon login - PASSED
+  Logout confirmation dialog should appear - PASSED
+  Should return to login page after successful logout - PASSED
+  Should be on login page before attempting login - PASSED
+  Should navigate to dashboard after successful login - PASSED
+  Account Tab should be visible upon login - PASSED
+  Logout confirmation dialog should appear - PASSED
+  Should return to login page after successful logout - PASSED
+----------------------------------------
+SUMMARY: 10 PASSED, 0 FAILED, 0 SCREENSHOTS
+----------------------------------------
+
+================================================================================
+TEST SUITE: TrimioLoginTest
+TEST METHOD: testNegativeLogin
+TIMESTAMP: 2025-08-19 15:51:43
+================================================================================
+  Should remain on login screen after failed login - PASSED
+  Error message should appear for invalid credentials - PASSED
+  Should remain on login page after failed login - PASSED
+  Should remain on login screen after failed login - PASSED
+  Error message should appear for invalid credentials - PASSED
+  Should remain on login page after failed login - PASSED
+  Should remain on login screen after failed login - PASSED
+  Error message should appear for invalid credentials - FAILED [Screenshot: assertion-fail-1_20250819_155143.png]
+  Should remain on login page after failed login - PASSED
+----------------------------------------
+SUMMARY: 8 PASSED, 1 FAILED, 1 SCREENSHOTS
+----------------------------------------
+
+================================================================================
+TEST SUITE: TrimioLoginTest
+TEST METHOD: testNegativeLogin
+TIMESTAMP: 2025-08-19 16:11:41
+================================================================================
+  Should remain on login screen after failed login - PASSED
+  Error message should appear for invalid credentials - PASSED
+  Should remain on login page after failed login - PASSED
+  Should remain on login screen after failed login - PASSED
+  Error message should appear for invalid credentials - PASSED
+  Should remain on login page after failed login - PASSED
+  Should remain on login screen after failed login - PASSED
+  Error message should appear for invalid credentials - FAILED [Screenshot: assertion-fail-1_20250819_161140.png]
+  Should remain on login page after failed login - PASSED
+----------------------------------------
+SUMMARY: 8 PASSED, 1 FAILED, 1 SCREENSHOTS
+----------------------------------------
+
+================================================================================
+TEST SUITE: TrimioLoginTest
+TEST METHOD: testPositiveLoginAllUserTypes
+TIMESTAMP: 2025-08-19 16:22:00
+================================================================================
+  Should be on login page before attempting login - PASSED
+  Should navigate to dashboard after successful login - PASSED
+  Account Tab should be visible upon login - PASSED
+  Logout confirmation dialog should appear - PASSED
+  Should return to login page after successful logout - PASSED
+  Should be on login page before attempting login - PASSED
+  Should navigate to dashboard after successful login - PASSED
+  Account Tab should be visible upon login - PASSED
+  Logout confirmation dialog should appear - PASSED
+  Should return to login page after successful logout - PASSED
+----------------------------------------
+SUMMARY: 10 PASSED, 0 FAILED, 0 SCREENSHOTS
+----------------------------------------
+
+================================================================================
+TEST SUITE: TrimioLoginTest
+TEST METHOD: testPositiveLoginAllUserTypes
+TIMESTAMP: 2025-08-19 16:22:34
+================================================================================
+----------------------------------------
+SUMMARY: 0 PASSED, 0 FAILED, 0 SCREENSHOTS
+----------------------------------------
+
+================================================================================
+TEST SUITE: TrimioLoginTest
+TEST METHOD: testNegativeLogin
+TIMESTAMP: 2025-08-19 16:22:54
+================================================================================
+  Should remain on login screen after failed login - PASSED
+  Error message should appear for invalid credentials - PASSED
+  Should remain on login page after failed login - PASSED
+  Should remain on login screen after failed login - PASSED
+  Error message should appear for invalid credentials - PASSED
+  Should remain on login page after failed login - PASSED
+  Should remain on login screen after failed login - PASSED
+  Inline error message should appear for empty required field - PASSED
+----------------------------------------
+SUMMARY: 8 PASSED, 0 FAILED, 0 SCREENSHOTS
+----------------------------------------
+
+================================================================================
+TEST SUITE: TrimioLoginTest
+TEST METHOD: testLogoutCancellation
+TIMESTAMP: 2025-08-19 16:23:23
+================================================================================
+  Should be on login page before attempting login - PASSED
+  Should navigate to dashboard after successful login - PASSED
+  Account Tab should be visible upon login - PASSED
+  Cancel button should be enabled - PASSED
+  Should still be on dashboard after canceling logout - FAILED [Screenshot: assertion-fail-1_20250819_162323.png]
+----------------------------------------
+SUMMARY: 4 PASSED, 1 FAILED, 1 SCREENSHOTS
+----------------------------------------
+
+================================================================================
+TEST SUITE: TrimioLoginTest
+TEST METHOD: testPositiveLoginAllUserTypes
+TIMESTAMP: 2025-08-19 16:27:43
+================================================================================
+  Should be on login page before attempting login - FAILED [Screenshot: assertion-fail-1_20250819_162703.png]
+  Could not find email and password text fields - FAILED [Screenshot: assertion-fail-2_20250819_162703.png]
+  Should navigate to dashboard after successful login - FAILED [Screenshot: assertion-fail-3_20250819_162708.png]
+  Account Tab should be visible upon login - PASSED
+  Logout confirmation dialog should appear - PASSED
+  Should return to login page after successful logout - PASSED
+  Should be on login page before attempting login - PASSED
+  Should navigate to dashboard after successful login - PASSED
+  Account Tab should be visible upon login - PASSED
+  Logout confirmation dialog should appear - PASSED
+  Should return to login page after successful logout - PASSED
+----------------------------------------
+SUMMARY: 8 PASSED, 3 FAILED, 3 SCREENSHOTS
+----------------------------------------
+
+================================================================================
+TEST SUITE: TrimioLoginTest
+TEST METHOD: testPositiveLoginAllUserTypes
+TIMESTAMP: 2025-08-19 16:28:49
+================================================================================
+  Should be on login page before attempting login - PASSED
+  Should navigate to dashboard after successful login - PASSED
+  Account Tab should be visible upon login - PASSED
+  Logout confirmation dialog should appear - PASSED
+  Should return to login page after successful logout - PASSED
+  Should be on login page before attempting login - PASSED
+  Should navigate to dashboard after successful login - PASSED
+  Account Tab should be visible upon login - PASSED
+  Logout confirmation dialog should appear - PASSED
+  Should return to login page after successful logout - PASSED
+----------------------------------------
+SUMMARY: 10 PASSED, 0 FAILED, 0 SCREENSHOTS
+----------------------------------------
+
+================================================================================
+TEST SUITE: TrimioLoginTest
+TEST METHOD: testNegativeLogin
+TIMESTAMP: 2025-08-19 16:29:09
+================================================================================
+  Should remain on login screen after failed login - PASSED
+  Error message should appear for invalid credentials - PASSED
+  Should remain on login page after failed login - PASSED
+  Should remain on login screen after failed login - PASSED
+  Error message should appear for invalid credentials - PASSED
+  Should remain on login page after failed login - PASSED
+  Should remain on login screen after failed login - PASSED
+  Inline error message should appear for empty required field - PASSED
+----------------------------------------
+SUMMARY: 8 PASSED, 0 FAILED, 0 SCREENSHOTS
+----------------------------------------
+
+================================================================================
+TEST SUITE: TrimioLoginTest
+TEST METHOD: testLogoutCancellation
+TIMESTAMP: 2025-08-19 16:29:40
+================================================================================
+  Should be on login page before attempting login - PASSED
+  Should navigate to dashboard after successful login - PASSED
+  Account Tab should be visible upon login - PASSED
+  Cancel button should be enabled - PASSED
+  Should still be on dashboard after canceling logout - FAILED [Screenshot: assertion-fail-1_20250819_162939.png]
+----------------------------------------
+SUMMARY: 4 PASSED, 1 FAILED, 1 SCREENSHOTS
+----------------------------------------
+
+================================================================================
+TEST SUITE: TrimioLoginTest
+TEST METHOD: testPositiveLoginAllUserTypes
+TIMESTAMP: 2025-08-19 16:36:31
+================================================================================
+  Should be on login page before attempting login - PASSED
+  Should navigate to dashboard after successful login - PASSED
+  Account Tab should be visible upon login - PASSED
+  Logout confirmation dialog should appear - PASSED
+  Should return to login page after successful logout - PASSED
+  Should be on login page before attempting login - PASSED
+  Should navigate to dashboard after successful login - PASSED
+  Account Tab should be visible upon login - PASSED
+  Logout confirmation dialog should appear - PASSED
+  Should return to login page after successful logout - PASSED
+----------------------------------------
+SUMMARY: 10 PASSED, 0 FAILED, 0 SCREENSHOTS
+----------------------------------------
+
+================================================================================
+TEST SUITE: TrimioLoginTest
+TEST METHOD: testNegativeLogin
+TIMESTAMP: 2025-08-19 16:36:50
+================================================================================
+  Should remain on login screen after failed login - PASSED
+  Error message should appear for invalid credentials - PASSED
+  Should remain on login page after failed login - PASSED
+  Should remain on login screen after failed login - PASSED
+  Error message should appear for invalid credentials - PASSED
+  Should remain on login page after failed login - PASSED
+  Should remain on login screen after failed login - PASSED
+  Inline error message should appear for empty required field - PASSED
+----------------------------------------
+SUMMARY: 8 PASSED, 0 FAILED, 0 SCREENSHOTS
+----------------------------------------
+
+================================================================================
+TEST SUITE: TrimioLoginTest
+TEST METHOD: testLogoutCancellation
+TIMESTAMP: 2025-08-19 16:37:21
+================================================================================
+  Should be on login page before attempting login - PASSED
+  Should navigate to dashboard after successful login - PASSED
+  Account Tab should be visible upon login - PASSED
+  Cancel button should be enabled - PASSED
+  Should still be on Account Page after canceling logout - FAILED [Screenshot: assertion-fail-1_20250819_163721.png]
+----------------------------------------
+SUMMARY: 4 PASSED, 1 FAILED, 1 SCREENSHOTS
+----------------------------------------
+
+================================================================================
+TEST SUITE: TrimioLoginTest
+TEST METHOD: testLogoutCancellation
+TIMESTAMP: 2025-08-19 16:48:55
+================================================================================
+  Should be on login page before attempting login - PASSED
+  Should navigate to dashboard after successful login - PASSED
+  Account Tab should be visible upon login - PASSED
+  Cancel button should be enabled - PASSED
+  Should still be on Account Page after canceling logout - FAILED [Screenshot: assertion-fail-1_20250819_164855.png]
+----------------------------------------
+SUMMARY: 4 PASSED, 1 FAILED, 1 SCREENSHOTS
+----------------------------------------
