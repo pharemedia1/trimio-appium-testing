@@ -12,9 +12,13 @@ import io.appium.java_client.AppiumBy;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.testng.annotations.*;
+import java.lang.reflect.Method;
 import java.net.URI;
 import java.time.Duration;
-
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.util.List;
+import java.util.ArrayList;
 
 public abstract class AppiumBase {
     protected AndroidDriver androidDriver;
@@ -37,12 +41,17 @@ public abstract class AppiumBase {
     }
 
     @BeforeMethod
-    public void setUpMethod() {
-        setUp("android");
+    public void setUpMethod(Method method) {
+        // Auto-detect platform and setup
+        String detectedPlatform = detectPlatform();
+        setUp(detectedPlatform);
+        testLogger.setCurrentTestMethod(method.getName());
+        logInfo("🔧 Starting test method: " + method.getName());
     }
 
     @AfterMethod
-    public void tearDownMethod() {
+    public void tearDownMethod(Method method) {
+        logInfo("🧹 Finishing test method: " + method.getName());
         tearDown();
         testLogger.assertAll();
     }
@@ -57,43 +66,163 @@ public abstract class AppiumBase {
         TestLogger.closeLogger();
     }
 
+    /**
+     * Auto-detect connected devices and return platform type
+     */
+    private String detectPlatform() {
+        try {
+            logInfo("🔍 Auto-detecting connected devices...");
+
+            // Check for Android devices
+            List<String> androidDevices = getAndroidDevices();
+            logInfo("Found " + androidDevices.size() + " Android device(s): " + androidDevices);
+
+            // Check for iOS devices
+            List<String> iosDevices = getIOSDevices();
+            logInfo("Found " + iosDevices.size() + " iOS device(s): " + iosDevices);
+
+            // Decide which platform to use
+            if (!androidDevices.isEmpty() && !iosDevices.isEmpty()) {
+                logInfo("⚠️ Both Android and iOS devices found. Defaulting to Android.");
+                return "android";
+            } else if (!androidDevices.isEmpty()) {
+                logInfo("✅ Using Android device: " + androidDevices.get(0));
+                return "android";
+            } else if (!iosDevices.isEmpty()) {
+                logInfo("✅ Using iOS device: " + iosDevices.get(0));
+                return "ios";
+            } else {
+                logInfo("❌ No devices found. Defaulting to Android emulator.");
+                return "android";
+            }
+
+        } catch (Exception e) {
+            logError("Error detecting platform: " + e.getMessage());
+            logInfo("Defaulting to Android");
+            return "android";
+        }
+    }
+
+    /**
+     * Get list of connected Android devices
+     */
+    private List<String> getAndroidDevices() {
+        List<String> devices = new ArrayList<>();
+        try {
+            Process process = Runtime.getRuntime().exec("adb devices");
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (line.contains("device") && !line.contains("List of devices")) {
+                    String deviceId = line.split("\\s+")[0];
+                    devices.add(deviceId);
+                }
+            }
+            process.waitFor();
+        } catch (Exception e) {
+            logError("Error checking Android devices: " + e.getMessage());
+        }
+        return devices;
+    }
+
+    /**
+     * Get list of connected iOS devices/simulators
+     */
+    private List<String> getIOSDevices() {
+        List<String> devices = new ArrayList<>();
+        try {
+            // Check for iOS simulators
+            Process process = Runtime.getRuntime().exec("xcrun simctl list devices --json");
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+
+            String line;
+            StringBuilder output = new StringBuilder();
+            while ((line = reader.readLine()) != null) {
+                output.append(line);
+            }
+
+            // Simple check for "Booted" simulators
+            if (output.toString().contains("Booted")) {
+                devices.add("iOS Simulator");
+            }
+
+            process.waitFor();
+        } catch (Exception e) {
+            // xcrun not available (probably not on Mac)
+            logInfo("iOS detection not available (not on Mac or Xcode not installed)");
+        }
+        return devices;
+    }
+
     public void setUp() {
-        setUp("android");
+        setUp("android"); // Fallback
     }
 
     public void setUp(String platform) {
         this.platform = platform.toLowerCase();
         try {
+            URI appiumServerURI = URI.create("http://127.0.0.1:4723");
+
             if ("android".equals(this.platform)) {
-                UiAutomator2Options options = new UiAutomator2Options();
-                options.setPlatformName("Android");
-                options.setDeviceName("emulator-5554");
-                options.setAutomationName("UiAutomator2");
-                options.setNoReset(true);
-
-                androidDriver = new AndroidDriver(URI.create("http://127.0.0.1:4723").toURL(), options);
-                webDriver = androidDriver;
-
+                setupAndroidDriver(appiumServerURI);
             } else if ("ios".equals(this.platform)) {
-                XCUITestOptions options = new XCUITestOptions();
-                options.setPlatformName("iOS");
-                options.setDeviceName("iPhone 16 Pro Max");
-                options.setAutomationName("XCUITest");
-                options.setBundleId("com.trimio.tests");
-                options.setNoReset(true);
-
-                iosDriver = new IOSDriver(URI.create("http://127.0.0.1:4723").toURL(), options);
-                webDriver = iosDriver;
+                setupIOSDriver(appiumServerURI);
+            } else {
+                logError("Unknown platform: " + platform + ". Defaulting to Android.");
+                setupAndroidDriver(appiumServerURI);
             }
 
             wait = new WebDriverWait(webDriver, Duration.ofSeconds(10));
-            logInfo("✅ Driver initialized successfully");
-            TestLogger.setDriver(webDriver); // Sets driver to whatever is being used in AppiumBase
+            TestLogger.setDriver(webDriver);
+            logInfo("✅ " + platform.toUpperCase() + " driver initialized successfully");
 
         } catch (Exception e) {
             logError("Failed to initialize driver: " + e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    private void setupAndroidDriver(URI appiumServerURI) throws Exception {
+        UiAutomator2Options options = new UiAutomator2Options();
+        options.setPlatformName("Android");
+
+        // Try to get actual device name
+        List<String> androidDevices = getAndroidDevices();
+        if (!androidDevices.isEmpty()) {
+            options.setDeviceName(androidDevices.get(0));
+            logInfo("Using Android device: " + androidDevices.get(0));
+        } else {
+            options.setDeviceName("emulator-5554"); // Default
+            logInfo("Using default Android emulator");
+        }
+
+        options.setAutomationName("UiAutomator2");
+        options.setNoReset(true);
+
+        // Add your app package if testing specific app
+        // options.setAppPackage("com.your.app.package");
+        // options.setAppActivity("com.your.app.MainActivity");
+
+        androidDriver = new AndroidDriver(appiumServerURI.toURL(), options);
+        webDriver = androidDriver;
+    }
+
+    private void setupIOSDriver(URI appiumServerURI) throws Exception {
+        XCUITestOptions options = new XCUITestOptions();
+        options.setPlatformName("iOS");
+        options.setDeviceName("iPhone 15 Simulator"); // Default simulator
+        options.setAutomationName("XCUITest");
+        options.setNoReset(true);
+
+        // Add your app bundle ID if testing specific app
+        // options.setBundleId("com.your.app.bundle");
+
+        // For simulator
+        options.setPlatformVersion("17.0"); // Adjust to your iOS version
+
+        iosDriver = new IOSDriver(appiumServerURI.toURL(), options);
+        webDriver = iosDriver;
     }
 
     public void tearDown() {
@@ -151,7 +280,7 @@ public abstract class AppiumBase {
     protected void assertLoginFailure() {
         assertElementPresent(AppiumBy.xpath("//*[contains(@content-desc, 'Welcome') or contains(@content-desc, 'Luxury beauty')]"),
                 "Should remain on login screen after failed login");
-        assertElementPresent(AppiumBy.accessibilityId("login_error_message"),
+        assertElementPresent(AppiumBy.xpath("//*[contains(@content-desc, 'login_error_message') or contains(@content-desc, 'error')]"),
                 "Error message should appear for invalid credentials");
     }
 
