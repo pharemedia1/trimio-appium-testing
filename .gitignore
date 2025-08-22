@@ -13,6 +13,9 @@ build/
 *.iws
 *.ipr
 
+# Misc
+src/test/java/com/trimio/tests/TestCaseReports/screenshots/
+
 # VS Code
 .vscode/
 
