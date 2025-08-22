@@ -599,3 +599,84 @@ Session ID: 771afbfc-d200-45fd-95ef-1503ac2397a2 - FAILED [Screenshot: assertion
 ----------------------------------------
 SUMMARY: 0 PASSED, 10 FAILED, 10 SCREENSHOTS
 ----------------------------------------
+
+================================================================================
+TEST SUITE: TrimioLoginTest
+TEST METHOD: testPositiveLoginAllUserTypes
+TIMESTAMP: 2025-08-22 16:44:29
+================================================================================
+  Should be on login page before attempting login - FAILED [Screenshot: assertion-fail-1_20250822_164424.png]
+  Could not find email and password text fields - FAILED [Screenshot: assertion-fail-2_20250822_164424.png]
+  Should navigate to dashboard after successful login - FAILED [Screenshot: assertion-fail-3_20250822_164424.png]
+  Account Tab should be visible upon login - FAILED [Screenshot: assertion-fail-4_20250822_164424.png]
+  Logout failed: An element could not be located on the page using the given search parameters.
+For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#no-such-element-exception
+Build info: version: '4.34.0', revision: '707dcb4246*'
+System info: os.name: 'Mac OS X', os.arch: 'aarch64', os.version: '15.1.1', java.version: '17.0.15'
+Driver info: io.appium.java_client.ios.IOSDriver
+Command: [407a8f11-1615-48b4-83d5-e273516e0ecc, findElement {using=xpath, value=//*[contains(@content-desc, 'Account') or contains(@content-desc, 'account')]}]
+Capabilities {appium:automationName: XCUITest, appium:databaseEnabled: false, appium:deviceName: iPhone 16 Pro Max, appium:javascriptEnabled: true, appium:locationContextEnabled: false, appium:networkConnectionEnabled: false, appium:noReset: true, appium:platformVersion: 18.2, appium:takesScreenshot: true, appium:udid: 81C71267-9692-4AF7-91A0-D4F..., appium:webStorageEnabled: false, platformName: IOS}
+Session ID: 407a8f11-1615-48b4-83d5-e273516e0ecc - FAILED [Screenshot: assertion-fail-5_20250822_164424.png]
+  Should be on login page before attempting login - FAILED [Screenshot: assertion-fail-6_20250822_164426.png]
+  Could not find email and password text fields - FAILED [Screenshot: assertion-fail-7_20250822_164426.png]
+  Should navigate to dashboard after successful login - FAILED [Screenshot: assertion-fail-8_20250822_164426.png]
+  Account Tab should be visible upon login - FAILED [Screenshot: assertion-fail-9_20250822_164426.png]
+  Logout failed: An element could not be located on the page using the given search parameters.
+For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#no-such-element-exception
+Build info: version: '4.34.0', revision: '707dcb4246*'
+System info: os.name: 'Mac OS X', os.arch: 'aarch64', os.version: '15.1.1', java.version: '17.0.15'
+Driver info: io.appium.java_client.ios.IOSDriver
+Command: [407a8f11-1615-48b4-83d5-e273516e0ecc, findElement {using=xpath, value=//*[contains(@content-desc, 'Account') or contains(@content-desc, 'account')]}]
+Capabilities {appium:automationName: XCUITest, appium:databaseEnabled: false, appium:deviceName: iPhone 16 Pro Max, appium:javascriptEnabled: true, appium:locationContextEnabled: false, appium:networkConnectionEnabled: false, appium:noReset: true, appium:platformVersion: 18.2, appium:takesScreenshot: true, appium:udid: 81C71267-9692-4AF7-91A0-D4F..., appium:webStorageEnabled: false, platformName: IOS}
+Session ID: 407a8f11-1615-48b4-83d5-e273516e0ecc - FAILED [Screenshot: assertion-fail-10_20250822_164427.png]
+----------------------------------------
+SUMMARY: 0 PASSED, 10 FAILED, 10 SCREENSHOTS
+----------------------------------------
+
+================================================================================
+TEST SUITE: TrimioLoginTest
+TEST METHOD: testPositiveLoginAllUserTypes
+TIMESTAMP: 2025-08-22 16:47:11
+================================================================================
+  Should be on login page before attempting login - PASSED
+  Should navigate to dashboard after successful login - PASSED
+  Account Tab should be visible upon login - PASSED
+  Logout confirmation dialog should appear - PASSED
+  Should return to login page after successful logout - PASSED
+  Should be on login page before attempting login - PASSED
+  Should navigate to dashboard after successful login - PASSED
+  Account Tab should be visible upon login - PASSED
+  Logout confirmation dialog should appear - PASSED
+  Should return to login page after successful logout - PASSED
+----------------------------------------
+SUMMARY: 10 PASSED, 0 FAILED, 0 SCREENSHOTS
+----------------------------------------
+
+================================================================================
+TEST SUITE: TrimioLoginTest
+TEST METHOD: testNegativeLogin
+TIMESTAMP: 2025-08-22 16:47:40
+================================================================================
+  Should remain on login screen after failed login - PASSED
+  Error message should appear for invalid credentials - PASSED
+  Should remain on login screen after failed login - PASSED
+  Error message should appear for invalid credentials - PASSED
+  Should remain on login screen after failed login - PASSED
+  Inline error message should appear for empty required field - PASSED
+----------------------------------------
+SUMMARY: 6 PASSED, 0 FAILED, 0 SCREENSHOTS
+----------------------------------------
+
+================================================================================
+TEST SUITE: TrimioLoginTest
+TEST METHOD: testLogoutCancellation
+TIMESTAMP: 2025-08-22 16:48:14
+================================================================================
+  Should be on login page before attempting login - PASSED
+  Should navigate to dashboard after successful login - PASSED
+  Account Tab should be visible upon login - PASSED
+  Cancel button should be enabled - PASSED
+  Should still be on Account Page after canceling logout - PASSED
+----------------------------------------
+SUMMARY: 5 PASSED, 0 FAILED, 0 SCREENSHOTS
+----------------------------------------
