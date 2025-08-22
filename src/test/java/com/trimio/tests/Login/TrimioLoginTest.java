@@ -2,12 +2,17 @@ package com.trimio.tests.Login;
 
 import com.trimio.tests.Base.AppiumBase;
 import io.appium.java_client.AppiumBy;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.annotations.*;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import java.util.List;
 
 public class TrimioLoginTest extends AppiumBase {
+
+
 
     @Test(description = "Test successful login for all user types", priority = 1)
     public void testPositiveLoginAllUserTypes() {
@@ -97,6 +102,10 @@ public class TrimioLoginTest extends AppiumBase {
                 textFields.get(1).sendKeys(PASSWORD);
                 logInfo("Password entered");
 
+                // Hide Keyboard
+                hideKeyboard();
+                Thread.sleep(1000); // Allow time for the keyboard to go away
+
                 // Click login button using generic approach
                 WebElement loginButton = findLoginButton();
                 loginButton.click();
@@ -133,15 +142,19 @@ public class TrimioLoginTest extends AppiumBase {
     private WebElement findLoginButton() {
         // Try content-desc first (works for both platforms)
         try {
+            logInfo("Locating Login button by xPath content-desc");
             return webDriver.findElement(
                     AppiumBy.xpath("//*[contains(@content-desc, 'login') or contains(@content-desc, 'LOGIN')]")
             );
         } catch (Exception e) {
+            logError("XPath failed. Could not locate.");
             // Platform-specific fallback
             if ("android".equals(platform)) {
+                logInfo("Locating login button by android widgets");
                 return webDriver.findElement(AppiumBy.className("android.widget.Button"));
             } else {
-                return webDriver.findElement(AppiumBy.className("XCUIElementTypeButton"));
+                logInfo("Locating button by xpath text element and clickable attr.");
+                return webDriver.findElement(AppiumBy.xpath("//*[@text='Login' and @clickable='true']"));
             }
         }
     }
@@ -197,6 +210,7 @@ public class TrimioLoginTest extends AppiumBase {
                 textFields.get(1).clear();
                 textFields.get(1).sendKeys(password);
 
+                hideKeyboard();
                 WebElement loginButton = findLoginButton();
                 loginButton.click();
 

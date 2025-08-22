@@ -331,3 +331,271 @@ Session ID: dbebf6e6-8ba9-40b0-9215-7d92ae803edc - FAILED [Screenshot: assertion
 ----------------------------------------
 SUMMARY: 0 PASSED, 10 FAILED, 10 SCREENSHOTS
 ----------------------------------------
+
+================================================================================
+TEST SUITE: TrimioLoginTest
+TEST METHOD: testPositiveLoginAllUserTypes
+TIMESTAMP: 2025-08-22 16:04:51
+================================================================================
+  Should be on login page before attempting login - FAILED [Screenshot: assertion-fail-1_20250822_160432.png]
+  Should navigate to dashboard after successful login - FAILED [Screenshot: assertion-fail-2_20250822_160439.png]
+  Account Tab should be visible upon login - FAILED [Screenshot: assertion-fail-3_20250822_160439.png]
+  Logout failed: An element could not be located on the page using the given search parameters.
+For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#no-such-element-exception
+Build info: version: '4.34.0', revision: '707dcb4246*'
+System info: os.name: 'Mac OS X', os.arch: 'aarch64', os.version: '15.1.1', java.version: '17.0.15'
+Driver info: io.appium.java_client.ios.IOSDriver
+Command: [1194e47d-efa3-4adb-a51d-f5d6923a8c9f, findElement {value=//*[contains(@content-desc, 'Account') or contains(@content-desc, 'account')], using=xpath}]
+Capabilities {appium:automationName: XCUITest, appium:databaseEnabled: false, appium:deviceName: iPhone 16 Pro Max, appium:javascriptEnabled: true, appium:locationContextEnabled: false, appium:networkConnectionEnabled: false, appium:noReset: true, appium:platformVersion: 18.2, appium:takesScreenshot: true, appium:udid: 81C71267-9692-4AF7-91A0-D4F..., appium:webStorageEnabled: false, platformName: IOS}
+Session ID: 1194e47d-efa3-4adb-a51d-f5d6923a8c9f - FAILED [Screenshot: assertion-fail-4_20250822_160439.png]
+  Should be on login page before attempting login - FAILED [Screenshot: assertion-fail-5_20250822_160442.png]
+  Should navigate to dashboard after successful login - FAILED [Screenshot: assertion-fail-6_20250822_160449.png]
+  Account Tab should be visible upon login - FAILED [Screenshot: assertion-fail-7_20250822_160449.png]
+  Logout failed: An element could not be located on the page using the given search parameters.
+For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#no-such-element-exception
+Build info: version: '4.34.0', revision: '707dcb4246*'
+System info: os.name: 'Mac OS X', os.arch: 'aarch64', os.version: '15.1.1', java.version: '17.0.15'
+Driver info: io.appium.java_client.ios.IOSDriver
+Command: [1194e47d-efa3-4adb-a51d-f5d6923a8c9f, findElement {value=//*[contains(@content-desc, 'Account') or contains(@content-desc, 'account')], using=xpath}]
+Capabilities {appium:automationName: XCUITest, appium:databaseEnabled: false, appium:deviceName: iPhone 16 Pro Max, appium:javascriptEnabled: true, appium:locationContextEnabled: false, appium:networkConnectionEnabled: false, appium:noReset: true, appium:platformVersion: 18.2, appium:takesScreenshot: true, appium:udid: 81C71267-9692-4AF7-91A0-D4F..., appium:webStorageEnabled: false, platformName: IOS}
+Session ID: 1194e47d-efa3-4adb-a51d-f5d6923a8c9f - FAILED [Screenshot: assertion-fail-8_20250822_160449.png]
+----------------------------------------
+SUMMARY: 0 PASSED, 8 FAILED, 8 SCREENSHOTS
+----------------------------------------
+
+================================================================================
+TEST SUITE: TrimioLoginTest
+TEST METHOD: testPositiveLoginAllUserTypes
+TIMESTAMP: 2025-08-22 16:12:03
+================================================================================
+  Should be on login page before attempting login - FAILED [Screenshot: assertion-fail-1_20250822_161150.png]
+  Should navigate to dashboard after successful login - FAILED [Screenshot: assertion-fail-2_20250822_161158.png]
+  Account Tab should be visible upon login - FAILED [Screenshot: assertion-fail-3_20250822_161158.png]
+  Logout failed: An element could not be located on the page using the given search parameters.
+For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#no-such-element-exception
+Build info: version: '4.34.0', revision: '707dcb4246*'
+System info: os.name: 'Mac OS X', os.arch: 'aarch64', os.version: '15.1.1', java.version: '17.0.15'
+Driver info: io.appium.java_client.ios.IOSDriver
+Command: [77d51a38-e245-49f0-b593-a2149afbb60f, findElement {using=xpath, value=//*[contains(@content-desc, 'Account') or contains(@content-desc, 'account')]}]
+Capabilities {appium:automationName: XCUITest, appium:databaseEnabled: false, appium:deviceName: iPhone 16 Pro Max, appium:javascriptEnabled: true, appium:locationContextEnabled: false, appium:networkConnectionEnabled: false, appium:noReset: true, appium:platformVersion: 18.2, appium:takesScreenshot: true, appium:udid: 81C71267-9692-4AF7-91A0-D4F..., appium:webStorageEnabled: false, platformName: IOS}
+Session ID: 77d51a38-e245-49f0-b593-a2149afbb60f - FAILED [Screenshot: assertion-fail-4_20250822_161158.png]
+  Should be on login page before attempting login - FAILED [Screenshot: assertion-fail-5_20250822_161200.png]
+  Could not find email and password text fields - FAILED [Screenshot: assertion-fail-6_20250822_161201.png]
+  Should navigate to dashboard after successful login - FAILED [Screenshot: assertion-fail-7_20250822_161201.png]
+  Account Tab should be visible upon login - FAILED [Screenshot: assertion-fail-8_20250822_161201.png]
+  Logout failed: An element could not be located on the page using the given search parameters.
+For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#no-such-element-exception
+Build info: version: '4.34.0', revision: '707dcb4246*'
+System info: os.name: 'Mac OS X', os.arch: 'aarch64', os.version: '15.1.1', java.version: '17.0.15'
+Driver info: io.appium.java_client.ios.IOSDriver
+Command: [77d51a38-e245-49f0-b593-a2149afbb60f, findElement {using=xpath, value=//*[contains(@content-desc, 'Account') or contains(@content-desc, 'account')]}]
+Capabilities {appium:automationName: XCUITest, appium:databaseEnabled: false, appium:deviceName: iPhone 16 Pro Max, appium:javascriptEnabled: true, appium:locationContextEnabled: false, appium:networkConnectionEnabled: false, appium:noReset: true, appium:platformVersion: 18.2, appium:takesScreenshot: true, appium:udid: 81C71267-9692-4AF7-91A0-D4F..., appium:webStorageEnabled: false, platformName: IOS}
+Session ID: 77d51a38-e245-49f0-b593-a2149afbb60f - FAILED [Screenshot: assertion-fail-9_20250822_161201.png]
+----------------------------------------
+SUMMARY: 0 PASSED, 9 FAILED, 9 SCREENSHOTS
+----------------------------------------
+
+================================================================================
+TEST SUITE: TrimioLoginTest
+TEST METHOD: testPositiveLoginAllUserTypes
+TIMESTAMP: 2025-08-22 16:15:04
+================================================================================
+  Should be on login page before attempting login - FAILED [Screenshot: assertion-fail-1_20250822_161451.png]
+  Should navigate to dashboard after successful login - FAILED [Screenshot: assertion-fail-2_20250822_161500.png]
+  Account Tab should be visible upon login - FAILED [Screenshot: assertion-fail-3_20250822_161500.png]
+  Logout failed: An element could not be located on the page using the given search parameters.
+For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#no-such-element-exception
+Build info: version: '4.34.0', revision: '707dcb4246*'
+System info: os.name: 'Mac OS X', os.arch: 'aarch64', os.version: '15.1.1', java.version: '17.0.15'
+Driver info: io.appium.java_client.ios.IOSDriver
+Command: [dd616c3b-2e08-43e1-9682-5c723ba07811, findElement {using=xpath, value=//*[contains(@content-desc, 'Account') or contains(@content-desc, 'account')]}]
+Capabilities {appium:automationName: XCUITest, appium:databaseEnabled: false, appium:deviceName: iPhone 16 Pro Max, appium:javascriptEnabled: true, appium:locationContextEnabled: false, appium:networkConnectionEnabled: false, appium:noReset: true, appium:platformVersion: 18.2, appium:takesScreenshot: true, appium:udid: 81C71267-9692-4AF7-91A0-D4F..., appium:webStorageEnabled: false, platformName: IOS}
+Session ID: dd616c3b-2e08-43e1-9682-5c723ba07811 - FAILED [Screenshot: assertion-fail-4_20250822_161500.png]
+  Should be on login page before attempting login - FAILED [Screenshot: assertion-fail-5_20250822_161502.png]
+  Could not find email and password text fields - FAILED [Screenshot: assertion-fail-6_20250822_161502.png]
+  Should navigate to dashboard after successful login - FAILED [Screenshot: assertion-fail-7_20250822_161502.png]
+  Account Tab should be visible upon login - FAILED [Screenshot: assertion-fail-8_20250822_161502.png]
+  Logout failed: An element could not be located on the page using the given search parameters.
+For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#no-such-element-exception
+Build info: version: '4.34.0', revision: '707dcb4246*'
+System info: os.name: 'Mac OS X', os.arch: 'aarch64', os.version: '15.1.1', java.version: '17.0.15'
+Driver info: io.appium.java_client.ios.IOSDriver
+Command: [dd616c3b-2e08-43e1-9682-5c723ba07811, findElement {using=xpath, value=//*[contains(@content-desc, 'Account') or contains(@content-desc, 'account')]}]
+Capabilities {appium:automationName: XCUITest, appium:databaseEnabled: false, appium:deviceName: iPhone 16 Pro Max, appium:javascriptEnabled: true, appium:locationContextEnabled: false, appium:networkConnectionEnabled: false, appium:noReset: true, appium:platformVersion: 18.2, appium:takesScreenshot: true, appium:udid: 81C71267-9692-4AF7-91A0-D4F..., appium:webStorageEnabled: false, platformName: IOS}
+Session ID: dd616c3b-2e08-43e1-9682-5c723ba07811 - FAILED [Screenshot: assertion-fail-9_20250822_161502.png]
+----------------------------------------
+SUMMARY: 0 PASSED, 9 FAILED, 9 SCREENSHOTS
+----------------------------------------
+
+================================================================================
+TEST SUITE: TrimioLoginTest
+TEST METHOD: testPositiveLoginAllUserTypes
+TIMESTAMP: 2025-08-22 16:19:43
+================================================================================
+----------------------------------------
+SUMMARY: 0 PASSED, 0 FAILED, 0 SCREENSHOTS
+----------------------------------------
+
+================================================================================
+TEST SUITE: TrimioLoginTest
+TEST METHOD: testPositiveLoginAllUserTypes
+TIMESTAMP: 2025-08-22 16:23:10
+================================================================================
+----------------------------------------
+SUMMARY: 0 PASSED, 0 FAILED, 0 SCREENSHOTS
+----------------------------------------
+
+================================================================================
+TEST SUITE: TrimioLoginTest
+TEST METHOD: testPositiveLoginAllUserTypes
+TIMESTAMP: 2025-08-22 16:26:02
+================================================================================
+  Should be on login page before attempting login - FAILED [Screenshot: assertion-fail-1_20250822_162548.png]
+  Should navigate to dashboard after successful login - FAILED [Screenshot: assertion-fail-2_20250822_162557.png]
+  Account Tab should be visible upon login - FAILED [Screenshot: assertion-fail-3_20250822_162557.png]
+  Logout failed: An element could not be located on the page using the given search parameters.
+For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#no-such-element-exception
+Build info: version: '4.34.0', revision: '707dcb4246*'
+System info: os.name: 'Mac OS X', os.arch: 'aarch64', os.version: '15.1.1', java.version: '17.0.15'
+Driver info: io.appium.java_client.ios.IOSDriver
+Command: [b3312a74-8b26-4e41-9087-a47a71ef2fd8, findElement {using=xpath, value=//*[contains(@content-desc, 'Account') or contains(@content-desc, 'account')]}]
+Capabilities {appium:automationName: XCUITest, appium:databaseEnabled: false, appium:deviceName: iPhone 16 Pro Max, appium:javascriptEnabled: true, appium:locationContextEnabled: false, appium:networkConnectionEnabled: false, appium:noReset: true, appium:platformVersion: 18.2, appium:takesScreenshot: true, appium:udid: 81C71267-9692-4AF7-91A0-D4F..., appium:webStorageEnabled: false, platformName: IOS}
+Session ID: b3312a74-8b26-4e41-9087-a47a71ef2fd8 - FAILED [Screenshot: assertion-fail-4_20250822_162557.png]
+  Should be on login page before attempting login - FAILED [Screenshot: assertion-fail-5_20250822_162559.png]
+  Could not find email and password text fields - FAILED [Screenshot: assertion-fail-6_20250822_162559.png]
+  Should navigate to dashboard after successful login - FAILED [Screenshot: assertion-fail-7_20250822_162559.png]
+  Account Tab should be visible upon login - FAILED [Screenshot: assertion-fail-8_20250822_162600.png]
+  Logout failed: An element could not be located on the page using the given search parameters.
+For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#no-such-element-exception
+Build info: version: '4.34.0', revision: '707dcb4246*'
+System info: os.name: 'Mac OS X', os.arch: 'aarch64', os.version: '15.1.1', java.version: '17.0.15'
+Driver info: io.appium.java_client.ios.IOSDriver
+Command: [b3312a74-8b26-4e41-9087-a47a71ef2fd8, findElement {using=xpath, value=//*[contains(@content-desc, 'Account') or contains(@content-desc, 'account')]}]
+Capabilities {appium:automationName: XCUITest, appium:databaseEnabled: false, appium:deviceName: iPhone 16 Pro Max, appium:javascriptEnabled: true, appium:locationContextEnabled: false, appium:networkConnectionEnabled: false, appium:noReset: true, appium:platformVersion: 18.2, appium:takesScreenshot: true, appium:udid: 81C71267-9692-4AF7-91A0-D4F..., appium:webStorageEnabled: false, platformName: IOS}
+Session ID: b3312a74-8b26-4e41-9087-a47a71ef2fd8 - FAILED [Screenshot: assertion-fail-9_20250822_162600.png]
+----------------------------------------
+SUMMARY: 0 PASSED, 9 FAILED, 9 SCREENSHOTS
+----------------------------------------
+
+================================================================================
+TEST SUITE: TrimioLoginTest
+TEST METHOD: testPositiveLoginAllUserTypes
+TIMESTAMP: 2025-08-22 16:41:34
+================================================================================
+  Should be on login page before attempting login - FAILED [Screenshot: assertion-fail-1_20250822_164125.png]
+  Login failed with exception: The previously found element ""Password" TextField" is not present in the current view anymore. Make sure the application UI has the expected state. You could also try to switch the binding strategy using the 'boundElementsByIndex' setting for the element lookup. Original error: No matches found for Identity Binding from input {(
+    TextField
+)}
+For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#stale-element-reference-exception
+Build info: version: '4.34.0', revision: '707dcb4246*'
+System info: os.name: 'Mac OS X', os.arch: 'aarch64', os.version: '15.1.1', java.version: '17.0.15'
+Driver info: io.appium.java_client.ios.IOSDriver
+Command: [b77f8a34-e2ec-4b6e-8d00-04d6830c73bc, clearElement {id=8A050000-0000-0000-B861-000000000000}]
+Capabilities {appium:automationName: XCUITest, appium:databaseEnabled: false, appium:deviceName: iPhone 16 Pro Max, appium:javascriptEnabled: true, appium:locationContextEnabled: false, appium:networkConnectionEnabled: false, appium:noReset: true, appium:platformVersion: 18.2, appium:takesScreenshot: true, appium:udid: 81C71267-9692-4AF7-91A0-D4F..., appium:webStorageEnabled: false, platformName: IOS}
+Element: [[IOSDriver:  on IOS (b77f8a34-e2ec-4b6e-8d00-04d6830c73bc)] -> class name: XCUIElementTypeTextField]
+Session ID: b77f8a34-e2ec-4b6e-8d00-04d6830c73bc - FAILED [Screenshot: assertion-fail-2_20250822_164129.png]
+  Should navigate to dashboard after successful login - FAILED [Screenshot: assertion-fail-3_20250822_164129.png]
+  Account Tab should be visible upon login - FAILED [Screenshot: assertion-fail-4_20250822_164130.png]
+  Logout failed: An element could not be located on the page using the given search parameters.
+For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#no-such-element-exception
+Build info: version: '4.34.0', revision: '707dcb4246*'
+System info: os.name: 'Mac OS X', os.arch: 'aarch64', os.version: '15.1.1', java.version: '17.0.15'
+Driver info: io.appium.java_client.ios.IOSDriver
+Command: [b77f8a34-e2ec-4b6e-8d00-04d6830c73bc, findElement {value=//*[contains(@content-desc, 'Account') or contains(@content-desc, 'account')], using=xpath}]
+Capabilities {appium:automationName: XCUITest, appium:databaseEnabled: false, appium:deviceName: iPhone 16 Pro Max, appium:javascriptEnabled: true, appium:locationContextEnabled: false, appium:networkConnectionEnabled: false, appium:noReset: true, appium:platformVersion: 18.2, appium:takesScreenshot: true, appium:udid: 81C71267-9692-4AF7-91A0-D4F..., appium:webStorageEnabled: false, platformName: IOS}
+Session ID: b77f8a34-e2ec-4b6e-8d00-04d6830c73bc - FAILED [Screenshot: assertion-fail-5_20250822_164130.png]
+  Should be on login page before attempting login - FAILED [Screenshot: assertion-fail-6_20250822_164132.png]
+  Could not find email and password text fields - FAILED [Screenshot: assertion-fail-7_20250822_164132.png]
+  Should navigate to dashboard after successful login - FAILED [Screenshot: assertion-fail-8_20250822_164132.png]
+  Account Tab should be visible upon login - FAILED [Screenshot: assertion-fail-9_20250822_164132.png]
+  Logout failed: An element could not be located on the page using the given search parameters.
+For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#no-such-element-exception
+Build info: version: '4.34.0', revision: '707dcb4246*'
+System info: os.name: 'Mac OS X', os.arch: 'aarch64', os.version: '15.1.1', java.version: '17.0.15'
+Driver info: io.appium.java_client.ios.IOSDriver
+Command: [b77f8a34-e2ec-4b6e-8d00-04d6830c73bc, findElement {value=//*[contains(@content-desc, 'Account') or contains(@content-desc, 'account')], using=xpath}]
+Capabilities {appium:automationName: XCUITest, appium:databaseEnabled: false, appium:deviceName: iPhone 16 Pro Max, appium:javascriptEnabled: true, appium:locationContextEnabled: false, appium:networkConnectionEnabled: false, appium:noReset: true, appium:platformVersion: 18.2, appium:takesScreenshot: true, appium:udid: 81C71267-9692-4AF7-91A0-D4F..., appium:webStorageEnabled: false, platformName: IOS}
+Session ID: b77f8a34-e2ec-4b6e-8d00-04d6830c73bc - FAILED [Screenshot: assertion-fail-10_20250822_164132.png]
+----------------------------------------
+SUMMARY: 0 PASSED, 10 FAILED, 10 SCREENSHOTS
+----------------------------------------
+
+================================================================================
+TEST SUITE: TrimioLoginTest
+TEST METHOD: testPositiveLoginAllUserTypes
+TIMESTAMP: 2025-08-22 16:42:35
+================================================================================
+  Should be on login page before attempting login - FAILED [Screenshot: assertion-fail-1_20250822_164230.png]
+  Could not find email and password text fields - FAILED [Screenshot: assertion-fail-2_20250822_164230.png]
+  Should navigate to dashboard after successful login - FAILED [Screenshot: assertion-fail-3_20250822_164230.png]
+  Account Tab should be visible upon login - FAILED [Screenshot: assertion-fail-4_20250822_164230.png]
+  Logout failed: An element could not be located on the page using the given search parameters.
+For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#no-such-element-exception
+Build info: version: '4.34.0', revision: '707dcb4246*'
+System info: os.name: 'Mac OS X', os.arch: 'aarch64', os.version: '15.1.1', java.version: '17.0.15'
+Driver info: io.appium.java_client.ios.IOSDriver
+Command: [72eab7ee-bed0-4bc4-acef-c9d6536cb2bd, findElement {value=//*[contains(@content-desc, 'Account') or contains(@content-desc, 'account')], using=xpath}]
+Capabilities {appium:automationName: XCUITest, appium:databaseEnabled: false, appium:deviceName: iPhone 16 Pro Max, appium:javascriptEnabled: true, appium:locationContextEnabled: false, appium:networkConnectionEnabled: false, appium:noReset: true, appium:platformVersion: 18.2, appium:takesScreenshot: true, appium:udid: 81C71267-9692-4AF7-91A0-D4F..., appium:webStorageEnabled: false, platformName: IOS}
+Session ID: 72eab7ee-bed0-4bc4-acef-c9d6536cb2bd - FAILED [Screenshot: assertion-fail-5_20250822_164230.png]
+  Should be on login page before attempting login - FAILED [Screenshot: assertion-fail-6_20250822_164233.png]
+  Could not find email and password text fields - FAILED [Screenshot: assertion-fail-7_20250822_164233.png]
+  Should navigate to dashboard after successful login - FAILED [Screenshot: assertion-fail-8_20250822_164233.png]
+  Account Tab should be visible upon login - FAILED [Screenshot: assertion-fail-9_20250822_164233.png]
+  Logout failed: An element could not be located on the page using the given search parameters.
+For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#no-such-element-exception
+Build info: version: '4.34.0', revision: '707dcb4246*'
+System info: os.name: 'Mac OS X', os.arch: 'aarch64', os.version: '15.1.1', java.version: '17.0.15'
+Driver info: io.appium.java_client.ios.IOSDriver
+Command: [72eab7ee-bed0-4bc4-acef-c9d6536cb2bd, findElement {value=//*[contains(@content-desc, 'Account') or contains(@content-desc, 'account')], using=xpath}]
+Capabilities {appium:automationName: XCUITest, appium:databaseEnabled: false, appium:deviceName: iPhone 16 Pro Max, appium:javascriptEnabled: true, appium:locationContextEnabled: false, appium:networkConnectionEnabled: false, appium:noReset: true, appium:platformVersion: 18.2, appium:takesScreenshot: true, appium:udid: 81C71267-9692-4AF7-91A0-D4F..., appium:webStorageEnabled: false, platformName: IOS}
+Session ID: 72eab7ee-bed0-4bc4-acef-c9d6536cb2bd - FAILED [Screenshot: assertion-fail-10_20250822_164233.png]
+----------------------------------------
+SUMMARY: 0 PASSED, 10 FAILED, 10 SCREENSHOTS
+----------------------------------------
+
+================================================================================
+TEST SUITE: TrimioLoginTest
+TEST METHOD: testPositiveLoginAllUserTypes
+TIMESTAMP: 2025-08-22 16:43:34
+================================================================================
+  Should be on login page before attempting login - FAILED [Screenshot: assertion-fail-1_20250822_164319.png]
+  Login failed with exception: An element could not be located on the page using the given search parameters.
+For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#no-such-element-exception
+Build info: version: '4.34.0', revision: '707dcb4246*'
+System info: os.name: 'Mac OS X', os.arch: 'aarch64', os.version: '15.1.1', java.version: '17.0.15'
+Driver info: io.appium.java_client.ios.IOSDriver
+Command: [771afbfc-d200-45fd-95ef-1503ac2397a2, findElement {using=xpath, value=//*[@text='Login' and @clickable='true']}]
+Capabilities {appium:automationName: XCUITest, appium:databaseEnabled: false, appium:deviceName: iPhone 16 Pro Max, appium:javascriptEnabled: true, appium:locationContextEnabled: false, appium:networkConnectionEnabled: false, appium:noReset: true, appium:platformVersion: 18.2, appium:takesScreenshot: true, appium:udid: 81C71267-9692-4AF7-91A0-D4F..., appium:webStorageEnabled: false, platformName: IOS}
+Session ID: 771afbfc-d200-45fd-95ef-1503ac2397a2 - FAILED [Screenshot: assertion-fail-2_20250822_164324.png]
+  Should navigate to dashboard after successful login - FAILED [Screenshot: assertion-fail-3_20250822_164324.png]
+  Account Tab should be visible upon login - FAILED [Screenshot: assertion-fail-4_20250822_164324.png]
+  Logout failed: An element could not be located on the page using the given search parameters.
+For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#no-such-element-exception
+Build info: version: '4.34.0', revision: '707dcb4246*'
+System info: os.name: 'Mac OS X', os.arch: 'aarch64', os.version: '15.1.1', java.version: '17.0.15'
+Driver info: io.appium.java_client.ios.IOSDriver
+Command: [771afbfc-d200-45fd-95ef-1503ac2397a2, findElement {using=xpath, value=//*[contains(@content-desc, 'Account') or contains(@content-desc, 'account')]}]
+Capabilities {appium:automationName: XCUITest, appium:databaseEnabled: false, appium:deviceName: iPhone 16 Pro Max, appium:javascriptEnabled: true, appium:locationContextEnabled: false, appium:networkConnectionEnabled: false, appium:noReset: true, appium:platformVersion: 18.2, appium:takesScreenshot: true, appium:udid: 81C71267-9692-4AF7-91A0-D4F..., appium:webStorageEnabled: false, platformName: IOS}
+Session ID: 771afbfc-d200-45fd-95ef-1503ac2397a2 - FAILED [Screenshot: assertion-fail-5_20250822_164325.png]
+  Should be on login page before attempting login - FAILED [Screenshot: assertion-fail-6_20250822_164327.png]
+  Login failed with exception: An element could not be located on the page using the given search parameters.
+For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#no-such-element-exception
+Build info: version: '4.34.0', revision: '707dcb4246*'
+System info: os.name: 'Mac OS X', os.arch: 'aarch64', os.version: '15.1.1', java.version: '17.0.15'
+Driver info: io.appium.java_client.ios.IOSDriver
+Command: [771afbfc-d200-45fd-95ef-1503ac2397a2, findElement {using=xpath, value=//*[@text='Login' and @clickable='true']}]
+Capabilities {appium:automationName: XCUITest, appium:databaseEnabled: false, appium:deviceName: iPhone 16 Pro Max, appium:javascriptEnabled: true, appium:locationContextEnabled: false, appium:networkConnectionEnabled: false, appium:noReset: true, appium:platformVersion: 18.2, appium:takesScreenshot: true, appium:udid: 81C71267-9692-4AF7-91A0-D4F..., appium:webStorageEnabled: false, platformName: IOS}
+Session ID: 771afbfc-d200-45fd-95ef-1503ac2397a2 - FAILED [Screenshot: assertion-fail-7_20250822_164332.png]
+  Should navigate to dashboard after successful login - FAILED [Screenshot: assertion-fail-8_20250822_164332.png]
+  Account Tab should be visible upon login - FAILED [Screenshot: assertion-fail-9_20250822_164332.png]
+  Logout failed: An element could not be located on the page using the given search parameters.
+For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#no-such-element-exception
+Build info: version: '4.34.0', revision: '707dcb4246*'
+System info: os.name: 'Mac OS X', os.arch: 'aarch64', os.version: '15.1.1', java.version: '17.0.15'
+Driver info: io.appium.java_client.ios.IOSDriver
+Command: [771afbfc-d200-45fd-95ef-1503ac2397a2, findElement {using=xpath, value=//*[contains(@content-desc, 'Account') or contains(@content-desc, 'account')]}]
+Capabilities {appium:automationName: XCUITest, appium:databaseEnabled: false, appium:deviceName: iPhone 16 Pro Max, appium:javascriptEnabled: true, appium:locationContextEnabled: false, appium:networkConnectionEnabled: false, appium:noReset: true, appium:platformVersion: 18.2, appium:takesScreenshot: true, appium:udid: 81C71267-9692-4AF7-91A0-D4F..., appium:webStorageEnabled: false, platformName: IOS}
+Session ID: 771afbfc-d200-45fd-95ef-1503ac2397a2 - FAILED [Screenshot: assertion-fail-10_20250822_164332.png]
+----------------------------------------
+SUMMARY: 0 PASSED, 10 FAILED, 10 SCREENSHOTS
+----------------------------------------

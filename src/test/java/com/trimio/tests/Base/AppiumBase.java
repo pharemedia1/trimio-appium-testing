@@ -310,6 +310,18 @@ public abstract class AppiumBase {
             return "";
         }
     }
+    protected void hideKeyboard() {
+        try {
+            if ("android".equals(platform) && androidDriver != null) {
+                androidDriver.hideKeyboard();
+                logInfo("Keyboard hidden");
+            } else if ("ios".equals(platform) && iosDriver != null) {
+                iosDriver.hideKeyboard();
+            }
+        } catch (Exception e) {
+            logInfo("Could not hide keyboard (may not be visible): " + e.getMessage());
+        }
+    }
 
     protected void clickElement(By locator) {
         try {
@@ -335,7 +347,7 @@ public abstract class AppiumBase {
     protected void scrollToBottomOfPage() {
         try {
             if ("android".equals(platform) && androidDriver != null) {
-                androidDriver.findElement(AppiumBy.androidUIAutomator(
+                webDriver.findElement(AppiumBy.androidUIAutomator(
                         "new UiScrollable(new UiSelector().scrollable(true)).scrollToEnd(10)"
                 ));
                 logInfo("✅ Scrolled to bottom of page");
@@ -358,7 +370,7 @@ public abstract class AppiumBase {
             System.out.println("🔍 Debugging Flutter elements...");
 
             logInfo("Searching for all Flutter View elements");
-            var views = androidDriver.findElements(AppiumBy.className("android.view.View"));
+            var views = webDriver.findElements(AppiumBy.className("android.view.View"));
             System.out.println("Found " + views.size() + " android.view.View elements");
 
             logInfo("Searching for all clickable attributes, and retrieving content descriptions");
@@ -392,7 +404,7 @@ public abstract class AppiumBase {
 
             for (String widgetClass : androidWidgets) {
                 try {
-                    var widgets = androidDriver.findElements(AppiumBy.className(widgetClass));
+                    var widgets = webDriver.findElements(AppiumBy.className(widgetClass));
                     if (!widgets.isEmpty()) {
                         System.out.println("\nFound " + widgets.size() + " " + widgetClass + " elements");
 
