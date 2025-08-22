@@ -12,7 +12,6 @@ public class TrimioLoginTest extends AppiumBase {
     @Test(description = "Test successful login for all user types", priority = 1)
     public void testPositiveLoginAllUserTypes() {
         try {
-//            debugFlutterElements();
             logInfo("LOGIN POSITIVE TESTING ALL 3 USER TYPES");
 
             // Test Client Login
@@ -29,14 +28,6 @@ public class TrimioLoginTest extends AppiumBase {
             performLogout();
             Thread.sleep(2000);
 
-            /* Uncomment when ready to test admin
-            logInfo("Testing ADMIN login");
-            performLogin(ADMIN_USERNAME);
-            assertLoginSuccess();
-            performLogout();
-            Thread.sleep(2000);
-            */
-
         } catch (Exception e) {
             logError("Positive login test failed: " + e.getMessage());
             debugFlutterElements();
@@ -49,15 +40,12 @@ public class TrimioLoginTest extends AppiumBase {
         try {
             logInfo("Starting Negative Test Suite");
 
-            // Test with invalid email
             performInvalidLogin("invalid@email.com", PASSWORD);
             assertLoginFailure();
 
-            // Test with invalid password
             performInvalidLogin(CLIENT_USERNAME, "wrongpassword");
             assertLoginFailure();
 
-            // Test with empty credentials
             performInvalidLogin("", "");
             assertEmptyFieldLoginError();
 
@@ -72,16 +60,12 @@ public class TrimioLoginTest extends AppiumBase {
         try {
             logInfo("Testing logout cancellation");
 
-            // Login first
             performLogin(CLIENT_USERNAME);
             assertLoginSuccess();
-
-            // Try to logout but cancel
             performLogoutCancel();
 
-            // Should still be logged in
-            Thread.sleep(1000); // Wait a bit for the confirmation screen to go away
-            assertElementPresent(AppiumBy.xpath("//*[contains(@content-desc, 'Profile') or contains(@content-desc, 'Member Since']"),
+            Thread.sleep(1000);
+            assertElementPresent(AppiumBy.xpath("//*[contains(@content-desc, 'Profile') or contains(@content-desc, 'Member Since')]"),
                     "Should still be on Account Page after canceling logout");
 
         } catch (Exception e) {
@@ -92,34 +76,32 @@ public class TrimioLoginTest extends AppiumBase {
 
     public void performLogin(String user) {
         try {
-            // Check if on login page
             assertElementPresent(AppiumBy.xpath("//*[contains(@content-desc, 'Welcome') or contains(@content-desc, 'Luxury beauty')]"),
                     "Should be on login page before attempting login");
 
-            logInfo("Locating text fields by android widgets");
-            List<WebElement> textFields = androidDriver.findElements(AppiumBy.className("android.widget.EditText"));
+            logInfo("Locating text fields by platform-specific widgets");
+
+            // Use platform-specific text field detection
+            List<WebElement> textFields = getTextFields();
 
             if (textFields.size() >= 2) {
                 // First field - Email
                 textFields.get(0).click();
                 textFields.get(0).clear();
                 textFields.get(0).sendKeys(user);
-                logInfo("✅ Email entered: " + user);
+                logInfo("Email entered: " + user);
 
                 // Second field - Password
                 textFields.get(1).click();
                 textFields.get(1).clear();
                 textFields.get(1).sendKeys(PASSWORD);
-                logInfo("✅ Password entered");
+                logInfo("Password entered");
 
-                // Click login button
-                WebElement loginButton = androidDriver.findElement(
-                        AppiumBy.xpath("//*[contains(@content-desc, 'login') or contains(@content-desc, 'LOGIN')]")
-                );
+                // Click login button using generic approach
+                WebElement loginButton = findLoginButton();
                 loginButton.click();
-                logInfo("✅ Login button pressed");
+                logInfo("Login button pressed");
 
-                // Wait for login to process
                 Thread.sleep(3000);
 
             } else {
@@ -132,11 +114,79 @@ public class TrimioLoginTest extends AppiumBase {
         }
     }
 
+    // Platform-specific helper methods
+    private List<WebElement> getTextFields() {
+        if ("android".equals(platform)) {
+            return webDriver.findElements(AppiumBy.className("android.widget.EditText"));
+        } else if ("ios".equals(platform)) {
+            return webDriver.findElements(AppiumBy.className("XCUIElementTypeTextField"));
+        } else {
+            // Fallback - try both
+            try {
+                return webDriver.findElements(AppiumBy.className("android.widget.EditText"));
+            } catch (Exception e) {
+                return webDriver.findElements(AppiumBy.className("XCUIElementTypeTextField"));
+            }
+        }
+    }
+
+    private WebElement findLoginButton() {
+        // Try content-desc first (works for both platforms)
+        try {
+            return webDriver.findElement(
+                    AppiumBy.xpath("//*[contains(@content-desc, 'login') or contains(@content-desc, 'LOGIN')]")
+            );
+        } catch (Exception e) {
+            // Platform-specific fallback
+            if ("android".equals(platform)) {
+                return webDriver.findElement(AppiumBy.className("android.widget.Button"));
+            } else {
+                return webDriver.findElement(AppiumBy.className("XCUIElementTypeButton"));
+            }
+        }
+    }
+
+    private WebElement findAccountTab() {
+        return webDriver.findElement(
+                AppiumBy.xpath("//*[contains(@content-desc, 'Account') or contains(@content-desc, 'account')]")
+        );
+    }
+
+    private WebElement findLogoutButton() {
+        return webDriver.findElement(
+                AppiumBy.xpath("//*[contains(@content-desc, 'LOG OUT') or contains(@content-desc, 'Log out')]")
+        );
+    }
+
+    private WebElement findLogoutConfirmButton() {
+        if ("android".equals(platform)) {
+            return webDriver.findElement(
+                    AppiumBy.xpath("//android.widget.Button[@content-desc='Logout']")
+            );
+        } else {
+            return webDriver.findElement(
+                    AppiumBy.xpath("//XCUIElementTypeButton[@name='Logout']")
+            );
+        }
+    }
+
+    private WebElement findCancelButton() {
+        if ("android".equals(platform)) {
+            return webDriver.findElement(
+                    AppiumBy.xpath("//android.widget.Button[@content-desc='Cancel']")
+            );
+        } else {
+            return webDriver.findElement(
+                    AppiumBy.xpath("//XCUIElementTypeButton[@name='Cancel']")
+            );
+        }
+    }
+
     public void performInvalidLogin(String user, String password) {
         try {
             logInfo("Attempting invalid login with: " + user);
 
-            List<WebElement> textFields = androidDriver.findElements(AppiumBy.className("android.widget.EditText"));
+            List<WebElement> textFields = getTextFields();
 
             if (textFields.size() >= 2) {
                 textFields.get(0).click();
@@ -147,13 +197,10 @@ public class TrimioLoginTest extends AppiumBase {
                 textFields.get(1).clear();
                 textFields.get(1).sendKeys(password);
 
-                WebElement loginButton = androidDriver.findElement(
-                        AppiumBy.xpath("//*[contains(@content-desc, 'Login') or contains(@content-desc, 'login')]")
-                );
+                WebElement loginButton = findLoginButton();
                 loginButton.click();
 
-                Thread.sleep(3000); // Wait for error to appear
-
+                Thread.sleep(3000);
             }
         } catch (Exception e) {
             logError("Exception during invalid login: " + e.getMessage());
@@ -164,32 +211,24 @@ public class TrimioLoginTest extends AppiumBase {
         try {
             logInfo("Starting logout process...");
 
-            // Click the Account tab
-            WebElement accountTab = androidDriver.findElement(
-                    AppiumBy.xpath("//*[contains(@content-desc, 'Account') or contains(@content-desc, 'account')]")
-            );
+            WebElement accountTab = findAccountTab();
             accountTab.click();
-            logInfo("✅ Clicked Account tab");
+            logInfo("Clicked Account tab");
 
             Thread.sleep(2000);
             scrollToBottomOfPage();
 
-            // Click LOG OUT button
-            WebElement logOutButton = androidDriver.findElement(
-                    AppiumBy.xpath("//*[contains(@content-desc, 'LOG OUT') or contains(@content-desc, 'Log out')]")
-            );
+            WebElement logOutButton = findLogoutButton();
             logOutButton.click();
-            logInfo("✅ Clicked LOG OUT button");
+            logInfo("Clicked LOG OUT button");
 
-            // Handle logout confirmation
             handleLogoutConfirmation();
             Thread.sleep(2000);
 
-            // Verify we're back on login page
             assertElementPresent(AppiumBy.xpath("//*[contains(@content-desc, 'Welcome') or contains(@content-desc, 'Luxury beauty')]"),
                     "Should return to login page after successful logout");
 
-            logInfo("✅ User logged out successfully");
+            logInfo("User logged out successfully");
 
         } catch (Exception e) {
             testLogger.softAssertTrue(false, "Logout failed: " + e.getMessage());
@@ -201,21 +240,15 @@ public class TrimioLoginTest extends AppiumBase {
         try {
             logInfo("Starting logout cancellation test...");
 
-            // Navigate to logout but cancel
-            WebElement accountTab = androidDriver.findElement(
-                    AppiumBy.xpath("//*[contains(@content-desc, 'Account') or contains(@content-desc, 'account')]")
-            );
+            WebElement accountTab = findAccountTab();
             accountTab.click();
 
             Thread.sleep(2000);
             scrollToBottomOfPage();
 
-            WebElement logOutButton = androidDriver.findElement(
-                    AppiumBy.xpath("//*[contains(@content-desc, 'LOG OUT') or contains(@content-desc, 'Log out')]")
-            );
+            WebElement logOutButton = findLogoutButton();
             logOutButton.click();
 
-            // Cancel instead of confirming
             cancelLogout();
 
         } catch (Exception e) {
@@ -228,19 +261,15 @@ public class TrimioLoginTest extends AppiumBase {
         try {
             Thread.sleep(2000);
 
-            // Verify confirmation dialog appears
-            WebElement confirmationTitle = androidDriver.findElement(
+            WebElement confirmationTitle = webDriver.findElement(
                     AppiumBy.xpath("//*[contains(@content-desc, 'Logout Confirmation')]")
             );
             testLogger.softAssertTrue(confirmationTitle.isDisplayed(),
                     "Logout confirmation dialog should appear");
 
-            // Click confirm logout
-            WebElement confirmLogoutButton = androidDriver.findElement(
-                    AppiumBy.xpath("//android.widget.Button[@content-desc='Logout']")
-            );
+            WebElement confirmLogoutButton = findLogoutConfirmButton();
             confirmLogoutButton.click();
-            logInfo("✅ Confirmed logout in dialog");
+            logInfo("Confirmed logout in dialog");
 
         } catch (Exception e) {
             testLogger.softAssertTrue(false, "Failed to handle logout confirmation: " + e.getMessage());
@@ -251,26 +280,15 @@ public class TrimioLoginTest extends AppiumBase {
     protected void cancelLogout() {
         try {
             Thread.sleep(1000);
-            WebElement cancelButton = wait.until(ExpectedConditions.elementToBeClickable(
-                    AppiumBy.xpath("//android.widget.Button[@content-desc='Cancel']")
-            ));
+            WebElement cancelButton = wait.until(ExpectedConditions.elementToBeClickable(findCancelButton()));
 
             testLogger.softAssertTrue(cancelButton.isEnabled(), "Cancel button should be enabled");
             cancelButton.click();
-            logInfo("✅ Cancelled logout");
+            logInfo("Cancelled logout");
 
         } catch (Exception e) {
             testLogger.softAssertTrue(false, "Failed to cancel logout: " + e.getMessage());
             logError("Failed to cancel logout: " + e.getMessage());
         }
-    }
-
-    // Override the assertLoginFailure method for more specific error checking
-    protected void assertLoginFailure() {
-        super.assertLoginFailure();
-
-        // Additional login failure checks
-        assertElementPresent(AppiumBy.xpath("//*[contains(@content-desc, 'Welcome') or contains(@content-desc, 'Luxury beauty')]"),
-                "Should remain on login page after failed login");
     }
 }

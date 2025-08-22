@@ -246,3 +246,88 @@ TIMESTAMP: 2025-08-19 16:48:55
 ----------------------------------------
 SUMMARY: 4 PASSED, 1 FAILED, 1 SCREENSHOTS
 ----------------------------------------
+
+================================================================================
+TEST SUITE: TrimioLoginTest
+TEST METHOD: testPositiveLoginAllUserTypes
+TIMESTAMP: 2025-08-22 15:27:49
+================================================================================
+  Should be on login page before attempting login - FAILED
+  Login failed with exception: Cannot invoke "io.appium.java_client.android.AndroidDriver.findElements(org.openqa.selenium.By)" because "this.androidDriver" is null - FAILED
+  Should navigate to dashboard after successful login - FAILED
+  Account Tab should be visible upon login - FAILED
+  Logout failed: Cannot invoke "io.appium.java_client.android.AndroidDriver.findElement(org.openqa.selenium.By)" because "this.androidDriver" is null - FAILED
+  Should be on login page before attempting login - FAILED
+  Login failed with exception: Cannot invoke "io.appium.java_client.android.AndroidDriver.findElements(org.openqa.selenium.By)" because "this.androidDriver" is null - FAILED
+  Should navigate to dashboard after successful login - FAILED
+  Account Tab should be visible upon login - FAILED
+  Logout failed: Cannot invoke "io.appium.java_client.android.AndroidDriver.findElement(org.openqa.selenium.By)" because "this.androidDriver" is null - FAILED
+----------------------------------------
+SUMMARY: 0 PASSED, 10 FAILED, 0 SCREENSHOTS
+----------------------------------------
+
+================================================================================
+TEST SUITE: TrimioLoginTest
+TEST METHOD: testPositiveLoginAllUserTypes
+TIMESTAMP: 2025-08-22 15:35:22
+================================================================================
+  Should be on login page before attempting login - FAILED [Screenshot: assertion-fail-1_20250822_153517.png]
+  Login failed with exception: Cannot invoke "io.appium.java_client.android.AndroidDriver.findElements(org.openqa.selenium.By)" because "this.androidDriver" is null - FAILED [Screenshot: assertion-fail-2_20250822_153517.png]
+  Should navigate to dashboard after successful login - FAILED [Screenshot: assertion-fail-3_20250822_153517.png]
+  Account Tab should be visible upon login - FAILED [Screenshot: assertion-fail-4_20250822_153517.png]
+  Logout failed: Cannot invoke "io.appium.java_client.android.AndroidDriver.findElement(org.openqa.selenium.By)" because "this.androidDriver" is null - FAILED [Screenshot: assertion-fail-5_20250822_153517.png]
+  Should be on login page before attempting login - FAILED [Screenshot: assertion-fail-6_20250822_153519.png]
+  Login failed with exception: Cannot invoke "io.appium.java_client.android.AndroidDriver.findElements(org.openqa.selenium.By)" because "this.androidDriver" is null - FAILED [Screenshot: assertion-fail-7_20250822_153519.png]
+  Should navigate to dashboard after successful login - FAILED [Screenshot: assertion-fail-8_20250822_153520.png]
+  Account Tab should be visible upon login - FAILED [Screenshot: assertion-fail-9_20250822_153520.png]
+  Logout failed: Cannot invoke "io.appium.java_client.android.AndroidDriver.findElement(org.openqa.selenium.By)" because "this.androidDriver" is null - FAILED [Screenshot: assertion-fail-10_20250822_153520.png]
+----------------------------------------
+SUMMARY: 0 PASSED, 10 FAILED, 10 SCREENSHOTS
+----------------------------------------
+
+================================================================================
+TEST SUITE: TrimioLoginTest
+TEST METHOD: testPositiveLoginAllUserTypes
+TIMESTAMP: 2025-08-22 15:50:43
+================================================================================
+  Should be on login page before attempting login - FAILED [Screenshot: assertion-fail-1_20250822_155023.png]
+  Login failed with exception: An element could not be located on the page using the given search parameters.
+For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#no-such-element-exception
+Build info: version: '4.34.0', revision: '707dcb4246*'
+System info: os.name: 'Mac OS X', os.arch: 'aarch64', os.version: '15.1.1', java.version: '17.0.15'
+Driver info: io.appium.java_client.ios.IOSDriver
+Command: [dbebf6e6-8ba9-40b0-9215-7d92ae803edc, findElement {value=//*[contains(@content-desc, 'login') or contains(@content-desc, 'LOGIN')], using=xpath}]
+Capabilities {appium:automationName: XCUITest, appium:databaseEnabled: false, appium:deviceName: iPhone 16 Pro Max, appium:javascriptEnabled: true, appium:locationContextEnabled: false, appium:networkConnectionEnabled: false, appium:noReset: true, appium:platformVersion: 18.2, appium:takesScreenshot: true, appium:udid: 81C71267-9692-4AF7-91A0-D4F..., appium:webStorageEnabled: false, platformName: IOS}
+Session ID: dbebf6e6-8ba9-40b0-9215-7d92ae803edc - FAILED [Screenshot: assertion-fail-2_20250822_155030.png]
+  Should navigate to dashboard after successful login - FAILED [Screenshot: assertion-fail-3_20250822_155031.png]
+  Account Tab should be visible upon login - FAILED [Screenshot: assertion-fail-4_20250822_155031.png]
+  Logout failed: An element could not be located on the page using the given search parameters.
+For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#no-such-element-exception
+Build info: version: '4.34.0', revision: '707dcb4246*'
+System info: os.name: 'Mac OS X', os.arch: 'aarch64', os.version: '15.1.1', java.version: '17.0.15'
+Driver info: io.appium.java_client.ios.IOSDriver
+Command: [dbebf6e6-8ba9-40b0-9215-7d92ae803edc, findElement {value=//*[contains(@content-desc, 'Account') or contains(@content-desc, 'account')], using=xpath}]
+Capabilities {appium:automationName: XCUITest, appium:databaseEnabled: false, appium:deviceName: iPhone 16 Pro Max, appium:javascriptEnabled: true, appium:locationContextEnabled: false, appium:networkConnectionEnabled: false, appium:noReset: true, appium:platformVersion: 18.2, appium:takesScreenshot: true, appium:udid: 81C71267-9692-4AF7-91A0-D4F..., appium:webStorageEnabled: false, platformName: IOS}
+Session ID: dbebf6e6-8ba9-40b0-9215-7d92ae803edc - FAILED [Screenshot: assertion-fail-5_20250822_155031.png]
+  Should be on login page before attempting login - FAILED [Screenshot: assertion-fail-6_20250822_155033.png]
+  Login failed with exception: An element could not be located on the page using the given search parameters.
+For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#no-such-element-exception
+Build info: version: '4.34.0', revision: '707dcb4246*'
+System info: os.name: 'Mac OS X', os.arch: 'aarch64', os.version: '15.1.1', java.version: '17.0.15'
+Driver info: io.appium.java_client.ios.IOSDriver
+Command: [dbebf6e6-8ba9-40b0-9215-7d92ae803edc, findElement {value=//*[contains(@content-desc, 'login') or contains(@content-desc, 'LOGIN')], using=xpath}]
+Capabilities {appium:automationName: XCUITest, appium:databaseEnabled: false, appium:deviceName: iPhone 16 Pro Max, appium:javascriptEnabled: true, appium:locationContextEnabled: false, appium:networkConnectionEnabled: false, appium:noReset: true, appium:platformVersion: 18.2, appium:takesScreenshot: true, appium:udid: 81C71267-9692-4AF7-91A0-D4F..., appium:webStorageEnabled: false, platformName: IOS}
+Session ID: dbebf6e6-8ba9-40b0-9215-7d92ae803edc - FAILED [Screenshot: assertion-fail-7_20250822_155040.png]
+  Should navigate to dashboard after successful login - FAILED [Screenshot: assertion-fail-8_20250822_155041.png]
+  Account Tab should be visible upon login - FAILED [Screenshot: assertion-fail-9_20250822_155041.png]
+  Logout failed: An element could not be located on the page using the given search parameters.
+For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#no-such-element-exception
+Build info: version: '4.34.0', revision: '707dcb4246*'
+System info: os.name: 'Mac OS X', os.arch: 'aarch64', os.version: '15.1.1', java.version: '17.0.15'
+Driver info: io.appium.java_client.ios.IOSDriver
+Command: [dbebf6e6-8ba9-40b0-9215-7d92ae803edc, findElement {value=//*[contains(@content-desc, 'Account') or contains(@content-desc, 'account')], using=xpath}]
+Capabilities {appium:automationName: XCUITest, appium:databaseEnabled: false, appium:deviceName: iPhone 16 Pro Max, appium:javascriptEnabled: true, appium:locationContextEnabled: false, appium:networkConnectionEnabled: false, appium:noReset: true, appium:platformVersion: 18.2, appium:takesScreenshot: true, appium:udid: 81C71267-9692-4AF7-91A0-D4F..., appium:webStorageEnabled: false, platformName: IOS}
+Session ID: dbebf6e6-8ba9-40b0-9215-7d92ae803edc - FAILED [Screenshot: assertion-fail-10_20250822_155041.png]
+----------------------------------------
+SUMMARY: 0 PASSED, 10 FAILED, 10 SCREENSHOTS
+----------------------------------------

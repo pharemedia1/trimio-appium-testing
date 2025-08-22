@@ -208,10 +208,11 @@ public abstract class AppiumBase {
         webDriver = androidDriver;
     }
 
+    // As of 08/22/2025, xcuitest cannot support iOS 18
     private void setupIOSDriver(URI appiumServerURI) throws Exception {
         XCUITestOptions options = new XCUITestOptions();
         options.setPlatformName("iOS");
-        options.setDeviceName("iPhone 15 Simulator"); // Default simulator
+        options.setDeviceName("iPhone 16 Pro Max"); // Default simulator
         options.setAutomationName("XCUITest");
         options.setNoReset(true);
 
@@ -219,7 +220,7 @@ public abstract class AppiumBase {
         // options.setBundleId("com.your.app.bundle");
 
         // For simulator
-        options.setPlatformVersion("17.0"); // Adjust to your iOS version
+        options.setPlatformVersion("18.2"); // Adjust to your iOS version
 
         iosDriver = new IOSDriver(appiumServerURI.toURL(), options);
         webDriver = iosDriver;
