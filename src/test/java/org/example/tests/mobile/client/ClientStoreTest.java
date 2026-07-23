@@ -61,8 +61,7 @@ public class ClientStoreTest extends RoleSessionTest {
                         + "restricted to professionals");
     }
 
-    @Test(enabled = false,  // BLOCKED: the storefront's Add/stepper controls have no accessibility node (Flutter merges each card into one). Coordinate taps were calibrated for the product row but do not reproduce reliably in-suite. Re-enable once client_shop_screen.dart wraps these controls in Semantics(label: ...). See ClientShopScreen.BUNDLE_ADD_UNCALIBRATED.
-    description = "Adding a product confirms and increments the cart badge")
+    @Test(description = "Adding a product confirms and increments the cart badge")
     public void addProductToCart() {
         ClientShopScreen shop = openShop();
         if (shop.isEmpty()) {
@@ -70,11 +69,15 @@ public class ClientStoreTest extends RoleSessionTest {
                     + "product with a variant to run the cart tests.");
         }
 
-        int before = shop.cartCount();
         shop.addFirstItem();
+        String added = shop.lastAddedProduct();
 
-        Assert.assertTrue(shop.cartCount() > before,
-                "The cart badge should increment (was " + before + ", now " + shop.cartCount() + ")");
+        // Asserted through the cart's contents rather than the badge: the badge caps at "9+", so on
+        // an account whose cart is already full an increment is literally not observable there.
+        Assert.assertTrue(shop.showsAddedConfirmation(added),
+                "Adding '" + added + "' should confirm with the 'Added … to your cart' snackbar");
+        Assert.assertTrue(shop.openCart().hasItem(added),
+                "'" + added + "' should appear as a line in the cart");
     }
 
     @Test(description = "Adding a bundle puts its items in the cart")
@@ -83,11 +86,14 @@ public class ClientStoreTest extends RoleSessionTest {
         if (!shop.hasItem("Save ")) {
             throw new SkipException("No bundle is on the storefront — seed a bundle to run this test.");
         }
-        throw new SkipException(ClientShopScreen.BUNDLE_ADD_UNCALIBRATED);
+        shop.addFirstBundle();
+
+        Assert.assertFalse(shop.showsAddFailure(),
+                "Adding a bundle should not fail with '" + ClientShopScreen.ADD_FAILED_BUNDLE + "'");
+        Assert.assertFalse(shop.openCart().isEmpty(), "The bundle's items should land in the cart");
     }
 
-    @Test(enabled = false,  // BLOCKED: the storefront's Add/stepper controls have no accessibility node (Flutter merges each card into one). Coordinate taps were calibrated for the product row but do not reproduce reliably in-suite. Re-enable once client_shop_screen.dart wraps these controls in Semantics(label: ...). See ClientShopScreen.BUNDLE_ADD_UNCALIBRATED.
-    description = "The Shop tab's cart badge tracks the cart count")
+    @Test(description = "The Shop tab's cart badge tracks the cart count")
     public void cartBadgeReflectsCartCount() {
         ClientShopScreen shop = openShop();
         if (shop.isEmpty()) {
@@ -115,8 +121,7 @@ public class ClientStoreTest extends RoleSessionTest {
         Assert.assertTrue(cart.subtotal() > 0, "The cart should show a positive subtotal");
     }
 
-    @Test(enabled = false,  // BLOCKED: the storefront's Add/stepper controls have no accessibility node (Flutter merges each card into one). Coordinate taps were calibrated for the product row but do not reproduce reliably in-suite. Re-enable once client_shop_screen.dart wraps these controls in Semantics(label: ...). See ClientShopScreen.BUNDLE_ADD_UNCALIBRATED.
-    description = "Quantity changes are reflected in the cart")
+    @Test(description = "Quantity changes are reflected in the cart")
     public void quantityCanBeChanged() {
         ClientShopScreen shop = openShop();
         if (shop.isEmpty()) {
@@ -138,8 +143,7 @@ public class ClientStoreTest extends RoleSessionTest {
         Assert.assertEquals(cart.firstQuantity(), qtyBefore, "Decrementing should restore the quantity");
     }
 
-    @Test(enabled = false,  // BLOCKED: the storefront's Add/stepper controls have no accessibility node (Flutter merges each card into one). Coordinate taps were calibrated for the product row but do not reproduce reliably in-suite. Re-enable once client_shop_screen.dart wraps these controls in Semantics(label: ...). See ClientShopScreen.BUNDLE_ADD_UNCALIBRATED.
-    description = "Checkout is refused without a street and city")
+    @Test(description = "Checkout is refused without a street and city")
     public void checkoutRequiresAddress() {
         ClientShopScreen shop = openShop();
         if (shop.isEmpty()) {

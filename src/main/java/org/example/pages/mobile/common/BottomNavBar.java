@@ -111,18 +111,22 @@ public class BottomNavBar extends MobileBasePage {
         // one item exports content-desc "1\nShop" (verified on-device). Reading the digit off that
         // node is both simpler and safer than hunting for a bare number, which collides with every
         // KPI and counter elsewhere on screen.
-        var element = find(descContains(CLIENT_SHOP));
-        if (element == null) {
-            return 0;
+        // Several nodes contain "Shop": the storefront's own app-bar title (bare "Shop", no count)
+        // comes first in the tree, and the nav tab ("9+\nShop") comes later. Matching the first hit
+        // therefore always reported 0. Scan them all and take the one carrying a count.
+        for (var element : driver.findElements(descContains(CLIENT_SHOP))) {
+            String label = element.getAttribute("content-desc");
+            if (label == null || label.equals(CLIENT_SHOP)) {
+                continue;
+            }
+            if (label.contains("9+")) {
+                return 10;  // the badge caps at "9+", so any larger cart reports as 10
+            }
+            java.util.regex.Matcher m = java.util.regex.Pattern.compile("(\\d+)").matcher(label);
+            if (m.find()) {
+                return Integer.parseInt(m.group(1));
+            }
         }
-        String label = element.getAttribute("content-desc");
-        if (label == null) {
-            return 0;
-        }
-        if (label.contains("9+")) {
-            return 10;
-        }
-        java.util.regex.Matcher m = java.util.regex.Pattern.compile("(\\d+)").matcher(label);
-        return m.find() ? Integer.parseInt(m.group(1)) : 0;
+        return 0;
     }
 }

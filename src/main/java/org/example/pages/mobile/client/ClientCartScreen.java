@@ -50,16 +50,24 @@ public class ClientCartScreen extends MobileBasePage {
         return isPresentAfterScroll(name);
     }
 
-    /** The subtotal as a number; -1 if it can't be read. */
+    /**
+     * The cart subtotal as a number; -1 if it can't be read.
+     *
+     * <p>Reads the <em>standalone</em> amount node (the one whose whole label is "$36.00"), not
+     * simply the first node containing a "$". Line items merge their unit price into a multi-line
+     * label ("Argan Repair Shampoo\n$18.00 each\n$36.00\n2"), and that unit price sorts first — so
+     * the naive read returned $18.00 both before and after a quantity change and made the subtotal
+     * look frozen.
+     */
     public double subtotal() {
         scrollToDesc(SUBTOTAL);
-        By amount = descContains("$");
-        if (!isPresent(amount, Duration.ofSeconds(5))) {
-            return -1;
+        for (var element : driver.findElements(descContains("$"))) {
+            String label = element.getAttribute("content-desc");
+            if (label != null && label.trim().matches("\\$[0-9,]+(\\.[0-9]{2})?")) {
+                return ClientBookingFlowScreen.parseAmount(label);
+            }
         }
-        var element = find(amount);
-        String raw = element == null ? "" : element.getAttribute("content-desc");
-        return ClientBookingFlowScreen.parseAmount(raw);
+        return -1;
     }
 
     public boolean showsBundleSavingsNote() {
@@ -69,27 +77,24 @@ public class ClientCartScreen extends MobileBasePage {
     // ---- quantity -----------------------------------------------------------
 
     /**
-     * Horizontal positions of the quantity stepper inside a cart line, as fractions of the line's
-     * width. Both calibrated on-device by watching the subtotal move: a 996-wide line increments at
-     * 95% and decrements at 80%, vertically centred.
+     * Accessibility ids of the quantity stepper, added to {@code client_store_cart_screen.dart}.
      *
-     * <p>Coordinates are needed because the whole line — name, unit price, line total <em>and</em>
-     * the quantity controls — merges into one accessibility node
-     * ({@code "Argan Repair Shampoo\n$18.00 each\n$18.00\n1"}). There are no +/- elements to find.
+     * <p>These replaced coordinate taps calibrated at 95%/80% of the line's width. The stepper is
+     * icon-only, so before the labels existed it had nothing to announce and no node of its own —
+     * the whole line merged into {@code "Argan Repair Shampoo\n$18.00 each\n$18.00\n1"}.
      */
-    private static final double INCREMENT_X = 0.95;
-    private static final double DECREMENT_X = 0.80;
-    private static final double STEPPER_Y = 0.50;
+    public static final String QTY_INCREASE = "cart_qty_increase";
+    public static final String QTY_DECREASE = "cart_qty_decrease";
 
     /** Increments the quantity of the first line item. */
     public ClientCartScreen increaseFirstQuantity() {
-        tapWithin(descContains(" each"), INCREMENT_X, STEPPER_Y);
+        tap(accId(QTY_INCREASE));
         return this;
     }
 
     /** Decrements the quantity of the first line item. */
     public ClientCartScreen decreaseFirstQuantity() {
-        tapWithin(descContains(" each"), DECREMENT_X, STEPPER_Y);
+        tap(accId(QTY_DECREASE));
         return this;
     }
 
@@ -125,13 +130,24 @@ public class ClientCartScreen extends MobileBasePage {
      * EditText that was one screen away.
      */
     public ClientCartScreen openCheckout() {
-        scrollAndTap("Checkout");
+        // Tap it directly: "Checkout" sits in a pinned bottom bar, so scrolling the item list first
+        // (as scrollAndTap does) moves the list under it and the tap can miss.
+        tap(checkout);
+        if (!isPresent(descContains("Shipping address"), Duration.ofSeconds(20))) {
+            LOG.warn("Cart: the shipping-address sheet did not open after tapping Checkout");
+        }
         return this;
     }
 
-    /** True once the shipping-address step is showing its fields. */
+    /**
+     * True once the shipping-address sheet is open.
+     *
+     * <p>Keyed on the sheet's own heading rather than on an EditText: the cart screen has no text
+     * fields at all, so probing for one here burned a 15s timeout on every call before falling
+     * through to open the sheet.
+     */
     public boolean isAddressStepOpen() {
-        return isPresent(editText(0), Duration.ofSeconds(15));
+        return isPresent(descContains("Shipping address"), SHORT_TIMEOUT);
     }
 
     /** Fills the shipping-address form (opens the step first if needed). */

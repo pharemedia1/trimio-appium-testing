@@ -61,70 +61,71 @@ public class ClientShopScreen extends MobileBasePage {
     }
 
     /**
-     * Fractions locating the "Add" chip inside a product card, calibrated on-device.
+     * Accessibility ids of the storefront's add buttons, added to {@code client_shop_screen.dart}.
      *
-     * <p><b>There is no "Add" element to click.</b> Flutter merges each product card into a single
-     * accessibility node — {@code "Argan Repair Shampoo\nHair Care\n$18\nAdd"} — so
-     * {@code accessibilityId("Add")} matches nothing and times out. The chip has to be hit by
-     * position within the card.
-     *
-     * <p>Calibrated by measurement, not by guessing: on a 996×226 product row the card centre and
-     * the bottom-right corner (80%, 90%) both did nothing, while the right edge at ~70% height added
-     * the item and produced a cart subtotal. Re-measure if the storefront layout changes.
+     * <p>These replaced coordinate taps. Previously each card merged into one semantics node
+     * ({@code "Argan Repair Shampoo\nHair Care\n$18\nAdd"}) and the buttons had to be hit by
+     * position — which was brittle for products and never calibrated at all for bundle tiles, whose
+     * geometry differs. Wrapping each button in {@code Semantics(container: true)} gives it a node
+     * of its own, so it can simply be located and tapped. It also makes the buttons usable with a
+     * screen reader, which they were not before.
      */
-    private static final double ADD_X_FRACTION = 0.92;
-    private static final double ADD_Y_FRACTION = 0.70;
+    public static final String ADD_PRODUCT_PREFIX = "add_to_cart";
+    public static final String ADD_BUNDLE_PREFIX = "add_bundle_to_cart";
 
-    /**
-     * Adds the first take-home <em>product</em> to the cart.
-     *
-     * <p>Skips bundle tiles deliberately. Bundles and products share the word "Add" in their merged
-     * label but have different geometry — measured on-device, a bundle is a 609×478 tile while a
-     * product is a 996×226 row — so the product fractions land nowhere on a bundle. A bundle's desc
-     * always contains "Save $", which is what distinguishes the two.
-     */
-    public ClientShopScreen addFirstItem() {
-        LOG.info("Shop: adding the first product");
-        scrollToDesc(SECTION_PRODUCTS);
-        for (org.openqa.selenium.WebElement card : driver.findElements(descContains("Add"))) {
-            String label = card.getAttribute("content-desc");
-            if (label != null && !label.contains("Save ")) {
-                tapWithin(card, ADD_X_FRACTION, ADD_Y_FRACTION);
-                return this;
-            }
-        }
-        throw new IllegalStateException("No take-home product card found on the storefront");
+    /** Name of the product most recently added by {@link #addFirstItem()}. */
+    private String lastAdded = "";
+
+    /** The product {@link #addFirstItem()} added, so a test can assert it reached the cart. */
+    public String lastAddedProduct() {
+        return lastAdded;
     }
 
     /**
-     * Scrolls to a named product card and taps the "Add" chip inside it.
+     * Adds the first take-home product to the cart and waits for the app to confirm it.
      *
-     * <p>Products only — see {@link #BUNDLE_ADD_UNCALIBRATED} for why bundles are not supported here.
+     * <p>The wait is not cosmetic: adding is a server round-trip, so reading the cart or the badge
+     * straight after the tap sees the pre-add state. The app's own "Added … to your cart" snackbar
+     * is the signal that the round-trip finished.
      */
-    public ClientShopScreen addItem(String name) {
-        LOG.info("Shop: adding '{}'", name);
-        scrollToDesc(name);
-        tapWithin(descContains(name), ADD_X_FRACTION, ADD_Y_FRACTION);
+    public ClientShopScreen addFirstItem() {
+        scrollToDesc(SECTION_PRODUCTS);
+        var button = find(descContains(ADD_PRODUCT_PREFIX));
+        String label = button == null ? "" : button.getAttribute("content-desc");
+        lastAdded = label == null ? "" : label.replace(ADD_PRODUCT_PREFIX, "").split("\n")[0].trim();
+        LOG.info("Shop: adding product '{}'", lastAdded);
+
+        tap(descContains(ADD_PRODUCT_PREFIX));
+        if (!isPresent(descContains("to your cart"), Duration.ofSeconds(20))) {
+            LOG.warn("Shop: no add confirmation appeared for '{}'", lastAdded);
+        }
         return this;
     }
 
-    /**
-     * Why bundles cannot be added by this page object yet.
-     *
-     * <p>A bundle tile merges into one accessibility node exactly like a product row, so its "Add"
-     * control has no element to click and must be hit positionally. Unlike the product row — where
-     * the chip was located by measurement (right edge, ~70% height, confirmed by the subtotal
-     * changing) — three candidate positions on the bundle tile (bottom-right at 80%/90% and 85%/92%,
-     * and bottom-centre) all produced no cart change on-device.
-     *
-     * <p>Rather than ship a guessed coordinate that silently does nothing, the bundle test skips with
-     * this reason. Calibrating it needs a screenshot of the tile to see where the chip actually sits;
-     * the accessibility tree cannot reveal it.
-     */
-    public static final String BUNDLE_ADD_UNCALIBRATED =
-            "The bundle tile's 'Add' control has no accessibility node and its position is not yet "
-                    + "calibrated — three measured candidates produced no cart change on-device. "
-                    + "Product adds are calibrated and covered; see ClientShopScreen.";
+    /** Adds a named product to the cart. */
+    public ClientShopScreen addItem(String name) {
+        LOG.info("Shop: adding product '{}'", name);
+        scrollToDesc(name);
+        tap(descContains(ADD_PRODUCT_PREFIX + " " + name));
+        return this;
+    }
+
+    /** Adds the first bundle to the cart. */
+    public ClientShopScreen addFirstBundle() {
+        LOG.info("Shop: adding the first bundle");
+        scrollToDesc(SECTION_BUNDLES);
+        tap(descContains(ADD_BUNDLE_PREFIX));
+        isPresent(descContains("to your cart"), Duration.ofSeconds(20));
+        return this;
+    }
+
+    /** Adds a named bundle to the cart. */
+    public ClientShopScreen addBundle(String name) {
+        LOG.info("Shop: adding bundle '{}'", name);
+        scrollToDesc(name);
+        tap(descContains(ADD_BUNDLE_PREFIX + " " + name));
+        return this;
+    }
 
     /**
      * True if the "Added “<name>” to your cart" snackbar appeared. Matching is on the quoted name
