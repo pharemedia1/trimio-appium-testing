@@ -1,0 +1,58 @@
+[
+  {
+    "scenario": "empty email",
+    "email": "",
+    "phone": "5551234567",
+    "password": "Trimio@2580",
+    "expectedMessage": "Please enter your email"
+  },
+  {
+    "scenario": "invalid email format",
+    "email": "notanemail",
+    "phone": "5551234567",
+    "password": "Trimio@2580",
+    "expectedMessage": "Please enter a valid email address"
+  },
+  {
+    "scenario": "empty phone",
+    "email": "trimiotest+valid@gmail.com",
+    "phone": "",
+    "password": "Trimio@2580",
+    "expectedMessage": "Please enter your phone number"
+  },
+  {
+    "scenario": "phone not 10 digits",
+    "email": "trimiotest+valid@gmail.com",
+    "phone": "5551234",
+    "password": "Trimio@2580",
+    "expectedMessage": "Phone number must be 10 digits"
+  },
+  {
+    "scenario": "password too short",
+    "email": "trimiotest+valid@gmail.com",
+    "phone": "5551234567",
+    "password": "Pass1!",
+    "expectedMessage": "Password must be at least 8 characters long"
+  },
+  {
+    "scenario": "password missing uppercase",
+    "email": "trimiotest+valid@gmail.com",
+    "phone": "5551234567",
+    "password": "password1!",
+    "expectedMessage": "Password must include at least one uppercase letter"
+  },
+  {
+    "scenario": "password missing special character",
+    "email": "trimiotest+valid@gmail.com",
+    "phone": "5551234567",
+    "password": "Password11",
+    "expectedMessage": "Password must include at least one special character"
+  },
+  {
+    "scenario": "password has sequential digits",
+    "email": "trimiotest+valid@gmail.com",
+    "phone": "5551234567",
+    "password": "Newpass123!",
+    "expectedMessage": "Password cannot contain sequential numbers like '123'"
+  }
+]

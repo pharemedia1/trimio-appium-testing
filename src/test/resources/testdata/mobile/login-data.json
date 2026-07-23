@@ -1,0 +1,30 @@
+[
+  {
+    "scenario": "empty email",
+    "type": "validation",
+    "email": "",
+    "password": "Trimio@2580",
+    "expectedMessage": "Please enter your email"
+  },
+  {
+    "scenario": "invalid email format",
+    "type": "validation",
+    "email": "notanemail",
+    "password": "Trimio@2580",
+    "expectedMessage": "Please enter a valid email address"
+  },
+  {
+    "scenario": "empty password",
+    "type": "validation",
+    "email": "trimiotest+client1@gmail.com",
+    "password": "",
+    "expectedMessage": "Please enter your password"
+  },
+  {
+    "scenario": "wrong credentials",
+    "type": "backend",
+    "email": "trimiotest+notregistered@gmail.com",
+    "password": "Wrongpass@2580",
+    "expectedMessage": "Invalid email or password."
+  }
+]

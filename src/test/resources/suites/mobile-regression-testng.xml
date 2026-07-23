@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+
+<!--
+  Trimio mobile REGRESSION suite — the signed-in journeys for client, professional and admin.
+
+  Unlike mobile-testng.xml (which only needs a fresh install), every test here needs a seeded
+  account for its role. Fill in `roleAccounts` in src/test/resources/testdata/mobile/test-accounts.json;
+  anything without credentials SKIPS with an explanatory message rather than failing.
+
+  Run:
+    mvn test -DsuiteXmlFile=src/test/resources/suites/mobile-regression-testng.xml -DretryCount=0
+
+  Prerequisites:
+    - an Android emulator booted (e.g. `emulator -avd Pixel_7_API_35`)
+    - the backend up on :3000 (`cd ~/StudioProjects/trimio/backend && npm start`)
+    - Postgres `trimio` reachable; pass -Ddb.password=… for the tests that read the DB
+-->
+<suite name="Trimio Mobile Regression" parallel="false" verbose="1">
+
+    <listeners>
+        <listener class-name="org.example.listeners.TestListener"/>
+    </listeners>
+
+    <test name="Client — navigation &amp; discovery">
+        <classes>
+            <class name="org.example.tests.mobile.client.ClientNavigationTest"/>
+            <class name="org.example.tests.mobile.client.ClientHomeTest"/>
+        </classes>
+    </test>
+
+    <test name="Client — booking">
+        <classes>
+            <class name="org.example.tests.mobile.client.ClientBookingTest"/>
+            <class name="org.example.tests.mobile.client.ClientGroupBookingTest"/>
+            <class name="org.example.tests.mobile.client.ClientStyleMeNowTest"/>
+        </classes>
+    </test>
+
+    <test name="Client — appointments &amp; reviews">
+        <classes>
+            <class name="org.example.tests.mobile.client.ClientAppointmentsTest"/>
+            <class name="org.example.tests.mobile.client.ClientReviewTest"/>
+        </classes>
+    </test>
+
+    <test name="Client — store">
+        <classes>
+            <class name="org.example.tests.mobile.client.ClientStoreTest"/>
+        </classes>
+    </test>
+
+    <test name="Client — membership &amp; profile">
+        <classes>
+            <class name="org.example.tests.mobile.client.ClientMembershipTest"/>
+            <class name="org.example.tests.mobile.client.ClientProfileTest"/>
+        </classes>
+    </test>
+
+    <test name="Professional">
+        <classes>
+            <class name="org.example.tests.mobile.professional.ProfessionalDashboardTest"/>
+            <class name="org.example.tests.mobile.professional.ProfessionalBookingsTest"/>
+            <class name="org.example.tests.mobile.professional.ProfessionalClientHubTest"/>
+            <class name="org.example.tests.mobile.professional.ProfessionalStoreTest"/>
+            <class name="org.example.tests.mobile.professional.ProfessionalEarningsTest"/>
+            <class name="org.example.tests.mobile.professional.ProfessionalPerformanceTest"/>
+        </classes>
+    </test>
+
+    <test name="Admin console">
+        <classes>
+            <class name="org.example.tests.mobile.admin.AdminConsoleTest"/>
+            <class name="org.example.tests.mobile.admin.AdminUsersTest"/>
+            <class name="org.example.tests.mobile.admin.AdminQualityTest"/>
+            <class name="org.example.tests.mobile.admin.AdminQueuesTest"/>
+        </classes>
+    </test>
+
+</suite>

@@ -1,0 +1,14 @@
+[
+  {
+    "scenario": "incomplete otp (fewer than 6 digits)",
+    "type": "client",
+    "otp": "123",
+    "expectedMessage": "Please enter a valid 6-digit OTP"
+  },
+  {
+    "scenario": "wrong 6-digit otp",
+    "type": "backend",
+    "otp": "000000",
+    "expectedMessage": "Invalid OTP"
+  }
+]

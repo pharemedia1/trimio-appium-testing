@@ -1,0 +1,51 @@
+{
+  "_comment": "Central test-account data. No credentials live in code. Gmail '+' aliases all deliver to trimiotest@gmail.com and follow Trimio's users-table convention trimiotest+<role><n>@gmail.com.",
+  "_passwordPolicyNote": "genericPassword must satisfy the REDESIGNED signup policy (8+ chars, upper+lower+digit+special, NO sequential digits like 123). The old 'Trimio@1234' is now rejected client-side because of the '1234' sequence.",
+  "genericPassword": "Trimio@2580",
+  "resetPassword": "Reset@2080",
+  "defaultPhone": "5551234567",
+  "newClientEmailTemplate": "trimiotest+client{unique}@gmail.com",
+  "newProfessionalEmailTemplate": "trimiotest+professional{unique}@gmail.com",
+  "verifiedAccount": {
+    "_comment": "Pre-provisioned VERIFIED account (Postgres user 948, active+verified) used by positive login / forgot-password tests. Login only enforces a non-empty password client-side, so the existing 'Trimio@1234' value is fine here even though it would fail the registration policy.",
+    "email": "trimiotest+verified@gmail.com",
+    "password": "Trimio@1234"
+  },
+
+  "_roleAccountsNote": "Per-role sign-ins for the signed-in mobile and web suites. The app routes by user_type_id (1 client, 2 professional, 3 admin, 4 support, 9 vendor), so each role needs its own seeded account. Leave an entry blank and every test that needs it SKIPS with an explanatory message instead of failing. The 'professional' account must have an APPROVED profile, otherwise the app reroutes to ProfessionalNotCreatedHomePage and the dashboard is unreachable.",
+  "roleAccounts": {
+    "client": {
+      "_comment": "Blank falls back to verifiedAccount above.",
+      "email": "",
+      "password": ""
+    },
+    "professional": {
+      "_comment": "Needs profile.approval_status = 'approved' (and an approved state licence) to receive offers.",
+      "email": "",
+      "password": ""
+    },
+    "admin": {
+      "_comment": "user_type_id = 3. Also used for the admin web portal.",
+      "email": "",
+      "password": ""
+    },
+    "vendor": {
+      "_comment": "user_type_id = 9 with a store row. Created via admin Store -> New vendor -> Create login. A freshly-invited vendor is forced through a password reset on first sign-in.",
+      "email": "",
+      "password": ""
+    },
+    "support": {
+      "_comment": "user_type_id = 4. Permitted in the web portal but has no dedicated shell yet.",
+      "email": "",
+      "password": ""
+    }
+  },
+
+  "_storeFixturesNote": "Names of seeded catalogue items used by the store visibility assertions. Leave blank to skip those tests.",
+  "storeFixtures": {
+    "clientVisibleProduct": "",
+    "proOnlyProduct": "",
+    "shippingStreet": "1 Test Street",
+    "shippingCity": "Miami"
+  }
+}

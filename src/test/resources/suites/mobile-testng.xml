@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+
+<!--
+  Trimio mobile (Appium) suite.
+  - Serial: a single emulator/driver session at a time (no parallel @Test methods).
+  - listeners: TestListener drives ExtentReports, failure screenshots, and auto-retry.
+  Run with:
+    mvn test -DsuiteXmlFile=src/test/resources/suites/mobile-testng.xml
+  Provide a known account for the duplicate-email scenario via the positive test
+  (it self-generates a unique email), so no external credentials are required.
+-->
+<suite name="Trimio Mobile Suite" parallel="false" verbose="1">
+
+    <listeners>
+        <listener class-name="org.example.listeners.TestListener"/>
+    </listeners>
+
+    <test name="Onboarding (Welcome) Tests">
+        <classes>
+            <class name="org.example.tests.mobile.OnboardingTest"/>
+        </classes>
+    </test>
+
+    <test name="Registration Tests">
+        <classes>
+            <class name="org.example.tests.mobile.RegistrationTest"/>
+        </classes>
+    </test>
+
+    <test name="Login Tests">
+        <classes>
+            <class name="org.example.tests.mobile.LoginTest"/>
+        </classes>
+    </test>
+
+    <test name="Forgot Password Tests">
+        <classes>
+            <class name="org.example.tests.mobile.ForgotPasswordTest"/>
+        </classes>
+    </test>
+
+    <test name="OTP Verification Tests">
+        <classes>
+            <class name="org.example.tests.mobile.OtpTest"/>
+        </classes>
+    </test>
+
+    <test name="Reset Password Tests">
+        <classes>
+            <class name="org.example.tests.mobile.ResetPasswordTest"/>
+        </classes>
+    </test>
+
+</suite>

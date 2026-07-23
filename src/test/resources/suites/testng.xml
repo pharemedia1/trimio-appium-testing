@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+
+<!--
+  Trimio regression suite.
+  - parallel="methods" + thread-count: run @Test methods concurrently (PlaywrightFactory is
+    ThreadLocal, so each thread gets its own browser).
+  - listeners: TestListener drives ExtentReports, failure screenshots, and auto-retry.
+  Override on the CLI: mvn test -DsuiteXmlFile=path/to/other-suite.xml
+-->
+<suite name="Trimio Regression Suite" parallel="methods" thread-count="2" verbose="1">
+
+
+    <listeners>
+        <listener class-name="org.example.listeners.TestListener"/>
+    </listeners>
+
+    <test name="Smoke Tests">
+        C
+        <classes>
+            <class name="org.example.tests.LoginTest"/>
+            <!-- Mobile-emulation sanity check; skips itself unless -Ddevice=pixel7|iphone14 -->
+
+            <class name="org.example.tests.MobileEmulationTest"/>
+        </classes>
+    </test>
+
+</suite>

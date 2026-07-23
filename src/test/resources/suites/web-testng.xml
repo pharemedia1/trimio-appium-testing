@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+
+<!--
+  Trimio WEB PORTAL suite — Playwright against the Flutter Web staff portal (admin + vendor).
+
+  Serve the portal first:
+    cd ~/StudioProjects/trimio/frontend
+    flutter run -d chrome -t lib/main_web.dart
+  In local dev the API also needs CORS; until it sends the headers, launch Chrome with web
+  security disabled (see the header comment in lib/main_web.dart for the exact flag).
+
+  Run:
+    mvn test -DsuiteXmlFile=src/test/resources/suites/web-testng.xml \
+             -Dweb.baseUrl=http://localhost:<port> -Dheadless=false -DretryCount=0
+
+  Notes:
+    - Flutter Web paints to a canvas: the tests drive it through the accessibility (semantics)
+      tree. WebBaseTest SKIPS the whole suite cleanly if that tree is unavailable rather than
+      producing a wall of timeouts — see org.example.base.WebBasePage for why.
+    - Accounts come from testdata/mobile/test-accounts.json (roleAccounts). Missing credentials
+      skip the affected tests.
+    - Serial by design: several tests assert on session teardown after a refused login, which a
+      parallel run would make meaningless.
+-->
+<suite name="Trimio Web Portal Suite" parallel="false" verbose="1">
+
+    <listeners>
+        <listener class-name="org.example.listeners.TestListener"/>
+    </listeners>
+
+    <!-- The staff-only rule: both the UI dialog and the server's 403. Runs first because it is
+         the highest-severity behaviour in the portal. -->
+    <test name="Web portal access control">
+        <classes>
+            <class name="org.example.tests.web.WebPortalAccessTest"/>
+        </classes>
+    </test>
+
+    <test name="Admin portal — shell &amp; dashboard">
+        <classes>
+            <class name="org.example.tests.web.AdminPortalNavigationTest"/>
+        </classes>
+    </test>
+
+    <test name="Admin portal — marketplace">
+        <classes>
+            <class name="org.example.tests.web.AdminStoreTest"/>
+        </classes>
+    </test>
+
+    <test name="Vendor portal">
+        <classes>
+            <class name="org.example.tests.web.VendorPortalTest"/>
+        </classes>
+    </test>
+
+    <test name="Vendor application (public)">
+        <classes>
+            <class name="org.example.tests.web.VendorApplyTest"/>
+        </classes>
+    </test>
+
+</suite>

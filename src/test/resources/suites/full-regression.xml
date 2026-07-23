@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+
+<!--
+  Trimio FULL REGRESSION — every automated test across both surfaces, in the order a release
+  should be checked: auth (no accounts needed) → signed-in mobile journeys → the web portal.
+
+    mvn test -DsuiteXmlFile=src/test/resources/suites/full-regression.xml \
+             -Ddb.password=… -Dweb.baseUrl=http://localhost:<port> -DretryCount=0
+
+  Everything that needs an environment it cannot find SKIPS with an explanatory message, so a run
+  against a partially-provisioned environment still reports honestly instead of failing loudly.
+
+  Full prerequisites:
+    - Android emulator booted with the Trimio app installed
+    - backend on :3000, Postgres `trimio` on :5432
+    - the web portal served (flutter run -d chrome -t lib/main_web.dart)
+    - roleAccounts filled in testdata/mobile/test-accounts.json
+-->
+<suite name="Trimio Full Regression" parallel="false" verbose="1">
+
+    <listeners>
+        <listener class-name="org.example.listeners.TestListener"/>
+    </listeners>
+
+    <!-- 1. Auth — needs only a fresh app install -->
+    <test name="Auth — onboarding">
+        <classes>
+            <class name="org.example.tests.mobile.OnboardingTest"/>
+        </classes>
+    </test>
+    <test name="Auth — registration &amp; login">
+        <classes>
+            <class name="org.example.tests.mobile.RegistrationTest"/>
+            <class name="org.example.tests.mobile.LoginTest"/>
+        </classes>
+    </test>
+    <test name="Auth — password recovery">
+        <classes>
+            <class name="org.example.tests.mobile.ForgotPasswordTest"/>
+            <class name="org.example.tests.mobile.OtpTest"/>
+            <class name="org.example.tests.mobile.ResetPasswordTest"/>
+        </classes>
+    </test>
+
+    <!-- 2. Signed-in mobile journeys — need seeded role accounts -->
+    <test name="Client journeys">
+        <classes>
+            <class name="org.example.tests.mobile.client.ClientNavigationTest"/>
+            <class name="org.example.tests.mobile.client.ClientHomeTest"/>
+            <class name="org.example.tests.mobile.client.ClientBookingTest"/>
+            <class name="org.example.tests.mobile.client.ClientGroupBookingTest"/>
+            <class name="org.example.tests.mobile.client.ClientStyleMeNowTest"/>
+            <class name="org.example.tests.mobile.client.ClientAppointmentsTest"/>
+            <class name="org.example.tests.mobile.client.ClientStoreTest"/>
+            <class name="org.example.tests.mobile.client.ClientMembershipTest"/>
+            <class name="org.example.tests.mobile.client.ClientProfileTest"/>
+            <class name="org.example.tests.mobile.client.ClientReviewTest"/>
+        </classes>
+    </test>
+    <test name="Professional journeys">
+        <classes>
+            <class name="org.example.tests.mobile.professional.ProfessionalDashboardTest"/>
+            <class name="org.example.tests.mobile.professional.ProfessionalBookingsTest"/>
+            <class name="org.example.tests.mobile.professional.ProfessionalClientHubTest"/>
+            <class name="org.example.tests.mobile.professional.ProfessionalStoreTest"/>
+            <class name="org.example.tests.mobile.professional.ProfessionalEarningsTest"/>
+            <class name="org.example.tests.mobile.professional.ProfessionalPerformanceTest"/>
+        </classes>
+    </test>
+    <test name="Admin console (mobile)">
+        <classes>
+            <class name="org.example.tests.mobile.admin.AdminConsoleTest"/>
+            <class name="org.example.tests.mobile.admin.AdminUsersTest"/>
+            <class name="org.example.tests.mobile.admin.AdminQualityTest"/>
+            <class name="org.example.tests.mobile.admin.AdminQueuesTest"/>
+        </classes>
+    </test>
+
+    <!-- 3. Web portal — needs the Flutter Web build served -->
+    <test name="Web portal">
+        <classes>
+            <class name="org.example.tests.web.WebPortalAccessTest"/>
+            <class name="org.example.tests.web.AdminPortalNavigationTest"/>
+            <class name="org.example.tests.web.AdminStoreTest"/>
+            <class name="org.example.tests.web.VendorPortalTest"/>
+            <class name="org.example.tests.web.VendorApplyTest"/>
+        </classes>
+    </test>
+
+</suite>
