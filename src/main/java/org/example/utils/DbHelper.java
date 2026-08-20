@@ -83,6 +83,152 @@ public final class DbHelper {
         return sb.toString();
     }
 
+    // ---- disposable professional fixture -----------------------------------
+
+    /** The identity document the fixture submits, spelled as readiness expects it. */
+    public static final String IDENTITY_DOCUMENT_ALT = "Driving license Front image";
+
+    /**
+     * Creates a professional sitting in the admin's <b>Pending</b> queue, and returns its
+     * {@code professional_id}.
+     *
+     * <p>Exists so the approval test can bring its OWN subject. Approving is the one admin action
+     * the suite had deliberately left alone — it makes somebody bookable to real clients — and the
+     * way to test it without inheriting that objection is to approve a professional the test
+     * created and then removes, never one already in the queue.
+     *
+     * <p>A registered professional is NOT enough: signing up writes only a {@code users} row, and
+     * a professional reaches the queue only once a profile is submitted. So the three rows the
+     * queue reads from are written directly.
+     *
+     * <p>The NAME matters more than the address here: the admin's Pending queue renders
+     * "{@code <first> <last>}" and no email at all, so the name is the only handle a test has on
+     * its own row. Callers should make it unique per run.
+     */
+    public static long createPendingProfessional(String email, String firstName, String lastName) {
+        String url = ConfigReader.get("db.url", "jdbc:postgresql://localhost:5432/trimio");
+        String user = ConfigReader.get("db.user", "postgres");
+        String pass = ConfigReader.get("db.password", "");
+        try (Connection c = DriverManager.getConnection(url, user, pass)) {
+            c.setAutoCommit(false);
+            long userId;
+            try (PreparedStatement ps = c.prepareStatement(
+                    "insert into users (user_type_id, email, account_status, email_verified_at) "
+                            + "values (2, ?, 'active', now()) returning user_id")) {
+                ps.setString(1, email);
+                try (ResultSet rs = ps.executeQuery()) {
+                    rs.next();
+                    userId = rs.getLong(1);
+                }
+            }
+            long professionalId;
+            try (PreparedStatement ps = c.prepareStatement(
+                    "insert into professional (user_id) values (?) returning professional_id")) {
+                ps.setLong(1, userId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    rs.next();
+                    professionalId = rs.getLong(1);
+                }
+            }
+            try (PreparedStatement ps = c.prepareStatement(
+                    "insert into professional_profile (professional_id, first_name, last_name, "
+                            + "approval_status) values (?, ?, ?, 'pending')")) {
+                ps.setLong(1, professionalId);
+                ps.setString(2, firstName);
+                ps.setString(3, lastName);
+                ps.executeUpdate();
+            }
+            // AND A DOCUMENT TO ACTUALLY APPROVE.
+            //
+            // Without one the detail screen reads "No ID document submitted" and offers no
+            // Approve control at all — correctly, since there is nothing to decide. A fixture
+            // that only appears in the queue is enough to test the queue and nothing else.
+            //
+            // alt_text matches what services/proReadiness.js compares on (case-insensitively);
+            // a near-miss reads as "not submitted" and the professional stays blocked with no
+            // explanation. status defaults to 'pending', which is the state under test.
+            try (PreparedStatement ps = c.prepareStatement(
+                    "insert into images (user_id, professional_id, url, alt_text, purpose, status) "
+                            + "values (?, ?, ?, ?, 'identity_document', 'pending')")) {
+                ps.setLong(1, userId);
+                ps.setLong(2, professionalId);
+                ps.setString(3, "https://placehold.co/800x500/png?text=approval-fixture");
+                ps.setString(4, IDENTITY_DOCUMENT_ALT);
+                ps.executeUpdate();
+            }
+            c.commit();
+            return professionalId;
+        } catch (SQLException e) {
+            throw new IllegalStateException("Could not create the pending professional " + email
+                    + ": " + e.getMessage(), e);
+        }
+    }
+
+    /** The status the admin console has left on this professional's identity document. */
+    public static String documentStatusOf(long professionalId) {
+        return queryOne("select status from images where professional_id = ? "
+                + "and purpose = 'identity_document' order by image_id desc limit 1",
+                professionalId);
+    }
+
+    /** The approval status the admin console has left on this professional. */
+    public static String approvalStatusOf(long professionalId) {
+        return queryOne("select approval_status from professional_profile where professional_id = ?",
+                professionalId);
+    }
+
+    /** Removes the fixture and everything hanging off it. */
+    public static void deleteProfessional(long professionalId) {
+        String url = ConfigReader.get("db.url", "jdbc:postgresql://localhost:5432/trimio");
+        String user = ConfigReader.get("db.user", "postgres");
+        String pass = ConfigReader.get("db.password", "");
+        try (Connection c = DriverManager.getConnection(url, user, pass)) {
+            c.setAutoCommit(false);
+            Long userId = null;
+            try (PreparedStatement ps = c.prepareStatement(
+                    "select user_id from professional where professional_id = ?")) {
+                ps.setLong(1, professionalId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) userId = rs.getLong(1);
+                }
+            }
+            // Inserting an identity_document image causes a verifications row to be created,
+            // so the fixture owns that too — otherwise every run leaves an orphan behind.
+            exec(c, "delete from verifications where professional_id = ?", professionalId);
+            exec(c, "delete from images where professional_id = ?", professionalId);
+            exec(c, "delete from professional_profile where professional_id = ?", professionalId);
+            exec(c, "delete from professional where professional_id = ?", professionalId);
+            if (userId != null) exec(c, "delete from users where user_id = ?", userId);
+            c.commit();
+        } catch (SQLException e) {
+            // Cleanup failure must not turn a passing test red; it leaves one disposable row.
+            throw new IllegalStateException("Could not remove professional " + professionalId
+                    + ": " + e.getMessage(), e);
+        }
+    }
+
+    private static void exec(Connection c, String sql, long id) throws SQLException {
+        try (PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setLong(1, id);
+            ps.executeUpdate();
+        }
+    }
+
+    private static String queryOne(String sql, long id) {
+        String url = ConfigReader.get("db.url", "jdbc:postgresql://localhost:5432/trimio");
+        String user = ConfigReader.get("db.user", "postgres");
+        String pass = ConfigReader.get("db.password", "");
+        try (Connection c = DriverManager.getConnection(url, user, pass);
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setLong(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getString(1) : null;
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("DB read failed: " + e.getMessage(), e);
+        }
+    }
+
     private static String readSecret(String email) {
         String url = ConfigReader.get("db.url", "jdbc:postgresql://localhost:5432/trimio");
         String user = ConfigReader.get("db.user", "postgres");

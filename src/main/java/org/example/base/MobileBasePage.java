@@ -111,11 +111,22 @@ public abstract class MobileBasePage {
                     "new UiScrollable(new UiSelector().scrollable(true).instance(0))"
                             + ".setMaxSearchSwipes(" + MAX_SCROLL_SWIPES + ")"
                             + ".scrollIntoView(new UiSelector().descriptionContains(\"" + escaped + "\"))"));
-            return true;
         } catch (RuntimeException e) {
             LOG.debug("scrollToDesc('{}') did not find the element: {}", text, e.getMessage());
             return false;
         }
+        // CONFIRM IT, do not take scrollIntoView's word for it. That call resolves to the
+        // SCROLLABLE CONTAINER, not the target, so it can succeed having never found what it was
+        // asked for — and this method then reported "found" for text that is not on screen.
+        // Every isPresentAfterScroll caller inherited that false positive: an assertion could pass
+        // against a screen which simply happens to be scrollable. Measured live against the admin
+        // Pending queue, which lists professionals by NAME: a search for an email returned true
+        // while the page source contained no such string anywhere.
+        boolean reallyThere = isPresent(descContains(text), SHORT_TIMEOUT);
+        if (!reallyThere) {
+            LOG.debug("scrollToDesc('{}') scrolled but the text is still absent", text);
+        }
+        return reallyThere;
     }
 
     /**
@@ -140,6 +151,15 @@ public abstract class MobileBasePage {
     protected boolean isEnabled(By by, Duration timeout) {
         if (!isPresent(by, timeout)) return false;
         return Boolean.parseBoolean(find(by).getAttribute("enabled"));
+    }
+
+    /** A short pause, for the handful of places where a value round-trips to the server. */
+    protected void sleepBriefly() {
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 
     /** Scrolls {@code text} into view and taps it. Fails the wait if it never appears. */

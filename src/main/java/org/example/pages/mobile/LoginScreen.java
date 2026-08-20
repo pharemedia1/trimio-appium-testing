@@ -104,6 +104,9 @@ public class LoginScreen extends MobileBasePage {
 
     /** Title of the biometric opt-in shown after the first successful sign-in. */
     public static final String BIOMETRIC_PROMPT = "Faster sign-in";
+    /** The upcoming-appointment reminder that covers the shell, and the button that clears it. */
+    public static final String APPOINTMENT_ALERT = "Appointment in";
+    public static final String APPOINTMENT_ALERT_DISMISS = "Got it";
     public static final String BIOMETRIC_DECLINE = "Not now";
     public static final String BIOMETRIC_ACCEPT = "Enable";
 
@@ -130,6 +133,33 @@ public class LoginScreen extends MobileBasePage {
             LOG.info("Login: declining the '{}' biometric prompt", BIOMETRIC_PROMPT);
             tap(accId(BIOMETRIC_DECLINE));
         }
+        return this;
+    }
+
+    /**
+     * Dismisses the upcoming-appointment reminder, if one is waiting.
+     *
+     * <p>Same shape of problem as the biometric prompt: a professional with a booking soon lands
+     * on the shell with "Appointment in 2 hours" modal over it, so the bottom nav is behind the
+     * dialog and simply ABSENT from the accessibility tree. The sign-in succeeded and the test
+     * then skips reporting "did not land in the professional shell", which is the wrong story —
+     * nothing is broken except an unanswered dialog.
+     *
+     * <p>Taps "Got it" rather than "View appointment": acknowledging must not navigate somewhere
+     * the caller did not ask for.
+     */
+    public LoginScreen dismissAppointmentAlertIfPresent() {
+        if (isPresent(descContains(APPOINTMENT_ALERT), Duration.ofSeconds(8))) {
+            LOG.info("Login: acknowledging the '{}' reminder", APPOINTMENT_ALERT);
+            tap(descOrText(APPOINTMENT_ALERT_DISMISS));
+        }
+        return this;
+    }
+
+    /** Answers every modal known to sit over the signed-in shell. */
+    public LoginScreen dismissPostLoginModals() {
+        dismissBiometricPromptIfPresent();
+        dismissAppointmentAlertIfPresent();
         return this;
     }
 

@@ -52,9 +52,10 @@ public abstract class RoleSessionTest extends MobileBaseTest {
             throw new SkipException("Login as '" + role + "' (" + email + ") was rejected — the "
                     + "account may be unverified, suspended, or the password may have changed.");
         }
-        // The biometric opt-in is modal over the shell: the login has succeeded but the bottom nav
-        // is behind the dialog and invisible to UiAutomator2 until it is answered.
-        form.dismissBiometricPromptIfPresent();
+        // Modals sit OVER the shell: the login has succeeded but the bottom nav is behind them and
+        // invisible to UiAutomator2 until each is answered — the biometric opt-in, and for a pro
+        // with a booking soon, the "Appointment in 2 hours" reminder.
+        form.dismissPostLoginModals();
         return new BottomNavBar(driver);
     }
 

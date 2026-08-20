@@ -2,6 +2,9 @@ package org.example.pages.mobile.admin;
 
 import io.appium.java_client.android.AndroidDriver;
 import org.example.base.MobileBasePage;
+import org.openqa.selenium.By;
+import org.openqa.selenium.remote.RemoteWebElement;
+import org.openqa.selenium.WebElement;
 
 import java.time.Duration;
 
@@ -20,6 +23,18 @@ import java.time.Duration;
 public class AdminUsersScreen extends MobileBasePage {
 
     // ---- segments -----------------------------------------------------------
+    /**
+     * All Users is a HUB, not the list.
+     *
+     * <p>Verified on-device: it offers two cards — "Clients · Registered customers" and
+     * "Professionals · Approvals &amp; status" — and the approval segments live one level inside
+     * the second. Every page-object method here that reached for "Pending" straight from the hub
+     * was reaching for something that is not on that screen.
+     */
+    public static final String CARD_PROFESSIONALS = "Professionals";
+    public static final String CARD_CLIENTS = "Clients";
+    public static final String BY_APPROVAL_STATUS = "By approval status";
+
     public static final String SEGMENT_PENDING = "Pending";
     public static final String SEGMENT_APPROVED = "Approved";
     public static final String SEGMENT_REJECTED = "Rejected";
@@ -56,7 +71,24 @@ public class AdminUsersScreen extends MobileBasePage {
         return isPresentAfterScroll("clients") && isPresentAfterScroll("pros");
     }
 
-    /** Opens a professional-status segment. */
+    /** Opens the Professionals card — the segments live inside it, not on the All Users hub. */
+    public AdminUsersScreen openProfessionals() {
+        LOG.info("AdminUsers: opening the Professionals card");
+        scrollAndTap(CARD_PROFESSIONALS);
+        return this;
+    }
+
+    /** True once the approval-status segments are on screen. */
+    public boolean isProfessionalsListLoaded() {
+        return isPresentAfterScroll(BY_APPROVAL_STATUS);
+    }
+
+    /**
+     * Opens a professional-status segment.
+     *
+     * <p>The segment tile merges its count into the label ("55\nPending"), so this matches on
+     * contains rather than an exact id.
+     */
     public AdminUsersScreen openSegment(String segment) {
         LOG.info("AdminUsers: opening the '{}' segment", segment);
         scrollAndTap(segment);
@@ -74,6 +106,39 @@ public class AdminUsersScreen extends MobileBasePage {
         return this;
     }
 
+    /**
+     * Opens a NAMED professional, by the email shown in the row.
+     *
+     * <p>The approval test must act on the subject it created, not on whoever happens to sit at
+     * the top of a queue that other people's data shares.
+     */
+    public AdminUsersScreen openProfessional(String email) {
+        LOG.info("AdminUsers: opening '{}'", email);
+        // Two separate hazards, so this both settles AND re-checks:
+        //   1. tapping a segment does not render its list synchronously, so a scroll issued
+        //      immediately searches an empty list and finds nothing;
+        //   2. scrollIntoView reporting success does NOT mean the row is still addressable a
+        //      moment later — it can settle back out of view, and Flutter drops the semantics of
+        //      anything off-screen, so a plain tap() then waits 30s for a node that is gone.
+        // Hence: look, scroll if absent, look again, and only tap while it is genuinely there.
+        By row = descContains(email);
+        for (int attempt = 0; attempt < 6; attempt++) {
+            if (isPresent(row, Duration.ofSeconds(3))) {
+                tap(row);
+                return this;
+            }
+            scrollToDesc(email);
+        }
+        throw new IllegalStateException("'" + email + "' never stayed on screen long enough to "
+                + "open — it may be under a different approval status, or below the scroll "
+                + "depth the search allows");
+    }
+
+    /** True if this professional's row/detail is reachable in the open segment. */
+    public boolean listsProfessional(String email) {
+        return isPresentAfterScroll(email);
+    }
+
     // ---- documents ----------------------------------------------------------
 
     /** True when the automated licence-check result (or its absence) is displayed. */
@@ -83,9 +148,31 @@ public class AdminUsersScreen extends MobileBasePage {
                 || isPresentAfterScroll(DMV_MATCH);
     }
 
-    /** Approves the open document/licence. */
+    /** True when the open document offers a decision — both Approve and Reject. */
+    public boolean canDecideOnDocument() {
+        return isPresentAfterScroll(APPROVE) && isPresentAfterScroll(REJECT);
+    }
+
+    /**
+     * Approves the open document/licence.
+     *
+     * <p>Taps via {@code mobile: clickGesture} on the ELEMENT rather than
+     * {@code element.click()} or a coordinate. Measured on this screen: the button is built
+     * correctly and live — a trace inside the widget showed a valid id and {@code busy=false},
+     * so {@code onPressed} was not null — yet neither a Selenium click nor a tap at the centre
+     * of the reported bounds ever reached the handler. Appium computes this gesture from the
+     * element's position at the moment of the tap, which is what the other two were getting
+     * wrong after the list had scrolled.
+     */
     public AdminUsersScreen approveDocument() {
-        scrollAndTap(APPROVE);
+        if (!isPresentAfterScroll(APPROVE)) {
+            throw new IllegalStateException("No '" + APPROVE + "' control on screen — a document "
+                    + "must be submitted before there is anything to approve");
+        }
+        WebElement button = find(descContains(APPROVE));
+        LOG.info("AdminUsers: approving the open document");
+        driver.executeScript("mobile: clickGesture",
+                java.util.Map.of("elementId", ((RemoteWebElement) button).getId()));
         return this;
     }
 

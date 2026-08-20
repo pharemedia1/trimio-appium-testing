@@ -11,23 +11,22 @@
     "email": "trimiotest+verified@gmail.com",
     "password": "Trimio@1234"
   },
-
   "_roleAccountsNote": "Per-role sign-ins for the signed-in mobile and web suites. The app routes by user_type_id (1 client, 2 professional, 3 admin, 4 support, 9 vendor), so each role needs its own seeded account. Leave an entry blank and every test that needs it SKIPS with an explanatory message instead of failing. The 'professional' account must have an APPROVED profile, otherwise the app reroutes to ProfessionalNotCreatedHomePage and the dashboard is unreachable.",
   "roleAccounts": {
     "client": {
-      "_comment": "Blank falls back to verifiedAccount above.",
-      "email": "",
-      "password": ""
+      "_comment": "Postgres user 948. Has a user_profile row (Austin, TX), without which the app pins the account to the 'Your details' gate and the client shell is never built.",
+      "email": "trimiotest+verified@gmail.com",
+      "password": "Trimio@1234"
     },
     "professional": {
-      "_comment": "Needs profile.approval_status = 'approved' (and an approved state licence) to receive offers.",
-      "email": "",
-      "password": ""
+      "_comment": "Postgres user 936 = professional_id 266. Approved, TX-licensed and the ONLY ready-for-duty professional with a real Stripe account (onboard_texas_batch.js: 'Use professional 266 for money tests'). proReadiness.readiness(266).ready == true, so the on-duty toggle is reachable.",
+      "email": "trimiotest+professional64@gmail.com",
+      "password": "Trimio@2580"
     },
     "admin": {
-      "_comment": "user_type_id = 3. Also used for the admin web portal.",
-      "email": "",
-      "password": ""
+      "_comment": "Postgres user 32297, user_type_id = 3. Used by the admin console suite and by the professional-approval test (ADM-011): approval is an ADMIN action, so the test performs it through the console rather than writing approval_status directly.",
+      "email": "trimiotest+admin1@gmail.com",
+      "password": "Trimio@2580"
     },
     "vendor": {
       "_comment": "user_type_id = 9 with a store row. Created via admin Store -> New vendor -> Create login. A freshly-invited vendor is forced through a password reset on first sign-in.",
@@ -40,7 +39,6 @@
       "password": ""
     }
   },
-
   "_storeFixturesNote": "Names of seeded catalogue items used by the store visibility assertions. Leave blank to skip those tests.",
   "storeFixtures": {
     "clientVisibleProduct": "",
