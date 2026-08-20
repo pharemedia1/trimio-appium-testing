@@ -42,7 +42,11 @@ public final class ApiClient {
 
     public ApiClient(String baseUrl) {
         this.baseUrl = baseUrl.replaceAll("/+$", "");
+        // HTTP/1.1 explicitly: the JDK client otherwise attempts an HTTP/2 upgrade, and the
+        // Express backend answers that with a bare connection close — "header parser received
+        // no bytes" — which looks exactly like the server being down.
         this.http = HttpClient.newBuilder()
+                .version(HttpClient.Version.HTTP_1_1)
                 .connectTimeout(Duration.ofSeconds(15))
                 .followRedirects(HttpClient.Redirect.NORMAL)
                 .build();
@@ -132,11 +136,15 @@ public final class ApiClient {
         return postJson("/auth/login", Map.of("email", email, "password", password), Map.of());
     }
 
-    /** True when the backend is reachable — used to skip API tests cleanly rather than fail them. */
+    /**
+     * True when the backend is reachable — used to skip API tests cleanly rather than fail them.
+     *
+     * <p>Probes {@code /health}, which is a route the server actually serves. The previous probe
+     * of {@code /} relied on the 404 handler and reported a healthy server as unreachable.
+     */
     public boolean isReachable() {
         try {
-            get("/", Map.of());
-            return true;
+            return get("/health", Map.of()).isSuccess();
         } catch (RuntimeException e) {
             LOG.warn("Backend at {} is not reachable: {}", baseUrl, e.getMessage());
             return false;

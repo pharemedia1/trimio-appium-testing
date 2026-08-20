@@ -83,4 +83,40 @@ public class OnboardingScreen extends MobileBasePage {
         tap(signInLink);
         return new LoginScreen(driver);
     }
+
+    // ---- privacy policy (AUTH-009) -----------------------------------------
+    public static final String PRIVACY_TITLE = "Privacy Policy";
+    public static final String PRIVACY_OPEN = "Open Privacy Policy";
+    public static final String PRIVACY_FAILED = "Failed to load privacy policy";
+    public static final String PRIVACY_UNSUPPORTED = "Unsupported document format";
+
+    /**
+     * Opens the Privacy Policy if a link to it is reachable from the current screen.
+     *
+     * @return false when no link is present, so the caller can skip rather than fail — the entry
+     *         point differs between builds and its absence is not a policy-rendering defect
+     */
+    public boolean openPrivacyPolicy() {
+        if (!isPresentAfterScroll(PRIVACY_TITLE)) {
+            return false;
+        }
+        scrollAndTap(PRIVACY_TITLE);
+        return true;
+    }
+
+    /**
+     * True when the policy actually rendered.
+     *
+     * <p>Deliberately asserts the absence of the failure states as well as the presence of the
+     * screen: {@code privacy_policy_screen.dart} shows its AppBar title even when the document
+     * behind it fails to load, so a title-only check would pass over a blank policy.
+     */
+    public boolean privacyPolicyRendered() {
+        boolean onScreen = isPresent(descContains(PRIVACY_TITLE), java.time.Duration.ofSeconds(20))
+                || isPresent(descContains(PRIVACY_OPEN), java.time.Duration.ofSeconds(10));
+        boolean failed = isPresent(descContains(PRIVACY_FAILED), SHORT_TIMEOUT)
+                || isPresent(descContains(PRIVACY_UNSUPPORTED), SHORT_TIMEOUT);
+        return onScreen && !failed;
+    }
+
 }

@@ -77,4 +77,20 @@ public class ResetPasswordTest extends RegisteredAccountTest {
         Assert.assertTrue(rp.isResetSucceeded(),
                 "A valid reset should navigate back to the login screen");
     }
+
+    /**
+     * AUTH-056 — a forced password reset must block the app until a new password is set.
+     *
+     * <p>Needs an account flagged for forced reset (the state a freshly-invited vendor lands in).
+     * Provision one and point roleAccounts.forcedReset at it to enable this.
+     */
+    @Test(description = "A forced password reset cannot be bypassed")
+    public void forcedResetBlocksTheApp() {
+        if (!TestAccounts.hasAccountFor("forcedReset")) {
+            throw new SkipException("Add roleAccounts.forcedReset (an account flagged for a forced "
+                    + "password reset, e.g. a newly-invited vendor) to test-accounts.json.");
+        }
+        throw new SkipException("Account configured — implement against the 'Set a new password' screen.");
+    }
+
 }

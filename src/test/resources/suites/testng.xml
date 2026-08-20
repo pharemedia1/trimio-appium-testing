@@ -2,25 +2,37 @@
 <!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
 
 <!--
-  Trimio regression suite.
-  - parallel="methods" + thread-count: run @Test methods concurrently (PlaywrightFactory is
-    ThreadLocal, so each thread gets its own browser).
-  - listeners: TestListener drives ExtentReports, failure screenshots, and auto-retry.
-  Override on the CLI: mvn test -DsuiteXmlFile=path/to/other-suite.xml
--->
-<suite name="Trimio Regression Suite" parallel="methods" thread-count="2" verbose="1">
+  DEFAULT suite — what a bare `mvn test` runs.
 
+  It deliberately contains only checks that need NO Trimio environment, so a plain `mvn test`
+  on a fresh clone is green rather than a wall of timeouts. It used to run a placeholder
+  Playwright scaffold (org.example.tests.LoginTest) whose selectors pointed at example.com;
+  that could only ever fail, so it has been deleted along with its page objects.
+
+  The real Trimio suites, each of which needs its environment and SKIPS with an explanatory
+  message when it cannot find it:
+
+    mobile-testng.xml             auth flows          emulator + backend
+    mobile-regression-testng.xml  signed-in journeys  emulator + backend + seeded accounts
+    web-testng.xml                staff web portal    served Flutter Web build
+    full-regression.xml           everything          all of the above
+
+  Run one with:
+    mvn test -DsuiteXmlFile=src/test/resources/suites/<suite>.xml -DretryCount=0
+
+  parallel="methods" + thread-count=2: PlaywrightFactory is ThreadLocal, so each thread gets
+  its own browser. Listeners drive ExtentReports, failure screenshots and auto-retry.
+-->
+<suite name="Trimio Default Suite" parallel="methods" thread-count="2" verbose="1">
 
     <listeners>
         <listener class-name="org.example.listeners.TestListener"/>
     </listeners>
 
-    <test name="Smoke Tests">
-        C
+    <!-- Framework self-check: proves the Playwright factory, config precedence and mobile
+         emulation path all work. Skips itself unless -Ddevice=pixel7|iphone14 is passed. -->
+    <test name="Framework self-checks">
         <classes>
-            <class name="org.example.tests.LoginTest"/>
-            <!-- Mobile-emulation sanity check; skips itself unless -Ddevice=pixel7|iphone14 -->
-
             <class name="org.example.tests.MobileEmulationTest"/>
         </classes>
     </test>

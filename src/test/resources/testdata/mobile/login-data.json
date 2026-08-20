@@ -26,5 +26,12 @@
     "email": "trimiotest+notregistered@gmail.com",
     "password": "Wrongpass@2580",
     "expectedMessage": "Invalid email or password."
+  },
+  {
+    "scenario": "registered email with wrong password",
+    "type": "backend",
+    "email": "trimiotest+verified@gmail.com",
+    "password": "Wrong@9876",
+    "expectedMessage": "Invalid email or password."
   }
 ]

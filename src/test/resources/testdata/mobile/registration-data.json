@@ -54,5 +54,26 @@
     "phone": "5551234567",
     "password": "Newpass123!",
     "expectedMessage": "Password cannot contain sequential numbers like '123'"
+  },
+  {
+    "scenario": "empty password",
+    "email": "trimiotest+valid@gmail.com",
+    "phone": "5551234567",
+    "password": "",
+    "expectedMessage": "Please enter your password"
+  },
+  {
+    "scenario": "password missing lowercase",
+    "email": "trimiotest+valid@gmail.com",
+    "phone": "5551234567",
+    "password": "PASSWORD@99",
+    "expectedMessage": "Password must include at least one lowercase letter"
+  },
+  {
+    "scenario": "password missing digit",
+    "email": "trimiotest+valid@gmail.com",
+    "phone": "5551234567",
+    "password": "Trimiopass@",
+    "expectedMessage": "Password must include at least one digit"
   }
 ]

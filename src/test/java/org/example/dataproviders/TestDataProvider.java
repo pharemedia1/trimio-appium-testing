@@ -22,12 +22,6 @@ public class TestDataProvider {
         return data;
     }
 
-    /** Legacy web login scenarios. */
-    @DataProvider(name = "loginData")
-    public static Object[][] loginData() {
-        return asRows("testdata/login-data.json");
-    }
-
     // ---- mobile (Appium) scenarios -----------------------------------------
 
     @DataProvider(name = "registrationNegative")

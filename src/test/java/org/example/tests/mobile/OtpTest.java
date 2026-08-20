@@ -69,4 +69,35 @@ public class OtpTest extends RegisteredAccountTest {
 
         Assert.assertTrue(otp.isOtpAccepted(), "The correct OTP should advance past the OTP screen");
     }
+
+    /**
+     * AUTH-050 — resending an OTP should issue a new code and invalidate the previous one.
+     *
+     * <p>Skipped because the feature does not exist: {@code otp_page.dart} has no resend control at
+     * all in this build. That is worth recording as a gap rather than deleting the case — a user who
+     * loses the email currently has no way forward except restarting the whole reset flow.
+     */
+    @Test(description = "Resending an OTP invalidates the previous code")
+    public void resendInvalidatesPreviousCode() {
+        OtpVerificationScreen otp = new OtpVerificationScreen(driver);
+        if (!otp.hasResendControl()) {
+            throw new SkipException("The OTP screen exposes no resend control in this build "
+                    + "(otp_page.dart has none), so there is nothing to test. Product gap: a user "
+                    + "who never receives the code must restart the reset flow.");
+        }
+        throw new SkipException("Resend appeared — this test needs implementing against it.");
+    }
+
+    /**
+     * AUTH-051 — account verification offers separate email and phone OTP resends.
+     *
+     * <p>Needs an account parked on the verification screen (registered but unverified), which this
+     * suite does not currently provision.
+     */
+    @Test(description = "Account verification supports email and phone OTP resend")
+    public void accountVerificationResendsBothChannels() {
+        throw new SkipException("Needs an account sitting on accountVerificationPage (registered but "
+                + "unverified). Provision one and drive it from registration to enable this.");
+    }
+
 }

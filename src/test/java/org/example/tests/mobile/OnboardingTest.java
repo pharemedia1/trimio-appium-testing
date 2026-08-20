@@ -5,6 +5,8 @@ import org.example.pages.mobile.LoginScreen;
 import org.example.pages.mobile.OnboardingScreen;
 import org.example.pages.mobile.RoleSelectionScreen;
 import org.testng.Assert;
+import org.example.pages.mobile.RegistrationScreen;
+import org.testng.SkipException;
 import org.testng.annotations.Test;
 
 /**
@@ -43,4 +45,34 @@ public class OnboardingTest extends MobileBaseTest {
         Assert.assertTrue(roles.isLoaded(),
                 "Get started should open the role-selection page (registration flow)");
     }
+
+    /** AUTH-007 — the client card opens the signup form for that role. */
+    @Test(description = "Choosing \"I'm a Client\" opens the client registration form")
+    public void clientRoleOpensRegistration() {
+        RegistrationScreen form = onboarding().goToRegister().chooseClient();
+
+        Assert.assertTrue(form.isLoaded(),
+                "Picking the client role should open the registration form");
+    }
+
+    /** AUTH-008 — same for the professional card; the role decides the whole downstream app. */
+    @Test(description = "Choosing \"I'm a Professional\" opens the professional registration form")
+    public void professionalRoleOpensRegistration() {
+        RegistrationScreen form = onboarding().goToRegister().chooseProfessional();
+
+        Assert.assertTrue(form.isLoaded(),
+                "Picking the professional role should open the registration form");
+    }
+
+    /** AUTH-009 — the policy has to actually render, not just navigate. */
+    @Test(description = "The Privacy Policy document opens and renders")
+    public void privacyPolicyOpens() {
+        OnboardingScreen onboarding = onboarding();
+        if (!onboarding.openPrivacyPolicy()) {
+            throw new SkipException("No Privacy Policy link is reachable from onboarding in this build.");
+        }
+        Assert.assertTrue(onboarding.privacyPolicyRendered(),
+                "The policy should render rather than showing 'Failed to load privacy policy'");
+    }
+
 }

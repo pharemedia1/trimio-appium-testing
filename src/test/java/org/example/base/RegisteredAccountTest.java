@@ -16,16 +16,22 @@ import org.testng.annotations.BeforeClass;
  */
 public abstract class RegisteredAccountTest extends MobileBaseTest {
 
+    /** The only state currently enabled for signup with published documents. */
+    protected static final String SIGNUP_STATE = "Texas";
+
     /** Email of the account registered for this class. */
     protected String accountEmail;
 
     @BeforeClass(alwaysRun = true)
     public void createTestAccount() {
-        AndroidDriver setup = AppiumDriverFactory.createDriver();
+        AndroidDriver setup = openSessionOrSkip();
         try {
             String email = TestAccounts.newClientEmail();
             RegistrationScreen reg = new OnboardingScreen(setup).goToRegister().chooseClient();
-            reg.register(email, TestAccounts.defaultPhone(), TestAccounts.genericPassword());
+            // Registration now requires a state and every published document read — see
+            // RegistrationScreen#register. Texas is the only state currently open for signup.
+            reg.register(email, TestAccounts.defaultPhone(), TestAccounts.genericPassword(),
+                    SIGNUP_STATE);
             if (!reg.isRegistrationSuccessful()) {
                 throw new IllegalStateException("Setup registration failed for " + email);
             }

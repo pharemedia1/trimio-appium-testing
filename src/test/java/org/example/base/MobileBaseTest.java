@@ -8,6 +8,7 @@ import org.example.factory.AppiumDriverFactory;
 import org.example.pages.mobile.OnboardingScreen;
 import org.example.reports.ExtentManager;
 import org.testng.ITestContext;
+import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.AfterSuite;
@@ -35,12 +36,34 @@ public abstract class MobileBaseTest {
 
     private static final Logger LOG = LogManager.getLogger(MobileBaseTest.class);
 
+    /**
+     * Set once the mobile environment has been shown to be absent, so the remaining tests skip
+     * immediately instead of each spending a session-creation timeout discovering the same thing.
+     *
+     * <p>Only latched when <em>no</em> session has ever succeeded — i.e. the environment never came
+     * up at all. A failure after a working session is a real failure (a crashed emulator, a genuine
+     * bug) and is reported as one rather than quietly swallowed.
+     */
+    private static volatile String mobileUnavailable;
+
+    /** Guards the latch above: proof that the environment did work at least once. */
+    private static volatile boolean sessionEverCreated;
+
     protected AndroidDriver driver;
 
     @BeforeSuite(alwaysRun = true)
     public void beforeSuite() {
         LOG.info("==== @BeforeSuite: starting Appium server + loading test data ====");
-        AppiumDriverFactory.startServer();
+        // A failure here is NOT fatal: autostart may be off, or a server may already be running at
+        // appium.url, and createDriver() falls back to it. Letting this throw would fail the whole
+        // suite in @BeforeSuite — a configuration error that reports as neither pass, fail nor a
+        // usable skip — before a single test has had the chance to say what it needs.
+        try {
+            AppiumDriverFactory.startServer();
+        } catch (RuntimeException e) {
+            LOG.warn("Could not start the embedded Appium server ({}). Falling back to appium.url; "
+                    + "tests will skip if no server answers there.", e.getMessage());
+        }
         TestAccounts.load();
     }
 
@@ -56,7 +79,42 @@ public abstract class MobileBaseTest {
 
     @BeforeMethod(alwaysRun = true)
     public void beforeMethod() {
-        driver = AppiumDriverFactory.createDriver();
+        driver = openSessionOrSkip();
+    }
+
+    /**
+     * Opens an Appium session, or raises {@link SkipException} when there is no mobile environment
+     * to open one against.
+     *
+     * <p>Why a skip and not a failure: an absent emulator says nothing about the app under test, and
+     * a suite run on a machine without one should report "not checked", not "broken". Letting the
+     * session error escape a {@code @Before*} hook produces a TestNG <em>configuration failure</em>
+     * instead — which fails the build while telling the reader nothing about what to install.
+     *
+     * <p>Shared with {@link RegisteredAccountTest}, which opens its own short-lived session in
+     * {@code @BeforeClass}; without this it would hard-fail one hook earlier than the tests it sets
+     * up, and skip the whole class as a configuration error.
+     */
+    protected static AndroidDriver openSessionOrSkip() {
+        if (mobileUnavailable != null) {
+            throw new SkipException(mobileUnavailable);
+        }
+        try {
+            AndroidDriver session = AppiumDriverFactory.createDriver();
+            sessionEverCreated = true;
+            return session;
+        } catch (RuntimeException e) {
+            if (sessionEverCreated) {
+                // The environment demonstrably works, so this is a real failure — a crashed
+                // emulator or a genuine defect. Report it rather than hiding it behind a skip.
+                throw e;
+            }
+            mobileUnavailable = "No Trimio mobile environment — could not open an Appium session. "
+                    + "Boot an emulator (emulator -avd Pixel_7_API_35), install the app "
+                    + "(com.trimio.trimio), and start the backend on :3000. Override the target with "
+                    + "-Dappium.udid=… / -Dappium.url=… (" + e.getMessage() + ")";
+            throw new SkipException(mobileUnavailable);
+        }
     }
 
     /** Convenience: a fresh-launched app always opens on the onboarding screen. */

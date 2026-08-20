@@ -6,6 +6,7 @@ import org.example.dataproviders.TestDataProvider;
 import org.example.pages.mobile.ForgotPasswordScreen;
 import org.testng.Assert;
 import org.testng.SkipException;
+import org.example.pages.mobile.OtpVerificationScreen;
 import org.testng.annotations.Test;
 
 import java.util.Map;
@@ -90,4 +91,31 @@ public class ForgotPasswordTest extends MobileBaseTest {
                 "An unknown email should advance exactly as a registered one does, so the two "
                         + "cannot be told apart from the client");
     }
+
+    /** AUTH-045 — a registered email must actually reach the OTP screen, not just be accepted. */
+    @Test(description = "A registered email advances to the OTP screen")
+    public void registeredEmailOpensOtpScreen() {
+        if (TestAccounts.verifiedEmail().isBlank()) {
+            throw new SkipException("Set verifiedAccount.email in test-accounts.json.");
+        }
+        ForgotPasswordScreen form = openForgotPasswordForm();
+        form.requestReset(TestAccounts.verifiedEmail(), "");
+
+        Assert.assertTrue(new OtpVerificationScreen(driver).isLoaded(),
+                "A reset request for a registered email should open the verification-code screen");
+    }
+
+    /** AUTH-046 — role only scopes the lookup; all three reach the same form. */
+    @Test(description = "The reset role page routes every role to the same form")
+    public void resetRolePageRoutesEveryRole() {
+        Assert.assertTrue(onboarding().goToLogin().goToForgotPassword().chooseClientForReset().isLoaded(),
+                "Client should reach the reset form");
+        restartApp();
+        Assert.assertTrue(onboarding().goToLogin().goToForgotPassword().chooseProfessionalForReset().isLoaded(),
+                "Professional should reach the reset form");
+        restartApp();
+        Assert.assertTrue(onboarding().goToLogin().goToForgotPassword().chooseAdminForReset().isLoaded(),
+                "Admin should reach the reset form");
+    }
+
 }

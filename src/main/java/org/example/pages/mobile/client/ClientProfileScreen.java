@@ -114,4 +114,23 @@ public class ClientProfileScreen extends MobileBasePage {
     public boolean showsRemovePrompt() {
         return isPresent(descContains(REMOVE_PERSON), Duration.ofSeconds(10));
     }
+
+    // ---- session (AUTH-039) -------------------------------------------------
+    public static final String LOGOUT = "Logout";
+    public static final String LOGOUT_CONFIRM = "Logout Confirmation";
+
+    /** True if a logout control is reachable on the account page. */
+    public boolean hasLogoutControl() {
+        return isPresentAfterScroll(LOGOUT);
+    }
+
+    /** Logs out and confirms the "Logout Confirmation" dialog. */
+    public ClientProfileScreen logout() {
+        scrollAndTap(LOGOUT);
+        if (isPresent(descContains(LOGOUT_CONFIRM), SHORT_TIMEOUT)) {
+            tap(descContains(LOGOUT));
+        }
+        return this;
+    }
+
 }

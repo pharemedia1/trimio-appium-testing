@@ -118,6 +118,30 @@ public abstract class MobileBasePage {
         }
     }
 
+    /**
+     * Flings the first scrollable to its very end.
+     *
+     * <p>Needed wherever a control only unlocks once the user has genuinely reached the bottom —
+     * a read-before-agree document, a long consent form. Scrolling "until the button appears"
+     * cannot express that: a DISABLED Flutter button is still in the accessibility tree, so it is
+     * found immediately and the scroll never happens.
+     */
+    protected void flingToEnd() {
+        try {
+            driver.findElement(AppiumBy.androidUIAutomator(
+                    "new UiScrollable(new UiSelector().scrollable(true).instance(0))"
+                            + ".flingToEnd(" + MAX_SCROLL_SWIPES + ")"));
+        } catch (RuntimeException e) {
+            LOG.debug("flingToEnd found nothing scrollable: {}", e.getMessage());
+        }
+    }
+
+    /** True if the element exists AND the platform reports it as enabled (not greyed out). */
+    protected boolean isEnabled(By by, Duration timeout) {
+        if (!isPresent(by, timeout)) return false;
+        return Boolean.parseBoolean(find(by).getAttribute("enabled"));
+    }
+
     /** Scrolls {@code text} into view and taps it. Fails the wait if it never appears. */
     protected void scrollAndTap(String text) {
         scrollToDesc(text);

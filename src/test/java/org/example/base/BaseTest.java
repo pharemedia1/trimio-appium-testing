@@ -4,7 +4,6 @@ import com.microsoft.playwright.Page;
 import org.example.factory.PlaywrightFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
 
 /**
  * Parent of all test classes. Owns the per-test browser lifecycle via {@link PlaywrightFactory}.
@@ -19,12 +18,6 @@ public abstract class BaseTest {
     @BeforeMethod(alwaysRun = true)
     public void setUp() {
         page = PlaywrightFactory.createPage();
-    }
-
-    @Test(alwaysRun = true)
-    public void test()
-    {
-        System.out.println("Hello World");
     }
 
     @AfterMethod(alwaysRun = true)

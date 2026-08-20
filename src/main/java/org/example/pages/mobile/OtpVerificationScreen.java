@@ -70,4 +70,11 @@ public class OtpVerificationScreen extends MobileBasePage {
     public boolean isStillOnScreen() {
         return !isAbsent(submitButton);
     }
+
+    /** True if the screen offers any resend affordance (AUTH-050). */
+    public boolean hasResendControl() {
+        return isPresent(descContains("Resend"), SHORT_TIMEOUT)
+                || isPresent(descContains("resend"), SHORT_TIMEOUT);
+    }
+
 }

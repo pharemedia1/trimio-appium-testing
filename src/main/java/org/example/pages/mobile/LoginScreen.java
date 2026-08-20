@@ -137,4 +137,25 @@ public class LoginScreen extends MobileBasePage {
     public boolean isStillOnForm() {
         return !isAbsent(loginButton);
     }
+
+    /** True while the password field masks its input (AUTH-033). */
+    public boolean isPasswordMasked() {
+        var field = find(editText(1));
+        return field != null && "true".equalsIgnoreCase(field.getAttribute("password"));
+    }
+
+    /** Taps the password visibility toggle, if the field exposes one. */
+    public LoginScreen togglePasswordVisibility() {
+        if (isPresent(descContains("visibility"), SHORT_TIMEOUT)) {
+            tap(descContains("visibility"));
+        }
+        return this;
+    }
+
+    /** Taps "Register" back to the signup flow (AUTH-036). */
+    public RoleSelectionScreen goToRegister() {
+        scrollAndTap("Register");
+        return new RoleSelectionScreen(driver);
+    }
+
 }
