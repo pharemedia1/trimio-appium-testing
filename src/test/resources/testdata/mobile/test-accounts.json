@@ -24,7 +24,12 @@
       "password": "Trimio123!"
     },
     "admin": {
-      "_comment": "Postgres user 41505, user_type_id = 3. Used by the admin console suite and by the professional-approval test (ADM-011): approval is an ADMIN action, so the test performs it through the console rather than writing approval_status directly.",
+      "_comment": "ORDINARY admin, user_type_id = 3 (Postgres user 53058). Used by the admin console suite and by the professional-approval test (ADM-011): approval is an ADMIN action, so the test performs it through the console rather than writing approval_status directly. This USED to be trimiotest+admin1, which became user_type_id 4 (super_admin) on 2026-08-29 -- so every 'admin' test was silently running as the super admin and could not have caught the boundary being erased. Keep this one at type 3.",
+      "email": "trimiotest+admin2@gmail.com",
+      "password": "Trimio123!"
+    },
+    "superAdmin": {
+      "_comment": "The SUPER ADMIN seat, user_type_id = 4 (Postgres user 41505). Singular and transferable -- see super_admin_transfers and the 'Handovers' section of SuperAdminPage. Lands in the SAME web shell as an admin plus one extra sidebar destination ('Super admin'); the real difference is server-side, where requireSuperAdmin reserves /admin/invitations, legal-document publish, jurisdiction status and region enable/disable. Use it to prove those are refused (403) for the plain admin above.",
       "email": "trimiotest+admin1@gmail.com",
       "password": "Trimio123!"
     },
@@ -34,7 +39,7 @@
       "password": "Trimio123!"
     },
     "support": {
-      "_comment": "user_type_id = 4. Permitted in the web portal but has no dedicated shell yet.",
+      "_comment": "NOT user_type_id 4 any more -- that id was reassigned from 'support' to 'super_admin' on 2026-08-29, and user_types has no support row at all now. Support sits at 5-8 per backend middleware/requireStaff.js (STAFF_TYPE_IDS = 3,4,5,6,7,8 = admin, super-admin, support L0-L3) and reaches the portal by role name via web_portal_access.dart. Leave blank until such an account is seeded.",
       "email": "",
       "password": ""
     }

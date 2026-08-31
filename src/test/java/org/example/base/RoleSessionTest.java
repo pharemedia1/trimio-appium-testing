@@ -30,6 +30,26 @@ public abstract class RoleSessionTest extends MobileBaseTest {
     public static final String PROFESSIONAL = "professional";
     public static final String ADMIN = "admin";
     public static final String VENDOR = "vendor";
+
+    /**
+     * The super admin seat — {@code user_type_id} 4, a role in its own right since 2026-08-29.
+     *
+     * <p>Not a variant of {@link #ADMIN} and not interchangeable with it. {@code adminAuth} admits
+     * both ({@code ADMIN_TYPE_IDS = {3, 4}}) because the seat can do everything an admin can, which
+     * is precisely why the difference has to be tested deliberately: the extra powers are reserved
+     * at the route by {@code requireSuperAdmin}, not by anything visible in the shell. On the web
+     * both roles land in the SAME {@code WebShell}; the seat simply gains one sidebar destination.
+     *
+     * <p>Worth stating because the two were conflated: {@code roleAccounts.admin} pointed at the
+     * seat, so the whole admin suite ran as a super admin while believing otherwise, and no test
+     * could have noticed the boundary disappearing.
+     */
+    public static final String SUPER_ADMIN = "superAdmin";
+
+    /**
+     * Support. NOT {@code user_type_id} 4 any more — that id was reassigned to the super admin.
+     * Support occupies 5-8 (backend {@code middleware/requireStaff.js}) and has no seeded account.
+     */
     public static final String SUPPORT = "support";
 
     /**
@@ -144,7 +164,25 @@ public abstract class RoleSessionTest extends MobileBaseTest {
         return dashboard;
     }
 
-    /** Signs in as an admin and returns the console. */
+    /**
+     * Signs in as the super admin and returns the console.
+     *
+     * <p>The same console an ordinary admin gets — that is the design, not an oversight. Use this
+     * where a test needs the seat's authority (inviting an admin, publishing a legal document,
+     * switching a jurisdiction or region); use {@link #loginAsAdmin()} to prove those same actions
+     * are refused for a plain admin.
+     */
+    protected AdminConsoleScreen loginAsSuperAdmin() {
+        loginAs(SUPER_ADMIN);
+        AdminConsoleScreen console = new AdminConsoleScreen(driver);
+        if (!console.isLoaded() && !console.isAdminShell()) {
+            throw new SkipException("The configured 'superAdmin' account did not land in the Admin "
+                    + "Console — check its user_type_id is 4.");
+        }
+        return console;
+    }
+
+    /** Signs in as an ordinary admin (user_type_id 3) and returns the console. */
     protected AdminConsoleScreen loginAsAdmin() {
         loginAs(ADMIN);
         AdminConsoleScreen console = new AdminConsoleScreen(driver);
