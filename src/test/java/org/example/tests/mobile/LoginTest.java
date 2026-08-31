@@ -73,7 +73,7 @@ public class LoginTest extends MobileBaseTest {
         Assert.assertTrue(form.isLoginAccepted(),
                 "Login should be accepted (form left) for: " + TestAccounts.verifiedEmail());
 
-        form.dismissBiometricPromptIfPresent();
+        form.dismissPostLoginModals();
 
         // A client whose profile has no name/address is pinned to "Your details" and the shell is
         // never built — the app is correct, the account simply isn't provisioned. Skip rather than
@@ -149,7 +149,7 @@ public class LoginTest extends MobileBaseTest {
         LoginScreen form = openLoginForm();
         form.login(TestAccounts.verifiedEmail(), TestAccounts.verifiedPassword());
         Assert.assertTrue(form.isLoginAccepted(), "Login should be accepted");
-        form.dismissBiometricPromptIfPresent();
+        form.dismissPostLoginModals();
 
         restartApp();
 
@@ -168,7 +168,7 @@ public class LoginTest extends MobileBaseTest {
         form.login(TestAccounts.emailFor("professionalPending"),
                 TestAccounts.passwordFor("professionalPending"));
         Assert.assertTrue(form.isLoginAccepted(), "Login should be accepted");
-        form.dismissBiometricPromptIfPresent();
+        form.dismissPostLoginModals();
 
         Assert.assertFalse(new BottomNavBar(driver).isProfessionalShell(),
                 "A pending professional must not reach the dashboard tabs");
@@ -190,7 +190,7 @@ public class LoginTest extends MobileBaseTest {
         LoginScreen form = openLoginForm();
         form.login(TestAccounts.verifiedEmail(), TestAccounts.verifiedPassword());
         Assert.assertTrue(form.isLoginAccepted(), "Login should be accepted");
-        form.dismissBiometricPromptIfPresent();
+        form.dismissPostLoginModals();
 
         new BottomNavBar(driver).open(BottomNavBar.CLIENT_PROFILE);
         ClientProfileScreen profile = new ClientProfileScreen(driver);

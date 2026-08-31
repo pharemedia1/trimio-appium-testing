@@ -40,6 +40,14 @@ public class ResetPasswordTest extends RegisteredAccountTest {
         reset.requestReset(accountEmail, "");
 
         OtpVerificationScreen otp = new OtpVerificationScreen(driver);
+        if (!otp.isLoaded() && reset.isRateLimited()) {
+            // The credential limiter is spent, so no code was issued — see
+            // ForgotPasswordScreen.RATE_LIMITED. Skipping names the cause; asserting would report
+            // a missing OTP screen and send the next reader hunting for a selector bug.
+            throw new SkipException("The backend's credential rate limit is exhausted (10 requests "
+                    + "per 15 minutes per IP), so no OTP was issued. Run this class on its own, "
+                    + "wait out the window, or raise AUTH_CREDENTIAL_RATE_MAX for the run.");
+        }
         Assert.assertTrue(otp.isLoaded(), "OTP screen should be displayed");
         String code = DbHelper.getOtp(accountEmail);
         Assert.assertNotNull(code, "An OTP should be stored for " + accountEmail);

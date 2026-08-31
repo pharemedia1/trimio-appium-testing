@@ -111,4 +111,29 @@ public class ForgotPasswordScreen extends MobileBasePage {
     public boolean isStillOnForm() {
         return !isAbsent(resetButton);
     }
+
+    /**
+     * The backend's credential rate limit, surfaced on the form.
+     *
+     * <p>{@code /password/forgotPassword} sits behind {@code credentialLimiter}: <b>10 requests per
+     * 15-minute window, per IP</b> ({@code AUTH_CREDENTIAL_RATE_MAX} /
+     * {@code AUTH_CREDENTIAL_RATE_WINDOW_MS}). Every OTP-minting test spends one, and the emulator
+     * reaches the host from a single address, so a full sweep of ForgotPassword + Otp + ResetPassword
+     * exhausts the window part-way through and every later reset is refused with 429.
+     *
+     * <p>Measured against the running server: requests 1-10 return
+     * {@code 200 "OTP sent successfully."}, the 11th onward {@code 429 RATE_LIMITED}.
+     *
+     * <p>Worth naming rather than absorbing, because the symptom is silent: the app has no OTP page
+     * to open, so it simply stays put and the next locator times out — which reads as a broken
+     * selector or a dead backend rather than a protection doing its job. To exercise the whole OTP
+     * suite in one run, raise {@code AUTH_CREDENTIAL_RATE_MAX} for that run; do not weaken it
+     * permanently.
+     */
+    public static final String RATE_LIMITED = "Too many attempts";
+
+    /** True when the reset was refused because the credential rate limit is spent. */
+    public boolean isRateLimited() {
+        return isPresent(descContains(RATE_LIMITED), SHORT_TIMEOUT);
+    }
 }

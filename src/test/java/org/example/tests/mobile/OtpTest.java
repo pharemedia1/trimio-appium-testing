@@ -33,6 +33,15 @@ public class OtpTest extends RegisteredAccountTest {
                 .chooseClientForReset();
         reset.requestReset(accountEmail, ""); // backend issues a fresh OTP and opens the OTP screen
         OtpVerificationScreen otp = new OtpVerificationScreen(driver);
+        if (!otp.isLoaded() && reset.isRateLimited()) {
+            // Not a defect and not a broken locator: the credential limiter is spent, so the server
+            // never issued a code and the app has no OTP screen to show. Saying so beats a timeout
+            // that looks like the OTP page disappeared. See ForgotPasswordScreen.RATE_LIMITED.
+            throw new SkipException("The backend's credential rate limit is exhausted (10 requests "
+                    + "per 15 minutes per IP), so no OTP was issued. Every OTP-minting test spends "
+                    + "one; run this class on its own, wait out the window, or raise "
+                    + "AUTH_CREDENTIAL_RATE_MAX for the run.");
+        }
         Assert.assertTrue(otp.isLoaded(), "OTP screen should be displayed after requesting a reset");
         return otp;
     }

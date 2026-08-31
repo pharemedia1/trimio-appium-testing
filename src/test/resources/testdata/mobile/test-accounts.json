@@ -7,9 +7,9 @@
   "newClientEmailTemplate": "trimiotest+client{unique}@gmail.com",
   "newProfessionalEmailTemplate": "trimiotest+professional{unique}@gmail.com",
   "verifiedAccount": {
-    "_comment": "Pre-provisioned VERIFIED account (Postgres user 948, active+verified) used by positive login / forgot-password tests. Login only enforces a non-empty password client-side, so the existing 'Trimio@1234' value is fine here even though it would fail the registration policy.",
-    "email": "trimiotest+verified@gmail.com",
-    "password": "Trimio@1234"
+    "_comment": "Pre-provisioned VERIFIED account used by the positive login / forgot-password / quality tests. Postgres user 41501 ('Casey Client'), active + email_verified_at set, seeded by backend/scripts/seed_login_pair.js. This USED to be user 948 / trimiotest+verified@gmail.com, which no longer exists in the database -- every positive login test then failed at 'login_button' against an account the backend had never heard of. Keep this in step with roleAccounts.client: they are the same person, and the password is bcrypt-verified server-side now, so a stale value fails rather than being ignored.",
+    "email": "trimiotest+client1@gmail.com",
+    "password": "Trimio123!"
   },
   "_roleAccountsNote": "Per-role sign-ins for the signed-in mobile and web suites. The app routes by user_type_id (1 client, 2 professional, 3 admin, 4 support, 9 vendor), so each role needs its own seeded account. Leave an entry blank and every test that needs it SKIPS with an explanatory message instead of failing. The 'professional' account must have an APPROVED profile, otherwise the app reroutes to ProfessionalNotCreatedHomePage and the dashboard is unreachable.",
   "roleAccounts": {
