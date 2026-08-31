@@ -61,6 +61,7 @@
     <test name="Professional journeys">
         <classes>
             <class name="org.example.tests.mobile.professional.ProfessionalDashboardTest"/>
+            <class name="org.example.tests.mobile.professional.ProfessionalDutyTest"/>
             <class name="org.example.tests.mobile.professional.ProfessionalBookingsTest"/>
             <class name="org.example.tests.mobile.professional.ProfessionalClientHubTest"/>
             <class name="org.example.tests.mobile.professional.ProfessionalStoreTest"/>
@@ -72,6 +73,7 @@
         <classes>
             <class name="org.example.tests.mobile.admin.AdminConsoleTest"/>
             <class name="org.example.tests.mobile.admin.AdminUsersTest"/>
+            <class name="org.example.tests.mobile.admin.AdminProfessionalApprovalTest"/>
             <class name="org.example.tests.mobile.admin.AdminQualityTest"/>
             <class name="org.example.tests.mobile.admin.AdminQueuesTest"/>
         </classes>
@@ -85,6 +87,12 @@
             <class name="org.example.tests.web.AdminStoreTest"/>
             <class name="org.example.tests.web.VendorPortalTest"/>
             <class name="org.example.tests.web.VendorApplyTest"/>
+        </classes>
+    </test>
+
+    <test name="Social Sign-up (API)">
+        <classes>
+            <class name="org.example.tests.api.SocialRegistrationTest"/>
         </classes>
     </test>
 
