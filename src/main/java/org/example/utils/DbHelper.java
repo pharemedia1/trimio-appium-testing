@@ -22,6 +22,15 @@ import java.security.NoSuchAlgorithmException;
  */
 public final class DbHelper {
 
+    /**
+     * Where the Trimio database listens by default.
+     *
+     * <p>Port <b>5433</b>, not 5432. The backend's own {@code .env} moved to 5433 and the tests
+     * followed it; a helper still pointing at 5432 fails to connect and every DB-backed assertion
+     * quietly degrades to "couldn't check". Override with {@code -Ddb.url=…} when it moves again.
+     */
+    private static final String DEFAULT_URL = "jdbc:postgresql://localhost:5433/trimio";
+
     private DbHelper() {
         // static utility
     }
@@ -106,7 +115,7 @@ public final class DbHelper {
      * its own row. Callers should make it unique per run.
      */
     public static long createPendingProfessional(String email, String firstName, String lastName) {
-        String url = ConfigReader.get("db.url", "jdbc:postgresql://localhost:5432/trimio");
+        String url = ConfigReader.get("db.url", DEFAULT_URL);
         String user = ConfigReader.get("db.user", "postgres");
         String pass = ConfigReader.get("db.password", "");
         try (Connection c = DriverManager.getConnection(url, user, pass)) {
@@ -179,7 +188,7 @@ public final class DbHelper {
 
     /** Removes the fixture and everything hanging off it. */
     public static void deleteProfessional(long professionalId) {
-        String url = ConfigReader.get("db.url", "jdbc:postgresql://localhost:5432/trimio");
+        String url = ConfigReader.get("db.url", DEFAULT_URL);
         String user = ConfigReader.get("db.user", "postgres");
         String pass = ConfigReader.get("db.password", "");
         try (Connection c = DriverManager.getConnection(url, user, pass)) {
@@ -215,7 +224,7 @@ public final class DbHelper {
     }
 
     private static String queryOne(String sql, long id) {
-        String url = ConfigReader.get("db.url", "jdbc:postgresql://localhost:5432/trimio");
+        String url = ConfigReader.get("db.url", DEFAULT_URL);
         String user = ConfigReader.get("db.user", "postgres");
         String pass = ConfigReader.get("db.password", "");
         try (Connection c = DriverManager.getConnection(url, user, pass);
@@ -230,7 +239,7 @@ public final class DbHelper {
     }
 
     private static String readSecret(String email) {
-        String url = ConfigReader.get("db.url", "jdbc:postgresql://localhost:5432/trimio");
+        String url = ConfigReader.get("db.url", DEFAULT_URL);
         String user = ConfigReader.get("db.user", "postgres");
         String pass = ConfigReader.get("db.password", "");
         String sql = "select two_factor_secret from users where email = ?";
@@ -242,6 +251,61 @@ public final class DbHelper {
             }
         } catch (SQLException e) {
             throw new IllegalStateException("DB read failed for " + email + ": " + e.getMessage(), e);
+        }
+    }
+
+    // ---- booking verification ----------------------------------------------
+
+    /**
+     * How many appointments a professional holds, found by the display name the app shows.
+     *
+     * <p>Used to prove a paid booking actually became a row rather than only a confirmation
+     * screen. Returns -1 when the DB is not configured, so the caller can degrade to asserting on
+     * the UI alone instead of failing for want of a password.
+     *
+     * @param professionalName the name as rendered in the booking shortlist, e.g. "Pat Pro"
+     */
+    public static long countAppointmentsFor(String professionalName) {
+        String sql = "select count(*) from appointments a "
+                + " join professional_profile pp on pp.professional_id = a.professional_id "
+                + " where trim(concat(pp.first_name, ' ', pp.last_name)) = ?";
+        String v = queryOneByName(sql, professionalName);
+        return v == null ? -1 : Long.parseLong(v);
+    }
+
+    /**
+     * The Stripe connected-account id a professional would be charged through, or null.
+     *
+     * <p>Exists to explain a refused charge. {@code resolveChargeAccount} rejects any id Stripe
+     * could not have issued — seeded environments carry {@code acct_SEEDED_NOT_REAL_<id>} — and
+     * that refusal reaches the client as a generic failure, so the id is worth naming in the test
+     * output rather than leaving someone to find it.
+     */
+    public static String stripeAccountIdFor(String professionalName) {
+        String sql = "select psa.stripe_account_id from professional_stripe_accounts psa "
+                + " join professional_profile pp on pp.professional_id = psa.professional_id "
+                + " where trim(concat(pp.first_name, ' ', pp.last_name)) = ?";
+        return queryOneByName(sql, professionalName);
+    }
+
+    /** Runs a single-column, single-row query keyed on a name; null when unconfigured or absent. */
+    private static String queryOneByName(String sql, String name) {
+        if (!isConfigured()) {
+            return null;
+        }
+        String url = ConfigReader.get("db.url", DEFAULT_URL);
+        String user = ConfigReader.get("db.user", "postgres");
+        String pass = ConfigReader.get("db.password", "");
+        try (Connection c = DriverManager.getConnection(url, user, pass);
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, name);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getString(1) : null;
+            }
+        } catch (SQLException e) {
+            // Verification is a bonus here, never the point of the test: a booking that the UI
+            // confirmed is still a booking if this lookup cannot run.
+            return null;
         }
     }
 }

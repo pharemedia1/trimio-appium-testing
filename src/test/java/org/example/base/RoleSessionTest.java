@@ -1,5 +1,7 @@
 package org.example.base;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.example.data.TestAccounts;
 import org.example.pages.mobile.LoginScreen;
 import org.example.pages.mobile.admin.AdminConsoleScreen;
@@ -21,6 +23,8 @@ import org.testng.SkipException;
  * trains people to ignore red.
  */
 public abstract class RoleSessionTest extends MobileBaseTest {
+
+    private static final Logger LOG = LogManager.getLogger(RoleSessionTest.class);
 
     public static final String CLIENT = "client";
     public static final String PROFESSIONAL = "professional";
@@ -86,6 +90,40 @@ public abstract class RoleSessionTest extends MobileBaseTest {
                     + "booking flow are unreachable. Complete the profile (name + address) for "
                     + TestAccounts.emailFor(CLIENT) + ", or point roleAccounts.client at a "
                     + "fully-provisioned client.");
+        }
+        return home;
+    }
+
+    /**
+     * Returns a client Home tab, signing in only if the app has not already done it.
+     *
+     * <p>Debug builds carrying the {@code DEV_AUTOLOGIN_*} dart-defines sign themselves in during
+     * splash and never render onboarding, so {@link #loginAsClient()} times out looking for a login
+     * form on a shell that is already up — and {@code adb shell pm clear} does not help, because
+     * the credentials are compiled into the APK. Rather than make every signed-in client test
+     * depend on which APK is installed, this accepts either route: an existing client shell is used
+     * as-is, and anything else falls through to a real sign-in.
+     *
+     * <p>The profile gate is still enforced, for the same reason {@link #loginAsProvisionedClient()}
+     * enforces it — an unprovisioned client cannot reach booking at all.
+     */
+    protected ClientHomeScreen clientSession() {
+        BottomNavBar nav = new BottomNavBar(driver);
+        ClientHomeScreen home;
+        if (nav.isClientShell()) {
+            LOG.info("The app is already signed in as a client (dev autologin build)");
+            // The shell can be up and still covered: the post-login modals leave the bottom nav in
+            // the tree while their scrim hides the feed, so isClientShell() is not evidence that
+            // anything is reachable. Nothing signed in here, so answer them explicitly.
+            new LoginScreen(driver).dismissPostLoginModals();
+            home = new ClientHomeScreen(driver);
+        } else {
+            home = loginAsClient();
+        }
+        if (home.isBlockedByProfileGate()) {
+            throw new SkipException("The signed-in client has an incomplete profile — the app holds "
+                    + "it on the '" + ClientHomeScreen.PROFILE_GATE + "' screen, so booking is "
+                    + "unreachable. Give the account a name and address.");
         }
         return home;
     }

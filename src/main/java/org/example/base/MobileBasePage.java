@@ -74,6 +74,22 @@ public abstract class MobileBasePage {
     }
 
     /**
+     * A <b>Button</b> whose content-desc contains {@code text}.
+     *
+     * <p>Needed wherever a dialog repeats its choice inside its own message. The rebook prompt's
+     * body reads "…or choose a New professional?", so a bare {@link #descContains(String)} for
+     * "New professional" resolves to the message paragraph — which is a real, clickable node, so
+     * the tap "succeeds" against a 744×105 block of text and the dialog simply stays put. Verified
+     * on-device: the button is 353×126 and 116px lower. Constraining to the Button class picks the
+     * control rather than the prose describing it.
+     */
+    protected static By buttonDescContains(String text) {
+        return AppiumBy.androidUIAutomator(
+                "new UiSelector().className(\"android.widget.Button\").descriptionContains(\""
+                        + text + "\")");
+    }
+
+    /**
      * Matches either the content-desc <em>or</em> the rendered text containing {@code value}.
      *
      * <p>Most Trimio screens carry no explicit {@code Semantics} (only two exist in the whole app),
@@ -262,6 +278,44 @@ public abstract class MobileBasePage {
             LOG.debug("Could not dismiss the keyboard via performEditorAction ({}); continuing with "
                     + "it open rather than risking a BACK press.", e.getMessage());
         }
+    }
+
+    /**
+     * Answers Android's runtime location prompt, if it is up.
+     *
+     * <p>The booking flow asks for location the first time it opens, and the prompt is a
+     * <b>system</b> dialog from the permission controller, not part of the app. While it is
+     * showing, Flutter's semantics tree is empty — every app locator times out against a screen
+     * that is really there but covered, which reads exactly like a broken selector. Verified
+     * on-device: the tree goes from the full Home feed to zero nodes and back.
+     *
+     * <p>{@code autoGrantPermissions} does not cover it. That capability grants manifest
+     * permissions at <em>install</em> time, and the suite installs once and then clears app data
+     * per session — which revokes the grant and brings the prompt back on the next run.
+     *
+     * <p>Best-effort and quick: no prompt is the normal case once granted.
+     *
+     * @return true if a prompt was found and allowed
+     */
+    protected boolean allowLocationIfAsked() {
+        return allowLocationIfAsked(Duration.ofSeconds(12));
+    }
+
+    /**
+     * @param timeout how long to wait for the prompt to appear. The permission controller is a
+     *     separate process and the dialog is raised only once Flutter asks, so it can lag the tap
+     *     that triggered it by several seconds — a short wait returns "no prompt" while one is
+     *     still on its way, and the caller then times out against a covered screen.
+     */
+    protected boolean allowLocationIfAsked(Duration timeout) {
+        By allow = By.xpath("//*[contains(@text,'While using the app') or contains(@text,'Only this time')]");
+        if (!isPresent(allow, timeout)) {
+            return false;
+        }
+        LOG.info("Answering the system location prompt");
+        tap(allow);
+        sleepBriefly();
+        return true;
     }
 
     protected String getText(By by) {

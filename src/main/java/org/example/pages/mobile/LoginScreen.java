@@ -108,6 +108,20 @@ public class LoginScreen extends MobileBasePage {
     public static final String APPOINTMENT_ALERT = "Appointment in";
     public static final String APPOINTMENT_ALERT_DISMISS = "Got it";
     public static final String BIOMETRIC_DECLINE = "Not now";
+
+    /**
+     * The rate-and-tip sheet raised for a visit that has finished but not been reviewed.
+     *
+     * <p>Third modal in the post-login queue, and the one that grows on you: it appears only once
+     * the account has a <em>completed</em> appointment, so a fixture that books successfully today
+     * breaks every signed-in client test tomorrow. Its scrim covers the Home feed while leaving the
+     * bottom nav in the tree, so {@code isClientShell()} answers true and the shell still never
+     * renders — which reads as "the Home feed should render" failing against a perfectly healthy
+     * app. Verified on-device 2026-08-30 for a Casey Client with a finished Pat Pro visit.
+     */
+    public static final String REVIEW_PROMPT = "How was it with";
+    /** Its decline button — the same label the biometric prompt uses. */
+    public static final String REVIEW_PROMPT_DECLINE = "Not now";
     public static final String BIOMETRIC_ACCEPT = "Enable";
 
     /**
@@ -156,10 +170,32 @@ public class LoginScreen extends MobileBasePage {
         return this;
     }
 
-    /** Answers every modal known to sit over the signed-in shell. */
+    /**
+     * Declines the rate-and-tip sheet for a completed visit, if one is waiting.
+     *
+     * <p>Taps "Not now" rather than rating or tipping: acknowledging a modal must not leave a
+     * review or move money. See {@link #REVIEW_PROMPT} for why this is easy to acquire and hard to
+     * recognise.
+     */
+    public LoginScreen dismissReviewPromptIfPresent() {
+        if (isPresent(descContains(REVIEW_PROMPT), Duration.ofSeconds(8))) {
+            LOG.info("Login: declining the rate-and-tip sheet for a completed visit");
+            tap(accId(REVIEW_PROMPT_DECLINE));
+        }
+        return this;
+    }
+
+    /**
+     * Answers every modal known to sit over the signed-in shell.
+     *
+     * <p>Order matters and the list is a queue, not a set: the modals are raised one after another,
+     * so the next only becomes visible once the previous is answered. Anything that stops early
+     * leaves the shell covered and the failure lands on whichever screen the test wanted next.
+     */
     public LoginScreen dismissPostLoginModals() {
         dismissBiometricPromptIfPresent();
         dismissAppointmentAlertIfPresent();
+        dismissReviewPromptIfPresent();
         return this;
     }
 

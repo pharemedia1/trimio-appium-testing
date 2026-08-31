@@ -14,24 +14,24 @@
   "_roleAccountsNote": "Per-role sign-ins for the signed-in mobile and web suites. The app routes by user_type_id (1 client, 2 professional, 3 admin, 4 support, 9 vendor), so each role needs its own seeded account. Leave an entry blank and every test that needs it SKIPS with an explanatory message instead of failing. The 'professional' account must have an APPROVED profile, otherwise the app reroutes to ProfessionalNotCreatedHomePage and the dashboard is unreachable.",
   "roleAccounts": {
     "client": {
-      "_comment": "Postgres user 948. Has a user_profile row (Austin, TX), without which the app pins the account to the 'Your details' gate and the client shell is never built.",
-      "email": "trimiotest+verified@gmail.com",
-      "password": "Trimio@1234"
+      "_comment": "Postgres user 41501 ('Casey Client'), seeded by backend/scripts/seed_login_pair.js. Has a user_profile + address (Dallas, TX) AND a real Stripe TEST card (pm_card_visa) in client_payment_methods -- without the card the booking flow reaches 'Review & pay' and the charge is refused 402. Passwords are bcrypt now, not SHA-256.",
+      "email": "trimiotest+client1@gmail.com",
+      "password": "Trimio123!"
     },
     "professional": {
-      "_comment": "Postgres user 936 = professional_id 266. Approved, TX-licensed and the ONLY ready-for-duty professional with a real Stripe account (onboard_texas_batch.js: 'Use professional 266 for money tests'). proReadiness.readiness(266).ready == true, so the on-duty toggle is reachable.",
-      "email": "trimiotest+professional64@gmail.com",
-      "password": "Trimio@2580"
+      "_comment": "Postgres user 41504 = professional_id 878 ('Pat Pro'), Class A Barber (TX), approved, on duty, 5 priced services. NOTE: its professional_stripe_accounts row is a FABRICATED 'acct_SEEDED_NOT_REAL_878', so it can be dispatched and booked but CANNOT TAKE MONEY -- resolveChargeAccount refuses a non-Stripe-issued id in every environment. Point this at a Connect-onboarded pro for the payment test.",
+      "email": "trimiotest+pro1@gmail.com",
+      "password": "Trimio123!"
     },
     "admin": {
-      "_comment": "Postgres user 32297, user_type_id = 3. Used by the admin console suite and by the professional-approval test (ADM-011): approval is an ADMIN action, so the test performs it through the console rather than writing approval_status directly.",
+      "_comment": "Postgres user 41505, user_type_id = 3. Used by the admin console suite and by the professional-approval test (ADM-011): approval is an ADMIN action, so the test performs it through the console rather than writing approval_status directly.",
       "email": "trimiotest+admin1@gmail.com",
-      "password": "Trimio@2580"
+      "password": "Trimio123!"
     },
     "vendor": {
-      "_comment": "user_type_id = 9 with a store row. Created via admin Store -> New vendor -> Create login. A freshly-invited vendor is forced through a password reset on first sign-in.",
-      "email": "",
-      "password": ""
+      "_comment": "Postgres user 41506, user_type_id = 9 with a store_vendors row, seeded by seed_login_pair.js.",
+      "email": "trimiotest+store1@gmail.com",
+      "password": "Trimio123!"
     },
     "support": {
       "_comment": "user_type_id = 4. Permitted in the web portal but has no dedicated shell yet.",
