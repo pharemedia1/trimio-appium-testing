@@ -142,12 +142,13 @@ public class LoginScreen extends MobileBasePage {
      * <p>No-op when the prompt does not appear (it is only offered on devices with biometrics
      * enrolled, and only until the user answers it).
      */
-    public LoginScreen dismissBiometricPromptIfPresent() {
+    public boolean dismissBiometricPromptIfPresent() {
         if (isPresent(descContains(BIOMETRIC_PROMPT), Duration.ofSeconds(8))) {
             LOG.info("Login: declining the '{}' biometric prompt", BIOMETRIC_PROMPT);
             tap(accId(BIOMETRIC_DECLINE));
+            return true;
         }
-        return this;
+        return false;
     }
 
     /**
@@ -162,12 +163,13 @@ public class LoginScreen extends MobileBasePage {
      * <p>Taps "Got it" rather than "View appointment": acknowledging must not navigate somewhere
      * the caller did not ask for.
      */
-    public LoginScreen dismissAppointmentAlertIfPresent() {
+    public boolean dismissAppointmentAlertIfPresent() {
         if (isPresent(descContains(APPOINTMENT_ALERT), Duration.ofSeconds(8))) {
             LOG.info("Login: acknowledging the '{}' reminder", APPOINTMENT_ALERT);
             tap(descOrText(APPOINTMENT_ALERT_DISMISS));
+            return true;
         }
-        return this;
+        return false;
     }
 
     /**
@@ -177,25 +179,45 @@ public class LoginScreen extends MobileBasePage {
      * review or move money. See {@link #REVIEW_PROMPT} for why this is easy to acquire and hard to
      * recognise.
      */
-    public LoginScreen dismissReviewPromptIfPresent() {
+    public boolean dismissReviewPromptIfPresent() {
         if (isPresent(descContains(REVIEW_PROMPT), Duration.ofSeconds(8))) {
             LOG.info("Login: declining the rate-and-tip sheet for a completed visit");
             tap(accId(REVIEW_PROMPT_DECLINE));
+            return true;
         }
-        return this;
+        return false;
     }
 
+    /** How many modals to clear before giving up. Six unreviewed visits fit inside this. */
+    private static final int MAX_POST_LOGIN_MODALS = 10;
+
     /**
-     * Answers every modal known to sit over the signed-in shell.
+     * Answers every modal sitting over the signed-in shell, until none is left.
      *
-     * <p>Order matters and the list is a queue, not a set: the modals are raised one after another,
-     * so the next only becomes visible once the previous is answered. Anything that stops early
-     * leaves the shell covered and the failure lands on whichever screen the test wanted next.
+     * <p><b>A loop, not three calls.</b> These are a queue and the queue can repeat: the rate-and-tip
+     * sheet is raised <em>per unreviewed completed visit</em>, so answering one uncovers the next.
+     * Measured on-device against a client with six completed appointments — the log showed all three
+     * known modals dismissed and the Home feed still absent, because a fourth sheet was already
+     * behind them. A single pass is correct only for an account with no history, which is the one
+     * account nobody keeps.
+     *
+     * <p>Each pass retries every modal, since answering one can reveal a different kind rather than
+     * another of the same. Stops as soon as a pass finds nothing, so the common case costs one pass.
+     *
+     * @return this screen, for chaining
      */
     public LoginScreen dismissPostLoginModals() {
-        dismissBiometricPromptIfPresent();
-        dismissAppointmentAlertIfPresent();
-        dismissReviewPromptIfPresent();
+        for (int pass = 1; pass <= MAX_POST_LOGIN_MODALS; pass++) {
+            boolean dismissedSomething = dismissBiometricPromptIfPresent()
+                    | dismissAppointmentAlertIfPresent()
+                    | dismissReviewPromptIfPresent();
+            if (!dismissedSomething) {
+                return this;
+            }
+            LOG.debug("Post-login modal pass {} cleared at least one dialog", pass);
+        }
+        LOG.warn("Still finding post-login modals after {} passes — continuing anyway",
+                MAX_POST_LOGIN_MODALS);
         return this;
     }
 
