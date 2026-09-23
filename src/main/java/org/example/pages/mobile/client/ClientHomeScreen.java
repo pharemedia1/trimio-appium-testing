@@ -380,6 +380,12 @@ public class ClientHomeScreen extends MobileBasePage {
         // flow behind a modal that is neither the booking flow nor the Home feed, which is what
         // made this look like a tap that had done nothing at all.
         chooseVenueIfAsked(true);
+        // The SAME modal chain as Home's own entry point, because this lands in the same place:
+        // activityPage._openBooking switches to the Home tab and starts the individual flow there.
+        // So the rebook prompt ("Book your professional?") stands between the venue sheet and the
+        // flow here too. Leaving it unanswered left the test on a modal that is neither the flow
+        // nor the Home feed, which read as "the tap produced no navigation".
+        answerRebookPromptIfPresent(false);
         allowLocationIfAsked();
         return new ClientBookingFlowScreen(driver);
     }
