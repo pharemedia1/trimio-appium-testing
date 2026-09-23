@@ -39,6 +39,35 @@ public class ClientReviewTest extends RoleSessionTest {
         org.example.utils.DbHelper.clearReviewDrafts(REVIEWER_USER_ID);
     }
 
+    /**
+     * Opens the review flow on a visit that had MORE THAN ONE service.
+     *
+     * <p>Only the per-service gate needs this. The newest completed visit is usually
+     * single-service -- the payment suite books individual appointments which later complete and
+     * land at the top of history -- so taking whichever is first made this test skip claiming the
+     * appointment had one service. True of that appointment; not true of the history.
+     */
+    private ClientReviewScreen openMultiServiceReviewFlow() {
+        loginAsClient();
+        new BottomNavBar(driver).open(BottomNavBar.CLIENT_APPOINTMENTS);
+
+        ClientAppointmentsScreen appointments = new ClientAppointmentsScreen(driver);
+        appointments.openHistory();
+        if (!appointments.rateFirstMultiServiceVisit()) {
+            throw new SkipException("No reviewable visit in the history had more than one service, "
+                    + "so the per-service gate cannot trigger. Add one with: INSERT INTO "
+                    + "appointment_services (appointment_id, service_id, final_price, quoted_price) "
+                    + "VALUES (<a completed, unreviewed appointment>, 21, 85.00, 85.00);");
+        }
+
+        ClientReviewScreen review = new ClientReviewScreen(driver);
+        if (!review.isLoaded()) {
+            throw new SkipException("'" + ClientAppointmentsScreen.RATE_VISIT + "' did not open the "
+                    + "review flow — its entry point may differ in this build.");
+        }
+        return review;
+    }
+
     private ClientReviewScreen openReviewFlow() {
         loginAsClient();
         new BottomNavBar(driver).open(BottomNavBar.CLIENT_APPOINTMENTS);
@@ -88,7 +117,7 @@ public class ClientReviewTest extends RoleSessionTest {
         // (overall star + "would you book them again") and step 2 (the aspect rows) have to be
         // completed to reach it. The old version pressed submit on step 1 and read the silence as
         // "there is only one service".
-        ClientReviewScreen review = openReviewFlow();
+        ClientReviewScreen review = openMultiServiceReviewFlow();
         review.completeStepOne(5);
         review.rateAllAspects(5);
         review.submit();

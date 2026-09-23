@@ -35,6 +35,18 @@ public class ProfessionalBookingsScreen extends MobileBasePage {
     /** Empty state of the timeline, verified on-device (the range word varies: today/week/month). */
     public static final String EMPTY_TIMELINE = "bookings yet.";
     /**
+     * The status word on a booking card that is still actionable.
+     *
+     * <p>The action sheet is built from the appointment's state, so a Completed or Canceled
+     * booking carries neither "Report no-show" nor "Cancel appointment". Since today's bookings
+     * complete as the day passes, the card a test finds first changes with the clock.
+     */
+    public static final String STATUS_CONFIRMED = "Confirmed";
+    /** The timeline's range selector: "Today | Week | Month". Today is the default. */
+    public static final String RANGE_TODAY = "Today";
+    public static final String RANGE_WEEK = "Week";
+    public static final String RANGE_MONTH = "Month";
+    /**
      * The timeline's own count, e.g. "1 booking" / "3 bookings", beside "Today's Timeline".
      *
      * <p>The screen has no per-card "View details" control -- a booking is a single merged card,
@@ -67,6 +79,17 @@ public class ProfessionalBookingsScreen extends MobileBasePage {
         }
         return timelineCount() > 0 || !bookingCards().isEmpty()
                 || isPresentAfterScroll(VIEW_DETAILS);
+    }
+
+    /** True when any of {@code cards} is still actionable (not complete, cancelled or no-show). */
+    private boolean hasActionableCard(java.util.List<org.openqa.selenium.WebElement> cards) {
+        for (org.openqa.selenium.WebElement card : cards) {
+            String desc = card.getAttribute("content-desc");
+            if (desc != null && desc.contains(STATUS_CONFIRMED)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /** The number the timeline states, or -1 when it is not on screen. */
@@ -179,8 +202,38 @@ public class ProfessionalBookingsScreen extends MobileBasePage {
             throw new org.openqa.selenium.NoSuchElementException(
                     "No booking card to open actions on.");
         }
-        LOG.info("ProBookings: long-pressing {}", cards.get(0).getAttribute("content-desc"));
-        longPress(cards.get(0));
+        // WIDEN THE RANGE if today holds nothing actionable. The timeline defaults to Today, and
+        // a professional's bookings for today are complete by the afternoon -- pro 878 has 26
+        // completed, 62 cancelled and exactly ONE confirmed booking, which is tomorrow. So the
+        // default view can be entirely un-actionable through no fault of the fixture, and the
+        // week or month view is where a confirmed booking lives.
+        if (!hasActionableCard(cards)) {
+            for (String range : new String[]{RANGE_WEEK, RANGE_MONTH}) {
+                LOG.info("ProBookings: nothing actionable in this range, trying '{}'", range);
+                scrollAndTapExact(range);
+                sleepBriefly();
+                cards = bookingCards();
+                if (hasActionableCard(cards)) {
+                    break;
+                }
+            }
+        }
+        // Prefer a booking that can still be ACTED ON. The sheet is built from the appointment's
+        // state -- canReportNoShow is `!isComplete && !isCanceled && !isNoShow` -- so a completed
+        // booking is offered no "Report no-show" at all and the caller waits 30 seconds for a
+        // control that was never going to be there. The first card is not reliably actionable:
+        // today's bookings COMPLETE as the day passes, so a card that was "Confirmed" when a test
+        // last ran is "Completed" by the afternoon.
+        org.openqa.selenium.WebElement target = cards.get(0);
+        for (org.openqa.selenium.WebElement card : cards) {
+            String desc = card.getAttribute("content-desc");
+            if (desc != null && desc.contains(STATUS_CONFIRMED)) {
+                target = card;
+                break;
+            }
+        }
+        LOG.info("ProBookings: long-pressing {}", target.getAttribute("content-desc"));
+        longPress(target);
         return this;
     }
 

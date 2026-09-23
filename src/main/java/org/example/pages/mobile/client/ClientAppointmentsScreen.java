@@ -244,6 +244,47 @@ public class ClientAppointmentsScreen extends MobileBasePage {
         return isPresentAfterScroll(RATE_VISIT);
     }
 
+    /**
+     * Starts a review for a past visit that had MORE THAN ONE service.
+     *
+     * <p>A multi-service card names its first service and then "+N more" --
+     * "Men's Haircut + Beard +1 more | $72.00 | ... | Completed". Picking one matters because the
+     * per-service gate needs two services to bite, and the newest completed visit is usually a
+     * single-service one: the payment suite creates individual bookings which later complete, so
+     * they arrive at the TOP of history and push the two-service visit down. Taking whichever is
+     * first made the test skip claiming the appointment had one service, which was true of the
+     * appointment it happened to open and not of the history.
+     *
+     * @return false when no multi-service reviewable visit is listed
+     */
+    public boolean rateFirstMultiServiceVisit() {
+        for (org.openqa.selenium.WebElement card : findAll(descContains(" more"))) {
+            String desc = card.getAttribute("content-desc");
+            if (desc == null || !desc.contains(RATE_VISIT.substring(0, 4))
+                    && !desc.contains("Completed")) {
+                continue;
+            }
+            int cardY = card.getLocation().getY();
+            org.openqa.selenium.WebElement cta = null;
+            int best = Integer.MAX_VALUE;
+            for (org.openqa.selenium.WebElement c : findAll(descContains(RATE_VISIT))) {
+                int y = c.getLocation().getY();
+                if (y > cardY && y < best) {
+                    best = y;
+                    cta = c;
+                }
+            }
+            if (cta != null) {
+                LOG.info("Appointments: reviewing a multi-service visit: {}",
+                        desc.replace("\n", " | "));
+                cta.click();
+                return true;
+            }
+        }
+        LOG.warn("Appointments: no multi-service reviewable visit in the history");
+        return false;
+    }
+
     /** Starts the review flow for the first reviewable visit in the history. */
     public ClientAppointmentsScreen rateFirstVisit() {
         LOG.info("Appointments: starting a review from history");
