@@ -390,12 +390,63 @@ moved. Every fix below was verified on-device before it was made.
 | Membership: the chooser says **"Choose Your Membership"**, not "Choose your plan"; no plan advertises "in-home cuts/month" | 3 |
 | 19 non-ASCII locator anchors, three hint-based locators, and `waitForIdleTimeout` | suite-wide |
 
-**The 23 remaining skips are honest**: 18 environment data gaps (no completed-unreviewed
-appointment, no pending professional, no active enforcement, no availability for the chosen
-service), 3 unset `storeFixtures`, and 2 app defects below. Each names the fix in its message.
+**The 23 remaining skips are honest** — and that claim turned out to be wrong. It is left here
+because being wrong about it cost a day, and the correction is §4.11. Only four of the twenty-two
+that survived into the mobile regression were environment data gaps. The rest were the harness
+looking in the wrong place and blaming the environment for what it could not see.
 
 **There are no remaining failures.** The one defect the triage exposed — §4.10 — has been fixed in
 the app.
+
+### 4.11 The skips were not data gaps — 2026-09-23
+
+Every one of the 22 skips in the mobile regression was worked through. The distribution is the
+finding:
+
+| Resolution | Count |
+|---|---|
+| Stale locator, or the control is one tap further in | 16 |
+| A genuine fixture gap, seeded | 4 |
+| Needed a DEDICATED account, because the assertion is about an ABSENCE | 1 |
+| Left skipping deliberately, covered elsewhere | 1 |
+
+**Why the skip messages misled.** Each guard reads `if (!somePageObjectCheck()) throw new
+SkipException("...no X in this environment...")`. A stale anchor makes the check false, and the
+message then blames the environment — the single most misleading thing it could say, because it
+sends the reader to seed data that already exists. The database had 89 appointments for a
+professional whose screen "had no bookings", 43 pending professionals in a queue that called
+itself empty, and an enforcement register reporting nothing while the console beside it read
+"Enforcements | 3 active".
+
+**Two structural causes, over and over.** The control is one tap further in — `Actions` on the
+professional's page not the Quality list, Extend/Reinstate on Enforcement Detail not the register,
+"Manage plan" past the profile's "Manage", the balance behind the account tab's "Earnings" row,
+the review flow behind a past visit's "Rate your visit". Or the copy differs from the Dart source
+— "credit/available" not "credits left", "Reason is required" (a SnackBar, after the dialog
+closes) not "Reason (required)" (a hintText, which never reaches the a11y tree at all).
+
+**Three failures that were not locators, and are worth knowing:**
+
+1. **A fixture broke unrelated tests.** Seeding the client a membership made booking step 1 render
+   a credit banner naming a service — "Your credit covers up to $60 of Men's Haircut." An
+   over-broad `descContains` matched it, so the category FILTER looked broken and `selectService`
+   tapped the banner instead of a service row. Five tests, none of them about memberships.
+
+2. **The day walks never walked.** `offeredDays()` returned empty on a strip showing six days
+   (`DAY_CHIP` expected `"Sun\n27"`; the chip is `"Sunday, September 27\nSun\n27"`), and both
+   walks size their loop off it — so `openFirstDayWithTimes`, the helper that exists so tests are
+   not pinned to one day, had only ever examined the default day.
+
+3. **"The first appointment" is not the soonest.** `openFirst()` opens whichever section
+   `hasAnyAppointment()` remembered, and that tries Future, Past, Today in that order.
+
+**Fixtures are `scripts/seed_test_fixtures.sql`** — idempotent, test-DB only, each section naming
+the test it unblocks and why. Seed a WINDOW, not a row: a fixture pinned to one appointment worked
+in the morning and failed by afternoon once that appointment was in the past.
+
+**`ScreenDumpTest`** (`tests/diag/`) prints a screen's real content-descs and never asserts. Every
+screen it was pointed at was settled in one run. Guessing a locator from `.dart` source cost a
+full run every time it was tried.
 
 ### 4.10 Training material validation was invisible to the admin — FIXED
 
