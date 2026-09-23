@@ -99,26 +99,32 @@ WHERE EXISTS (SELECT 1 FROM users u WHERE u.user_id = v.client_id)
   );
 
 -- ---------------------------------------------------------------------------
--- 4. A RECURRING series on the client's soonest appointments.
+-- 4. A RECURRING series on ALL of the client's upcoming appointments.
 --    Unblocks: ClientAppointmentsTest.recurringCancelAsksForScope
 --    Skips on "The first appointment is not part of a recurring series".
---    The test calls openFirst(), so it is the EARLIEST upcoming appointment that has to be
---    recurring -- seeding a recurring appointment further out would not be reached. All of the
---    client's appointments sharing that earliest start time are marked, because several are tied
---    at the same minute and which one renders first is the app's choice, not ours.
+--
+--    Marking only the SOONEST one is not enough, and the reason is worth recording. The test
+--    calls openFirst(), which opens whichever SECTION hasAnyAppointment() remembered -- and that
+--    tries Future, Past, Today in that order. So "the first appointment" is the first card of the
+--    FUTURE section, not the next appointment by clock time. With only today's marked, the test
+--    opened tomorrow's un-marked booking and reported no series, while a recurring appointment
+--    sat two hours away in Today.
+--
+--    Every upcoming, non-cancelled booking in the next 30 days is therefore marked, so whichever
+--    section the page object lands in carries a series. Thirty days also outlives a single run:
+--    pinning the fixture to one appointment breaks as soon as that appointment is in the past,
+--    which is how this first came back after working earlier in the day.
 -- ---------------------------------------------------------------------------
 UPDATE appointments
    SET is_recurring        = true,
-       recurrence_pattern  = 'weekly',
-       recurrence_interval = 2,
-       recurrence_count    = 6
+       recurrence_pattern  = COALESCE(recurrence_pattern, 'weekly'),
+       recurrence_interval = COALESCE(recurrence_interval, 2),
+       recurrence_count    = COALESCE(recurrence_count, 6)
  WHERE client_id = 41501
    AND is_recurring IS NOT TRUE
-   AND scheduled_start_time = (
-       SELECT MIN(scheduled_start_time) FROM appointments
-        WHERE client_id = 41501 AND scheduled_start_time > now()
-          AND status NOT IN ('canceled','cancelled')
-   );
+   AND scheduled_start_time > now()
+   AND scheduled_start_time < now() + interval '30 days'
+   AND status NOT IN ('canceled', 'cancelled');
 
 -- ---------------------------------------------------------------------------
 -- 5. A SECOND service on a completed, unreviewed appointment.
