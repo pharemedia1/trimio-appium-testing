@@ -42,6 +42,20 @@ public class AdminQualityTest extends RoleSessionTest {
     @Test(description = "Suspension requires a reason")
     public void suspensionRequiresAReason() {
         AdminQualityScreen quality = openQuality();
+
+        // Quality → a status list → Actions. The panel does not exist on the Quality page itself;
+        // it belongs to a professional's row inside a status list.
+        // The WARNING list, not the Suspended one. The detail page offers the actions that suit
+        // the professional's CURRENT status, so an already-suspended professional is offered only
+        // "Deactivate" and "Reactivate" -- there is no Suspend button to press, and a test of the
+        // suspend-reason gate cannot run there. A professional on warning can still be suspended.
+        quality.openStatusList(AdminQualityScreen.CARD_WARNING);
+        if (!quality.statusListHasActions()) {
+            throw new SkipException("The '" + AdminQualityScreen.CARD_WARNING + "' list has no "
+                    + "professional to act on in this environment, so there is no Actions panel. "
+                    + "Seed one with: UPDATE professional SET account_status = 'warning' WHERE "
+                    + "professional_id = 1203;");
+        }
         quality.openActions();
         quality.tapSuspend();
 

@@ -89,9 +89,106 @@ public final class AppiumDriverFactory {
         AndroidDriver driver = new AndroidDriver(serverUrl, options);
         // Use explicit waits everywhere; no implicit wait to avoid compounding delays.
         driver.manage().timeouts().implicitlyWait(Duration.ZERO);
+        relaxIdleWaiting(driver);
         DRIVER.set(driver);
         return driver;
     }
+
+    /**
+     * Opens a session against a <em>named</em> device, outside the thread-local single-session
+     * model above.
+     *
+     * <p><b>Why a second entry point.</b> {@link #createDriver()} takes its target from
+     * configuration and stores the result in a {@link ThreadLocal}, which is exactly right for the
+     * suites where "the device" is a singular thing. It cannot express the case this method
+     * exists for: one test driving <em>two</em> devices at once, because the behaviour under test
+     * only happens between them. An on-demand booking is a conversation — a client asks, a
+     * professional is offered the job, the professional accepts, the client sees a pro on the way
+     * — and no single-device test can observe more than one side of it. Splitting it across two
+     * runs proves neither direction, because the interesting failures are the ones where the
+     * message does not arrive.
+     *
+     * <p><b>systemPort is not optional.</b> UiAutomator2 opens a local port per session to talk to
+     * its on-device server, and the default is the same number for every session. Two concurrent
+     * sessions that both take it do not fail cleanly: the second attaches to the first device's
+     * server, so commands aimed at the professional's phone are executed on the client's. That
+     * presents as a bafflingly wrong screen rather than as a port conflict, which is why each
+     * caller passes its own.
+     *
+     * <p>The returned driver is <b>not</b> registered in the ThreadLocal and is not closed by
+     * {@link #quitDriver()} — the caller owns it and must quit it.
+     *
+     * @param udid       the device, e.g. {@code emulator-5554}
+     * @param systemPort a port unique to this session (see above)
+     */
+    public static AndroidDriver createDriverFor(String udid, int systemPort) {
+        URL serverUrl = resolveServerUrl();
+
+        UiAutomator2Options options = new UiAutomator2Options()
+                .setPlatformName(ConfigReader.get("appium.platformName", "Android"))
+                .setAutomationName(ConfigReader.get("appium.automationName", "UiAutomator2"))
+                .setDeviceName(udid)
+                .setUdid(udid)
+                .setSystemPort(systemPort)
+                .setAppPackage(ConfigReader.get("app.package", "com.trimio.trimio"))
+                .setAppActivity(ConfigReader.get("app.activity", ".MainActivity"))
+                // noReset=TRUE here, unlike the single-device default. A paired run needs both
+                // apps signed in as different people for the whole test; clearing app data would
+                // drop each session back to onboarding and there would be nothing to pair.
+                .setNoReset(ConfigReader.getBoolean("appium.pairedNoReset", true))
+                .setAutoGrantPermissions(true)
+                // MUCH longer than the single-device default, and it is not padding. In a paired
+                // test exactly one session is being driven at any moment and the other is idle by
+                // construction — the professional's phone receives no command for as long as the
+                // client takes to walk a booking flow, and vice versa. Appium measures its command
+                // timeout per session, so the ordinary 300s killed the professional's session while
+                // the client was still choosing a service. The symptom is brutal: "Ending session,
+                // cause was 'New Command Timeout of 300 seconds expired'" on the device the test
+                // had not touched yet, so the failure lands on the NEXT command sent to it and
+                // looks like the app crashed.
+                .setNewCommandTimeout(Duration.ofSeconds(
+                        ConfigReader.getInt("appium.pairedCommandTimeout", 1800)));
+        options.setAppWaitActivity("*");
+
+        LOG.info("Starting AndroidDriver on {} for device {} (systemPort {})",
+                serverUrl, udid, systemPort);
+        AndroidDriver driver = new AndroidDriver(serverUrl, options);
+        driver.manage().timeouts().implicitlyWait(Duration.ZERO);
+        relaxIdleWaiting(driver);
+        return driver;
+    }
+
+    /**
+     * Stops UiAutomator waiting for an idle screen that never comes.
+     *
+     * <p><b>The Trimio client Home feed animates continuously.</b> It carries a marquee banner
+     * ("4 visits to review — tap to see them", "Next one tomorrow at 2:30 PM") that scrolls
+     * forever, so the accessibility framework never observes an idle window. UiAutomator's default
+     * behaviour is to wait for one before every single command, up to 10 seconds, and then proceed
+     * anyway — which turns each interaction into a ten-second pause and a screen dump into a flat
+     * failure. Confirmed from adb, where {@code uiautomator dump} on that screen answers
+     * {@code ERROR: could not get idle state.}
+     *
+     * <p>That cost is not theoretical: client journeys were taking five to six minutes each, and
+     * locators were timing out on controls that were plainly on screen, because the 25-second
+     * budget was being spent waiting for quiescence rather than looking.
+     *
+     * <p>100 ms is the usual remedy — long enough to let a settling frame land, short enough that
+     * a permanently animating screen costs nothing. Applied as a session setting, so it survives
+     * for the whole session and needs no change in any page object.
+     */
+    private static void relaxIdleWaiting(AndroidDriver driver) {
+        try {
+            driver.setSetting("waitForIdleTimeout",
+                    ConfigReader.getInt("appium.waitForIdleTimeout", 100));
+            driver.setSetting("actionAcknowledgmentTimeout",
+                    ConfigReader.getInt("appium.actionAcknowledgmentTimeout", 100));
+        } catch (RuntimeException e) {
+            // Not fatal: without it the suite is slow, not wrong.
+            LOG.warn("Could not relax UiAutomator idle waiting: {}", e.getMessage());
+        }
+    }
+
 
     /** Quits the session for the current thread and clears the ThreadLocal. */
     public static void quitDriver() {

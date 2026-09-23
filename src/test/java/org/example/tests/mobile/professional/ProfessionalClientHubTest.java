@@ -40,8 +40,13 @@ public class ProfessionalClientHubTest extends RoleSessionTest {
 
         hub.search("zzzznomatch");
 
-        Assert.assertFalse(hub.hasResult("zzzznomatch"),
-                "A query matching nothing should leave no client rows");
+        // Assert the app's own no-match empty state, not the absence of the query string. The
+        // query is still on screen after typing it — it is in the search field — so the old
+        // assertion was testing whether the text the test had just entered had vanished, and
+        // failed for a filter that was working correctly.
+        Assert.assertTrue(hub.showsNoSearchMatch(),
+                "A query matching no client should produce the '"
+                        + ProfessionalClientHubScreen.NO_SEARCH_MATCH + "' empty state");
     }
 
     @Test(description = "A private note persists on the client profile")
@@ -49,6 +54,12 @@ public class ProfessionalClientHubTest extends RoleSessionTest {
         ProfessionalClientHubScreen hub = openClientHub();
         if (!hub.hasAnyClient()) {
             throw new SkipException("The professional has served no clients yet.");
+        }
+
+        // Notes live on the client PROFILE, not on the hub list.
+        if (!hub.openFirstClient()) {
+            throw new SkipException("No client row could be opened, so the notes section is "
+                    + "unreachable. The hub lists clients; the notes are one tap in.");
         }
 
         String note = "Automation note " + System.currentTimeMillis();

@@ -9,6 +9,7 @@
     "scenario": "wrong 6-digit otp",
     "type": "backend",
     "otp": "000000",
-    "expectedMessage": "Invalid OTP"
+    "expectedMessage": "Invalid code.",
+    "_why": "Was 'Invalid OTP'. The backend now answers 'Invalid code.' for BOTH a wrong code and an unknown account -- deliberately, so the endpoint cannot be used to list accounts (services/passwordReset.service.js says so in as many words). Same anti-enumeration hardening as passwordController.sendOtp, which returns an identical 200 for unknown and registered addresses. The app surfaces response['message'] verbatim (otp_page.dart), so the screen text follows the server. Changed 2026-09-22 after the wrong-OTP row failed against a backend that was behaving correctly."
   }
 ]

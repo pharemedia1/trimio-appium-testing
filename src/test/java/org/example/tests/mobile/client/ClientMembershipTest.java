@@ -20,13 +20,24 @@ import org.testng.annotations.Test;
 public class ClientMembershipTest extends RoleSessionTest {
 
     private ClientMembershipScreen openMembership() {
-        loginAsClient();
+        return openMembership(CLIENT);
+    }
+
+    /** As {@link #openMembership()}, signed in as a named client role. */
+    private ClientMembershipScreen openMembership(String role) {
+        loginAsClient(role);
         new BottomNavBar(driver).open(BottomNavBar.CLIENT_PROFILE);
 
         ClientProfileScreen profile = new ClientProfileScreen(driver);
         Assert.assertTrue(profile.isLoaded(), "The Profile tab should render");
 
         ClientMembershipScreen membership = new ClientMembershipScreen(driver);
+        // A member lands on the profile card, not on the manage screen: the card summarises the
+        // plan and carries a "Manage" button, and the controls the manage tests assert on are one
+        // tap further in. Without this step an active member looked like a non-member.
+        if (membership.showsMembershipCard()) {
+            membership.openManage();
+        }
         if (!membership.isPlanChooserLoaded() && !membership.isManageLoaded()) {
             throw new SkipException("The membership area was not reachable from the profile — its "
                     + "entry point may differ in this build.");
@@ -36,18 +47,22 @@ public class ClientMembershipTest extends RoleSessionTest {
 
     @Test(description = "Available plans are listed with their monthly allotment")
     public void plansAreListed() {
-        ClientMembershipScreen membership = openMembership();
+        // Signed in as the client WITHOUT a membership. The chooser only shows to someone who has
+        // no plan, and roleAccounts.client now carries the seeded active subscription that the
+        // manage tests need — so the two states live on two accounts rather than fighting over one.
+        ClientMembershipScreen membership = openMembership(CLIENT_NO_MEMBERSHIP);
         if (membership.isManageLoaded()) {
-            throw new SkipException("The signed-in client already has a membership — use a client "
-                    + "without one to exercise the plan chooser.");
+            throw new SkipException("roleAccounts." + CLIENT_NO_MEMBERSHIP + " has a membership "
+                    + "after all, so the plan chooser cannot render. Cancel it, or point that role "
+                    + "at a client with no membership_subscriptions row.");
         }
 
         Assert.assertTrue(membership.hasAnyPlan() || membership.showsNoPlans(),
                 "The chooser should list plans or state that none are available");
         if (membership.hasAnyPlan()) {
-            Assert.assertTrue(membership.showsAllotment(),
-                    "Each plan should state its monthly in-home allotment — it is what the client is "
-                            + "actually buying");
+            Assert.assertTrue(membership.showsBillingPeriod(),
+                    "Each plan should state its billing period (/mo or /yr) — a price without one "
+                            + "is not a commitment the client can evaluate");
         }
     }
 

@@ -25,7 +25,16 @@ public class AdminConsoleScreen extends MobileBasePage {
     public static final String TILE_SERVICES = "Services";
     public static final String TILE_QUALITY = "Quality Control";
     public static final String TILE_REPORTS = "Reports";
-    public static final String TILE_PRICING = "Price Overrides";
+    /**
+     * The refunds queue — a tile that did not exist when this list was written.
+     *
+     * <p>It replaces the old "Price Overrides" tile, which was removed from the product on
+     * 2026-08-07: letting an admin set pricing rules on a professional's services is the platform
+     * setting the price, prong A of the ABC worker-classification test. The backend service,
+     * repository, controllers and routes went with it, so this is a legal position rather than a
+     * feature that might return.
+     */
+    public static final String TILE_REFUNDS = "Refunds";
     public static final String TILE_ENFORCEMENTS = "Enforcements";
     public static final String TILE_TRAINING = "Training";
     public static final String TILE_STORE = "Store";
@@ -33,7 +42,7 @@ public class AdminConsoleScreen extends MobileBasePage {
     public static final String TILE_STATES = "States";
 
     public static final String[] ALL_TILES = {
-            TILE_ALL_USERS, TILE_SERVICES, TILE_QUALITY, TILE_REPORTS, TILE_PRICING,
+            TILE_ALL_USERS, TILE_SERVICES, TILE_QUALITY, TILE_REPORTS, TILE_REFUNDS,
             TILE_ENFORCEMENTS, TILE_TRAINING, TILE_STORE, TILE_LICENSES, TILE_STATES,
     };
 
@@ -118,12 +127,6 @@ public class AdminConsoleScreen extends MobileBasePage {
     public AdminQualityScreen openQuality() {
         openTile(TILE_QUALITY);
         return new AdminQualityScreen(driver);
-    }
-
-    /** Opens Price Overrides. */
-    public AdminPricingScreen openPricing() {
-        openTile(TILE_PRICING);
-        return new AdminPricingScreen(driver);
     }
 
     /** Opens Enforcements. */

@@ -2,14 +2,14 @@
   {
     "scenario": "empty email",
     "email": "",
-    "phone": "5551234567",
+    "phone": "2025550123",
     "password": "Trimio@2580",
     "expectedMessage": "Please enter your email"
   },
   {
     "scenario": "invalid email format",
     "email": "notanemail",
-    "phone": "5551234567",
+    "phone": "2025550123",
     "password": "Trimio@2580",
     "expectedMessage": "Please enter a valid email address"
   },
@@ -30,50 +30,74 @@
   {
     "scenario": "password too short",
     "email": "trimiotest+valid@gmail.com",
-    "phone": "5551234567",
+    "phone": "2025550123",
     "password": "Pass1!",
     "expectedMessage": "Password must be at least 8 characters long"
   },
   {
     "scenario": "password missing uppercase",
     "email": "trimiotest+valid@gmail.com",
-    "phone": "5551234567",
+    "phone": "2025550123",
     "password": "password1!",
     "expectedMessage": "Password must include at least one uppercase letter"
   },
   {
     "scenario": "password missing special character",
     "email": "trimiotest+valid@gmail.com",
-    "phone": "5551234567",
+    "phone": "2025550123",
     "password": "Password11",
     "expectedMessage": "Password must include at least one special character"
   },
   {
     "scenario": "password has sequential digits",
     "email": "trimiotest+valid@gmail.com",
-    "phone": "5551234567",
+    "phone": "2025550123",
     "password": "Newpass123!",
     "expectedMessage": "Password cannot contain sequential numbers like '123'"
   },
   {
     "scenario": "empty password",
     "email": "trimiotest+valid@gmail.com",
-    "phone": "5551234567",
+    "phone": "2025550123",
     "password": "",
     "expectedMessage": "Please enter your password"
   },
   {
     "scenario": "password missing lowercase",
     "email": "trimiotest+valid@gmail.com",
-    "phone": "5551234567",
+    "phone": "2025550123",
     "password": "PASSWORD@99",
     "expectedMessage": "Password must include at least one lowercase letter"
   },
   {
     "scenario": "password missing digit",
     "email": "trimiotest+valid@gmail.com",
-    "phone": "5551234567",
+    "phone": "2025550123",
     "password": "Trimiopass@",
     "expectedMessage": "Password must include at least one digit"
+  },
+  {
+    "scenario": "phone exchange starts with 1",
+    "_why": "Ten digits and correctly formatted, but the EXCHANGE starts with 1, which the North American Numbering Plan does not allow. Added 2026-09-21: validators.dart usPhone() gained this rule on 2026-09-14 (mirroring backend/shared/auth/registrationRules.js) and nothing covered it. It is also the exact number this suite used as its VALID phone until that day, which is how it broke every positive registration test.",
+    "email": "trimiotest+nanp{unique}@gmail.com",
+    "phone": "5551234567",
+    "password": "Trimio@2580",
+    "expectedMessage": "Please enter a valid US phone number"
+  },
+  {
+    "scenario": "phone area code starts with 1",
+    "_why": "The other half of the NANP rule: an area code may not start with 0 or 1 either.",
+    "email": "trimiotest+nanp2{unique}@gmail.com",
+    "phone": "1235550123",
+    "password": "Trimio@2580",
+    "expectedMessage": "Please enter a valid US phone number"
+  },
+  {
+    "scenario": "phone is one repeated digit",
+    "_why": "(000) 000-0000 is ten digits and used to register. The validator now rejects one digit repeated ten times explicitly -- see the comment in validators.dart.",
+    "email": "trimiotest+nanp3{unique}@gmail.com",
+    "phone": "0000000000",
+    "password": "Trimio@2580",
+    "expectedMessage": "Please enter a valid US phone number"
   }
 ]

@@ -30,8 +30,9 @@
   {
     "scenario": "registered email with wrong password",
     "type": "backend",
-    "email": "trimiotest+verified@gmail.com",
+    "email": "trimiotest+client1@gmail.com",
     "password": "Wrong@9876",
-    "expectedMessage": "Invalid email or password."
+    "expectedMessage": "Invalid email or password.",
+    "_comment": "Must be an account that EXISTS, so this row tests the wrong-password path rather than repeating the unknown-email row above it. It pointed at trimiotest+verified@gmail.com, deleted from Postgres in the 2026-08-27 reseed; both rows then hit the same unknown-email branch and expect the same generic message, so the row passed while covering nothing. trimiotest+client1@gmail.com is user 41501, seeded by seed_login_pair.js."
   }
 ]

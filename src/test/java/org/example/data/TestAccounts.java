@@ -125,6 +125,16 @@ public final class TestAccounts {
         return root().path("storeFixtures").path("clientVisibleProduct").asText("");
     }
 
+    /**
+     * A product the PROFESSIONAL store lists and the signed-in professional has not bought.
+     *
+     * <p>Distinct from {@link #storeProductName()}, which names a product in the CLIENT shop. The
+     * two catalogues do not overlap: the professional store carries the pro-only range.
+     */
+    public static String proReviewableProductName() {
+        return root().path("storeFixtures").path("proReviewableProduct").asText("");
+    }
+
     /** Name of a pro-only product, used to assert clients cannot see it. */
     public static String proOnlyProductName() {
         return root().path("storeFixtures").path("proOnlyProduct").asText("");

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+
+<!--
+  Trimio PAIRED-DEVICE suite — the flows that only exist between two people, driven on two
+  emulators at the same time.
+
+  Run:
+    mvn test -DsuiteXmlFile=src/test/resources/suites/paired-testng.xml -DretryCount=0 \
+             -Ddevices.client=emulator-5554 -Ddevices.professional=emulator-5556
+
+  WHAT IT NEEDS
+    - TWO emulators, both with com.trimio.trimio installed. By convention (and matching
+      ~/StudioProjects/trimio/CLAUDE.md) emulator-5554 is the client and emulator-5556 the
+      professional. Override with -Ddevices.client / -Ddevices.professional.
+    - The backend on :3000 and Postgres reachable.
+    - The seeded client needs a Stripe test card and a completed profile; the seeded professional
+      needs an approved profile and must be able to go on duty. Any of those missing SKIPS with a
+      message naming the fix.
+
+  WHY IT IS NOT IN full-regression.xml
+    Two reasons, either of which would be enough.
+
+    1. IT WRITES. PAIR-012 accepts a live on-demand offer, which creates a real appointment
+       assigned to a real professional — the same reason booking-payment.xml is kept separate.
+
+    2. IT TAKES BOTH DEVICES. The regression suite drives one emulator; this one holds two
+       sessions open for the whole class. Running them together would have the regression's
+       @BeforeMethod fighting this suite for emulator-5554.
+
+  SERIAL, and it matters more here than elsewhere: the tests share one client and one professional,
+  and an on-demand request in flight blocks the next one (the app refuses to start a second while
+  one is in progress). Parallelising them would make each fail for the previous one's reasons.
+-->
+<suite name="Trimio Paired-Device Suite" parallel="false" verbose="1">
+
+    <listeners>
+        <listener class-name="org.example.listeners.TestListener"/>
+    </listeners>
+
+    <test name="PAIR-01 — on-demand dispatch, offer and acceptance">
+        <classes>
+            <class name="org.example.tests.paired.OnDemandDispatchTest"/>
+        </classes>
+    </test>
+
+</suite>

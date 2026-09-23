@@ -24,9 +24,13 @@ public class ClientProfileTest extends RoleSessionTest {
 
         Assert.assertTrue(profile.isLoaded(),
                 "The profile should offer '" + ClientProfileScreen.EDIT_DETAILS + "'");
-        // The plan line renders whether or not a membership is active, so it is a safe assertion.
-        Assert.assertTrue(profile.showsCurrentPlan() || profile.isLoaded(),
-                "The profile should render the membership plan line");
+        // Either half of the membership section is correct — "Current plan:" for a subscriber,
+        // the plan chooser for everyone else. Asserting only the first made this a test of the
+        // fixture, and the "|| isLoaded()" fallback made it a test of nothing.
+        Assert.assertTrue(profile.showsMembershipSection(),
+                "The profile should render the membership section — either '"
+                        + ClientProfileScreen.CURRENT_PLAN + "' or '"
+                        + ClientProfileScreen.CHOOSE_MEMBERSHIP + "'");
     }
 
     @Test(enabled = false,  // BLOCKED: unverified assumption. The signed-in client is held on the

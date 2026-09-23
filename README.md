@@ -76,7 +76,15 @@ src/test/resources/
 | `suites/mobile-testng.xml` | auth: onboarding, registration, login, forgot/OTP/reset | emulator + backend |
 | `suites/mobile-regression-testng.xml` | signed-in client / professional / admin journeys | + seeded role accounts |
 | `suites/web-testng.xml` | web portal: access control, admin shell, marketplace, vendor | + the portal served |
-| `suites/full-regression.xml` | everything, in release order | all of the above |
+| `suites/api-testng.xml` | API contract: membership, object-level authorization (IDOR), social sign-up | backend + Firebase web key |
+| `suites/security-testng.xml` | authentication, the role matrix, the super-admin seat, injection, enumeration, brute force, CORS, the staff-only portal | backend + Firebase web key |
+| `suites/paired-testng.xml` | on-demand dispatch → offer → acceptance | **two** emulators |
+| `suites/booking-payment.xml` | the individual booking money path | emulator + a client with a card |
+| `suites/full-regression.xml` | everything that does not write or trip the rate limiter | all of the above |
+
+The last four layers need **no device at all** (`api`, `security`, and the performance classes) or
+**two** (`paired`). See `docs/Trimio-Requirements-And-Coverage.md` for what each one proves and
+what it deliberately leaves out.
 
 ---
 
@@ -133,10 +141,41 @@ mvn test -DsuiteXmlFile=src/test/resources/suites/mobile-regression-testng.xml -
 mvn test -DsuiteXmlFile=src/test/resources/suites/web-testng.xml \
          -Dweb.baseUrl=http://localhost:<port> -Dheadless=false -DretryCount=0
 
-# Everything
+# Everything that does not write or trip the rate limiter
 mvn test -DsuiteXmlFile=src/test/resources/suites/full-regression.xml \
          -Ddb.password=… -Dweb.baseUrl=http://localhost:<port> -DretryCount=0
+
+# Security — no device needed, ~540 real HTTP calls in about 12 seconds
+mvn test -DsuiteXmlFile=src/test/resources/suites/security-testng.xml \
+         -Dfirebase.webApiKey=<web key from firebase_options.dart> -Ddb.password=… -DretryCount=0
+
+# Performance — run on an otherwise idle machine; an emulator in the background invalidates it
+mvn test -Dtest=ApiLatencyTest,ApiConcurrencyTest -DfailIfNoTests=false \
+         -Dfirebase.webApiKey=… -Dperf.concurrency=10 -Dperf.requestsPerWorker=10
+
+# On-demand across TWO emulators. WRITES: accepting an offer creates a real appointment.
+mvn test -DsuiteXmlFile=src/test/resources/suites/paired-testng.xml \
+         -Ddevices.client=emulator-5554 -Ddevices.professional=emulator-5556 -DretryCount=0
+
+# Where the coverage gaps are (reads the harvested route inventory, asserts nothing)
+python3 scripts/coverage_matrix.py --gaps
 ```
+
+### Two ways these suites break each other
+
+Both were found by doing them, and neither is obvious from a failing test:
+
+- **The security suite trips a rate limiter the mobile suites depend on.** `/auth/*` and
+  `/password/*` share a per-source limiter (429 after a handful of attempts) plus a per-account
+  lockout (423, **one hour**). A brute-force probe locked the seeded client and made the mobile
+  password-reset tests fail for a reason that had nothing to do with them. **Do not run
+  `security-testng.xml` concurrently with the mobile suites against the same backend.**
+- **A `DEV_AUTOLOGIN` build makes the whole auth suite unrunnable.** A debug APK carrying
+  `--dart-define=DEV_AUTOLOGIN_EMAIL/PASSWORD` signs itself in during splash and never renders
+  onboarding, and `adb shell pm clear` does not help because the credentials are compiled in.
+  Every onboarding, registration and login test then fails against a screen that never existed.
+  Rebuild without the defines (`flutter build apk --debug --target-platform android-arm64`) to
+  test auth.
 
 Any key in `config.properties` is overridable with `-Dkey=value` or an `UPPER_SNAKE` env var —
 `web.baseUrl`, `api.baseUrl`, `browser`, `headless`, `retryCount`, `appium.deviceName`, …

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+
+<!--
+  Trimio API suite — behaviour asserted at the HTTP contract rather than through a screen.
+
+  Run:
+    mvn test -DsuiteXmlFile=src/test/resources/suites/api-testng.xml \
+             -Dfirebase.webApiKey=… -DretryCount=0
+
+  Needs the backend on :3000 and a Firebase web API key (the public one from
+  frontend/lib/firebase_options.dart). The backend runs with AUTH_ENFORCED=true, so these tests
+  mint real Firebase ID tokens for the seeded accounts — there is no bypass to switch on. Without
+  the key every class SKIPS with that explanation.
+
+  WHAT BELONGS HERE rather than in the mobile suites: anything whose correctness is a property of
+  the response rather than of a screen. Two kinds dominate —
+
+    * data SCOPING (ObjectScopingTest). Whether a route returns YOUR records or somebody else's
+      turns on an id in the request, and the app only ever sends your own. The bug is invisible
+      from the UI by construction; it takes a request the app would never make.
+
+    * error PATHS (MembershipApiTest). The 500 on /memberships/invoices happens for a member whose
+      subscription has no Stripe customer id — a data shape, not a user action. No amount of
+      clicking reaches it unless you happen to be signed in as that member.
+
+  SocialRegistrationTest sits here for a third reason: /auth/registerGoogleUser verifies the
+  provider token it is given, so the test has to mint a genuine Firebase identity rather than
+  driving a Google sign-in sheet no automation can drive.
+-->
+<suite name="Trimio API Suite" parallel="false" verbose="1">
+
+    <listeners>
+        <listener class-name="org.example.listeners.TestListener"/>
+    </listeners>
+
+    <test name="API-01 — membership">
+        <classes>
+            <class name="org.example.tests.api.MembershipApiTest"/>
+        </classes>
+    </test>
+
+    <test name="API-02 — object-level authorization (IDOR)">
+        <classes>
+            <class name="org.example.tests.api.ObjectScopingTest"/>
+        </classes>
+    </test>
+
+    <test name="API-03 — social sign-up">
+        <classes>
+            <class name="org.example.tests.api.SocialRegistrationTest"/>
+        </classes>
+    </test>
+
+</suite>

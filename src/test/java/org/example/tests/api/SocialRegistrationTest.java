@@ -78,7 +78,18 @@ public class SocialRegistrationTest {
     }
 
     private ApiClient.Response register(Map<String, Object> body) {
-        return api.postJson("/auth/registerGoogleUser", body, Map.of());
+        ApiClient.Response response = api.postJson("/auth/registerGoogleUser", body, Map.of());
+        if (response.status() == 429) {
+            // The backend's auth limiter, not an answer to the question this test asked.
+            // /auth/* is capped per SOURCE (AUTH_RATE_MAX, default 60 per 15 minutes), so a
+            // security or API suite run just before this one can exhaust the budget and every
+            // assertion here then compares 429 against the status it expected -- reporting a
+            // missing authorization control that is in fact working and simply was not consulted.
+            throw new SkipException("The backend is rate-limiting /auth (429), so this request "
+                    + "never reached the control being tested. Re-run this class on its own, or "
+                    + "after the auth window clears. See backend/middleware/authRateLimit.js.");
+        }
+        return response;
     }
 
     // ---- happy path ---------------------------------------------------------

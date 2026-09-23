@@ -3,7 +3,6 @@ package org.example.tests.mobile.admin;
 import org.example.base.RoleSessionTest;
 import org.example.pages.mobile.admin.AdminConsoleScreen;
 import org.example.pages.mobile.admin.AdminEnforcementScreen;
-import org.example.pages.mobile.admin.AdminPricingScreen;
 import org.example.pages.mobile.admin.AdminQueuesScreen;
 import org.example.pages.mobile.admin.AdminTrainingScreen;
 import org.testng.Assert;
@@ -91,40 +90,18 @@ public class AdminQueuesTest extends RoleSessionTest {
                 "The extension dialog should state the permitted 1–30 day range");
     }
 
-    // ---- price overrides ----------------------------------------------------
-
-    @Test(description = "The override editor refuses to save without a service and reason")
-    public void overrideRequiresServiceAndReason() {
-        AdminConsoleScreen console = loginAsAdmin();
-        AdminPricingScreen pricing = console.openPricing();
-        Assert.assertTrue(pricing.isLoaded(), "Price Overrides should render");
-
-        pricing.createNew();
-        if (!pricing.editorIsOpen()) {
-            throw new SkipException("The override editor did not open.");
-        }
-        pricing.save();
-
-        Assert.assertTrue(pricing.saveWasBlocked(),
-                "Saving an override with no service or reason must be refused — an unexplained "
-                        + "override silently changes what every matching client pays");
-    }
-
-    @Test(description = "An override can be created for a service", enabled = false)
-    public void overrideCanBeCreated() {
-        // Deliberately disabled: a saved override immediately changes live client pricing, so it is
-        // run only against a disposable environment. Enable with -Dgroups or by flipping this flag
-        // when pointing at a seeded staging database.
-        AdminConsoleScreen console = loginAsAdmin();
-        AdminPricingScreen pricing = console.openPricing();
-
-        pricing.createNew()
-                .setFixedPrice("45")
-                .setReason("automation-" + System.currentTimeMillis())
-                .save();
-
-        Assert.assertFalse(pricing.saveWasBlocked(), "A complete override should save");
-    }
+    // ---- price overrides: REMOVED FROM THE PRODUCT ---------------------------
+    //
+    // overrideRequiresServiceAndReason and overrideCanBeCreated are GONE, along with
+    // AdminPricingScreen, because the feature they covered no longer exists. 'Price Overrides'
+    // was removed from the admin console on 2026-08-07 (admin_home_page.dart names it
+    // "Breaker #1, R2.3") and the backend service, repository, controllers and routes went with
+    // it — the endpoint inventory carries no /admin/price-overrides route at all.
+    //
+    // The reason matters and is worth keeping: it let an admin set custom pricing rules on a
+    // professional's services, i.e. the platform setting the price, which is prong A of the ABC
+    // worker-classification test. This is a deliberate legal position, not a feature that might
+    // come back, so the tests are deleted rather than disabled.
 
     // ---- training -----------------------------------------------------------
 
@@ -137,9 +114,29 @@ public class AdminQueuesTest extends RoleSessionTest {
         training.createNew();
         training.save();
 
+        // KNOWN PRODUCT DEFECT, and this test is what reports it.
+        //
+        // admin_training_materials_page.dart DOES validate — an empty title or URL returns early
+        // with a SnackBar reading exactly REQUIRED_ERROR. The admin never sees it. The dialog is
+        // opened with showDialog(context: context, builder: (ctx) => …) and the handler then calls
+        // ScaffoldMessenger.of(CONTEXT) — the page's messenger, not the dialog's — while the
+        // dialog is still up (it `return`s without popping). A SnackBar on the page's Scaffold
+        // renders beneath a pushed route and its modal barrier, so it is invisible on screen and
+        // absent from the accessibility tree above the modal.
+        //
+        // The effect for a real admin: the form appears to do nothing. They press Create, nothing
+        // moves, and there is no explanation anywhere.
+        //
+        // Same defect class as PaymentHandlerService in the booking flow, where a refused charge
+        // is reported on the dialog's context and the only evidence is `adb logcat`. Worth fixing
+        // the same way: pop the dialog first, or attach the message to the dialog itself.
         Assert.assertTrue(training.showsRequiredFieldsError(),
-                "Saving without a title and file URL should show '"
-                        + AdminTrainingScreen.REQUIRED_ERROR + "'");
+                "Saving a training material with no title and no file URL produced no visible "
+                        + "error. The validation runs and raises a SnackBar with exactly '"
+                        + AdminTrainingScreen.REQUIRED_ERROR + "', but it is raised on the PAGE's "
+                        + "ScaffoldMessenger while the dialog is still open, so it renders behind "
+                        + "the modal barrier — invisible to the admin and absent from the "
+                        + "accessibility tree. See admin_training_materials_page.dart.");
     }
 
     @Test(description = "A training material can be created", enabled = false)

@@ -19,16 +19,50 @@ import org.testng.annotations.Test;
  */
 public class ClientStyleMeNowTest extends RoleSessionTest {
 
+    /** A service the seeded barber is priced for — the list is filtered by the type segment. */
+    private static final String SERVICE = "Haircut";
+
+    /**
+     * Opens the on-demand flow from its OWN Home CTA.
+     *
+     * <p>It used to go through the deprecated {@code startBooking()}, which taps a bare "Book" —
+     * that is the SCHEDULED flow (or the nav tab), not this one. The two-step assertion then
+     * failed and the whole class skipped itself with "the flow was not reached", which reads as a
+     * missing professional or a denied location and is neither: the flow was never opened.
+     */
     private ClientStyleMeNowScreen openFlow() {
-        ClientHomeScreen home = loginAsProvisionedClient();
+        return openFlow(CLIENT);
+    }
+
+    /** As {@link #openFlow()}, signed in as a named client role. */
+    private ClientStyleMeNowScreen openFlow(String role) {
+        ClientHomeScreen home = loginAsProvisionedClient(role);
         Assert.assertTrue(home.isLoaded(), "The Home tab should render");
 
-        ClientStyleMeNowScreen flow = new ClientStyleMeNowScreen(driver);
-        home.startBooking();
+        ClientStyleMeNowScreen flow = home.styleMeNow();
         if (!flow.isLoaded() || !flow.showsTwoSteps()) {
-            throw new SkipException("The Style-Me-Now flow was not reached — its entry point may be "
-                    + "gated on location permission or on a professional being on duty nearby.");
+            throw new SkipException("The Style-Me-Now flow did not open from its '"
+                    + ClientHomeScreen.STYLE_ME_NOW + "' CTA. It needs a location: with GPS "
+                    + "unavailable the app raises a manual-address dialog instead. Set one with "
+                    + "`adb -s <device> emu geo fix -96.7970 32.7767`.");
         }
+        return flow;
+    }
+
+    /** Fills step 1 and advances to "Where & pay", where the money statement lives. */
+    private ClientStyleMeNowScreen openPayStep() {
+        return openPayStep(CLIENT);
+    }
+
+    /** As {@link #openPayStep()}, signed in as a named client role. */
+    private ClientStyleMeNowScreen openPayStep(String role) {
+        ClientStyleMeNowScreen flow = openFlow(role);
+        flow.chooseRecipient("Me");
+        // The segment FILTERS the service list — searching without choosing it finds nothing.
+        flow.chooseServiceType(ClientStyleMeNowScreen.TYPE_BARBER);
+        flow.searchService(SERVICE);
+        flow.selectService(SERVICE);
+        flow.continueToPay();
         return flow;
     }
 
@@ -43,14 +77,19 @@ public class ClientStyleMeNowTest extends RoleSessionTest {
 
     @Test(description = "The dispatch CTA quotes exactly the displayed total")
     public void ctaQuotesTheTotal() {
-        ClientStyleMeNowScreen flow = openFlow();
+        ClientStyleMeNowScreen flow = openPayStep();
 
         double total = flow.total();
         double quoted = flow.ctaQuote();
 
         if (total < 0 || quoted < 0) {
-            throw new SkipException("Could not read both the TOTAL row and the CTA quote — the flow "
-                    + "may not have reached the pay step (a service and a location are required).");
+            // Step 1 shows SUBTOTAL and a "Continue" CTA; only step 2 shows TOTAL and the quote.
+            // Reading -1 for both means openPayStep() did not get there — usually because no
+            // service matched the chosen segment.
+            throw new SkipException("Could not read both the TOTAL row and the CTA quote, so the "
+                    + "flow did not reach 'Where & pay'. A service must be selected first, and the "
+                    + "'" + ClientStyleMeNowScreen.TYPE_BARBER + "' segment must actually offer '"
+                    + SERVICE + "'.");
         }
         Assert.assertEquals(quoted, total, 0.001,
                 "The 'Find a pro · $x.xx' CTA must quote the same amount as the TOTAL row — this is "
@@ -59,11 +98,17 @@ public class ClientStyleMeNowTest extends RoleSessionTest {
 
     @Test(description = "Without a card on file the client is told they cannot book")
     public void noCardBlocksBooking() {
-        ClientStyleMeNowScreen flow = openFlow();
+        // Signed in as the CARDLESS client, not the suite's usual one. 41501 keeps its card so the
+        // booking and payment suites can take a real charge, which means it can never satisfy this
+        // assertion; 41617 exists to have nothing to pay with. Before this the test signed in as
+        // 41501, found a card and skipped itself every single run.
+        // The card notice lives on step 2, next to the pay controls.
+        ClientStyleMeNowScreen flow = openPayStep(CLIENT_NO_CARD);
 
         if (!flow.showsNoCardOnFile()) {
-            throw new SkipException("The signed-in client already has a card on file — use a client "
-                    + "without a payment method to exercise this path.");
+            throw new SkipException("roleAccounts." + CLIENT_NO_CARD + " has a card on file after "
+                    + "all, so the no-card notice cannot appear. Clear it with: DELETE FROM "
+                    + "client_payment_methods WHERE client_id = 41617;");
         }
         Assert.assertTrue(flow.showsNoCardOnFile(),
                 "A client with no payment method should see '" + ClientStyleMeNowScreen.NO_CARD + "'");

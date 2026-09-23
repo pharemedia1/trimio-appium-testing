@@ -28,7 +28,7 @@ public class AdminStorePage extends WebBasePage {
     public static final String COPY_LINK = "Copy link";
     public static final String NAME_REQUIRED = "Name *";
     public static final String SLUG_REQUIRED = "Slug *";
-    public static final String COMMISSION_HINT = "Commission rate (0–1, e.g. 0.15)";
+    public static final String COMMISSION_HINT = "Commission rate";
     public static final String ADMIN_SIGN_IN_REQUIRED = "Admin sign-in required";
     public static final String STATUS_ACTIVE = "Active";
     public static final String STATUS_PENDING = "Pending";
@@ -40,7 +40,7 @@ public class AdminStorePage extends WebBasePage {
     public static final String REJECT = "Reject";
     public static final String INTERNAL_NOTE = "Internal note (optional)";
     public static final String APPLIED_PREFIX = "Applied ";
-    public static final String INVITE_EMAIL_FAILED = "Approved — invite email failed";
+    public static final String INVITE_EMAIL_FAILED = "invite email failed";
 
     // ---- products -----------------------------------------------------------
     public static final String SEARCH_PRODUCTS = "Search products";

@@ -2,6 +2,7 @@ package org.example.base;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.example.config.ConfigReader;
 import org.example.data.TestAccounts;
 import org.example.pages.mobile.LoginScreen;
 import org.example.pages.mobile.admin.AdminConsoleScreen;
@@ -53,6 +54,32 @@ public abstract class RoleSessionTest extends MobileBaseTest {
     public static final String SUPPORT = "support";
 
     /**
+     * A client deliberately WITHOUT a payment method.
+     *
+     * <p>Exists because the absence of a card is itself a thing to test, and it cannot be tested
+     * with {@link #CLIENT}: 41501 has to keep its card or the booking and payment suites lose the
+     * charge they exist to prove. Removing it for one test and restoring it afterwards would make
+     * the suite order-dependent, so the negative case gets its own fully-provisioned account.
+     */
+    public static final String CLIENT_NO_CARD = "clientNoCard";
+
+    /**
+     * A client with NO membership, for the plan chooser.
+     *
+     * <p>The mirror image of the membership fixture: once {@link #CLIENT} was given an active
+     * subscription so the manage screen could be tested, it could no longer reach the chooser,
+     * which only shows to someone without a plan. Both states have to exist at once, so they
+     * live on different accounts.
+     */
+    public static final String CLIENT_NO_MEMBERSHIP = "clientNoMembership";
+
+    /**
+     * A professional whose Stripe payouts are NOT enabled, for the same reason as
+     * {@link #CLIENT_NO_CARD}: {@link #PROFESSIONAL} must stay payable.
+     */
+    public static final String PROFESSIONAL_NO_PAYOUTS = "professionalNoPayouts";
+
+    /**
      * Signs in as {@code role} from a freshly launched app.
      *
      * @return the bottom-nav of whatever shell the login produced
@@ -72,9 +99,38 @@ public abstract class RoleSessionTest extends MobileBaseTest {
                     + "onboarding (check the emulator and app install).");
         }
         form.login(email, password);
-        if (!form.isLoginAccepted()) {
-            throw new SkipException("Login as '" + role + "' (" + email + ") was rejected — the "
-                    + "account may be unverified, suspended, or the password may have changed.");
+        if (form.awaitLoginOutcome() == LoginScreen.LoginOutcome.RATE_LIMITED) {
+            // NOT a credential problem, and it must not be reported as one. The auth block that
+            // runs before these journeys in full-regression.xml spends around forty sign-ins,
+            // registrations and OTP requests, and the backend's limiter is per-source and shared —
+            // so the first client journey after it is refused with "Too many attempts" while the
+            // same credentials still work from curl in the same second.
+            //
+            // Waiting is the correct response because the limiter is a rolling window: it clears
+            // on its own, and one pause here is cheaper than the whole signed-in half of the suite
+            // skipping. Once, not in a loop — if a full window is not enough, something other than
+            // this suite is making the requests and the run should say so rather than stall.
+            long waitSeconds = ConfigReader.getInt("auth.rateLimitCooldownSeconds", 90);
+            LOG.warn("Sign-in as '{}' was RATE LIMITED, not refused. Waiting {}s for the window to "
+                    + "clear, then trying once more.", role, waitSeconds);
+            sleepSeconds(waitSeconds);
+            form = onboarding().goToLogin();
+            form.login(email, password);
+        }
+        LoginScreen.LoginOutcome outcome = form.awaitLoginOutcome();
+        if (outcome != LoginScreen.LoginOutcome.ACCEPTED) {
+            String reason = outcome == LoginScreen.LoginOutcome.RATE_LIMITED
+                    ? "the backend is STILL rate-limiting sign-ins from this machine ('"
+                      + LoginScreen.RATE_LIMITED + "'). The account is fine — the limiter counts "
+                      + "requests, not failures, and this framework signs in once per test. "
+                      + "backend/middleware/authRateLimit.js caps credential endpoints at "
+                      + "AUTH_CREDENTIAL_RATE_MAX (default 10) per AUTH_CREDENTIAL_RATE_WINDOW_MS "
+                      + "(default 15 minutes), so a suite of more than ten signed-in tests cannot "
+                      + "finish at the default. Raise AUTH_CREDENTIAL_RATE_MAX on the TEST backend "
+                      + "and restart it."
+                    : "the account may be unverified, suspended, or the password may have changed.";
+            throw new SkipException("Login as '" + role + "' (" + email + ") was rejected — "
+                    + reason);
         }
         // Modals sit OVER the shell: the login has succeeded but the bottom nav is behind them and
         // invisible to UiAutomator2 until each is answered — the biometric opt-in, and for a pro
@@ -85,10 +141,21 @@ public abstract class RoleSessionTest extends MobileBaseTest {
 
     /** Signs in as a client and returns the Home tab. */
     protected ClientHomeScreen loginAsClient() {
-        BottomNavBar nav = loginAs(CLIENT);
+        return loginAsClient(CLIENT);
+    }
+
+    /**
+     * Signs in as a NAMED client role and returns the Home tab.
+     *
+     * <p>Most tests want {@link #CLIENT}. The exceptions are the ones asserting what happens when
+     * something is missing — {@link #CLIENT_NO_CARD} — where the whole point is an account the
+     * main one must not become.
+     */
+    protected ClientHomeScreen loginAsClient(String role) {
+        BottomNavBar nav = loginAs(role);
         if (!nav.isClientShell()) {
-            throw new SkipException("The configured 'client' account did not land in the client "
-                    + "shell — check its user_type_id is 1.");
+            throw new SkipException("The configured '" + role + "' account did not land in the "
+                    + "client shell — check its user_type_id is 1.");
         }
         return new ClientHomeScreen(driver);
     }
@@ -103,12 +170,17 @@ public abstract class RoleSessionTest extends MobileBaseTest {
      * instead of reporting a dozen indistinguishable "Home tab should render" failures.
      */
     protected ClientHomeScreen loginAsProvisionedClient() {
-        ClientHomeScreen home = loginAsClient();
+        return loginAsProvisionedClient(CLIENT);
+    }
+
+    /** As {@link #loginAsProvisionedClient()}, for a named client role. */
+    protected ClientHomeScreen loginAsProvisionedClient(String role) {
+        ClientHomeScreen home = loginAsClient(role);
         if (home.isBlockedByProfileGate()) {
-            throw new SkipException("The 'client' account has an incomplete profile — the app holds "
+            throw new SkipException("The '" + role + "' account has an incomplete profile — the app holds "
                     + "it on the '" + ClientHomeScreen.PROFILE_GATE + "' screen, so the Home feed and "
                     + "booking flow are unreachable. Complete the profile (name + address) for "
-                    + TestAccounts.emailFor(CLIENT) + ", or point roleAccounts.client at a "
+                    + TestAccounts.emailFor(role) + ", or point roleAccounts." + role + " at a "
                     + "fully-provisioned client.");
         }
         return home;
@@ -150,15 +222,26 @@ public abstract class RoleSessionTest extends MobileBaseTest {
 
     /** Signs in as a professional and returns the dashboard. */
     protected ProfessionalDashboardScreen loginAsProfessional() {
-        loginAs(PROFESSIONAL);
+        return loginAsProfessional(PROFESSIONAL);
+    }
+
+    /**
+     * Signs in as a NAMED professional role.
+     *
+     * <p>Exists for {@link #PROFESSIONAL_NO_PAYOUTS}, the same way {@link #loginAsClient(String)}
+     * exists for {@link #CLIENT_NO_CARD}: the negative case needs an account the main one must
+     * never become.
+     */
+    protected ProfessionalDashboardScreen loginAsProfessional(String role) {
+        loginAs(role);
         ProfessionalDashboardScreen dashboard = new ProfessionalDashboardScreen(driver);
         if (dashboard.isProfileIncomplete()) {
-            throw new SkipException("The configured 'professional' account has no approved profile — "
+            throw new SkipException("The configured '" + role + "' account has no approved profile — "
                     + "the app routes it to ProfessionalNotCreatedHomePage, so the dashboard is "
                     + "unreachable. Approve the professional or seed an approved one.");
         }
         if (!dashboard.isLoaded()) {
-            throw new SkipException("The configured 'professional' account did not land in the "
+            throw new SkipException("The configured '" + role + "' account did not land in the "
                     + "professional shell — check its user_type_id is 2.");
         }
         return dashboard;
@@ -191,5 +274,14 @@ public abstract class RoleSessionTest extends MobileBaseTest {
                     + "Console — check its user_type_id is 3.");
         }
         return console;
+    }
+
+    /** Sleeps, preserving the interrupt flag — a cooldown, not a poll. */
+    private static void sleepSeconds(long seconds) {
+        try {
+            Thread.sleep(seconds * 1000L);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 }

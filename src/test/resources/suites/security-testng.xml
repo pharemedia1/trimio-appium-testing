@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+
+<!--
+  Trimio SECURITY suite — black-box authorization, injection and abuse testing against the running
+  backend. No emulator, no browser, no Appium: it needs only the API on :3000, a Firebase web key
+  to mint real ID tokens, and the seeded role accounts.
+
+  Run:
+    mvn test -DsuiteXmlFile=src/test/resources/suites/security-testng.xml \
+             -Dfirebase.webApiKey=… -Ddb.password=… -DretryCount=0
+
+  WHY A FIREBASE KEY IS MANDATORY. The backend runs with AUTH_ENFORCED=true and
+  ADMIN_AUTH_ENFORCED=true, so every protected route resolves the caller from a verified Firebase
+  ID token. There is no test bypass to switch on — a suite about authorization has to hold real
+  credentials for each role. Without the key every class here SKIPS with that explanation rather
+  than failing.
+
+  ORDERING IS DELIBERATE, not alphabetical:
+
+    1. The read-only sweeps run first (authentication, the role matrix, the super-admin seat,
+       injection). They make several hundred requests and change nothing.
+
+    2. Abuse testing runs LAST, because it is destructive to the environment rather than to the
+       application: it deliberately trips the rate limiter and the per-account lockout, and a
+       tripped limiter answers 429 to everything that follows — including the mobile suite's
+       logins, which then skip for a reason that has nothing to do with them. Learned the hard
+       way: a manual probe of this behaviour locked the seeded client for an hour mid-run.
+
+       RateLimitAndLockoutTest aims at an address with NO account and clears the row afterwards,
+       and AccountEnumerationTest skips rather than passes when it meets a 429 it caused.
+
+  DO NOT run this concurrently with the mobile or web suites against the same backend. The auth
+  rate limiter is per-source and shared; a run that looks green here will make those look broken.
+-->
+<suite name="Trimio Security Suite" parallel="false" verbose="1">
+
+    <listeners>
+        <listener class-name="org.example.listeners.TestListener"/>
+    </listeners>
+
+    <!-- 1. Is the caller who they say they are? Everything else rests on this. -->
+    <test name="SEC-01 — authentication enforcement">
+        <classes>
+            <class name="org.example.tests.security.AuthenticationEnforcementTest"/>
+        </classes>
+    </test>
+
+    <!-- 2. Given who they are, may they do it? The privilege-escalation surface. -->
+    <test name="SEC-02/03 — authorization and the super-admin seat">
+        <classes>
+            <class name="org.example.tests.security.RoleAuthorizationMatrixTest"/>
+            <class name="org.example.tests.security.SuperAdminBoundaryTest"/>
+        </classes>
+    </test>
+
+    <!-- 3. Hostile input, and what the server says when it goes wrong. -->
+    <test name="SEC-04 — injection and input handling">
+        <classes>
+            <class name="org.example.tests.security.InjectionAndInputHandlingTest"/>
+        </classes>
+    </test>
+
+    <!-- 4. Protocol-level controls the app and the browser both cannot reach. -->
+    <test name="SEC-07 — transport, CORS and the staff-only portal">
+        <classes>
+            <class name="org.example.tests.security.TransportAndHeadersTest"/>
+        </classes>
+    </test>
+
+    <!-- 5. LAST: the tests that deliberately trip the limiter. See the header. -->
+    <test name="SEC-05/06 — enumeration, brute force and rate limiting">
+        <classes>
+            <class name="org.example.tests.security.AccountEnumerationTest"/>
+            <class name="org.example.tests.security.RateLimitAndLockoutTest"/>
+        </classes>
+    </test>
+
+</suite>

@@ -153,6 +153,61 @@ public abstract class MobileBasePage {
      * cannot express that: a DISABLED Flutter button is still in the accessibility tree, so it is
      * found immediately and the scroll never happens.
      */
+    /**
+     * Flings the first scrollable back to the TOP.
+     *
+     * <p>Needed because Flutter drops the semantics of off-screen widgets: anything that scrolled
+     * to find one control has, by doing so, made earlier controls invisible to UiAutomator. Two
+     * consecutive checks on the same screen can therefore disagree — the second one looking at a
+     * viewport the first one moved.
+     */
+    /**
+     * Every element matching {@code by}, or an EMPTY list when there are none.
+     *
+     * <p><b>{@code driver.findElements} does not do this for a UiAutomator selector.</b> The
+     * WebDriver contract says findElements returns an empty list rather than throwing, and that is
+     * true for most locator strategies — but UiAutomator2 evaluates a {@code UiSelector} on the
+     * device and raises {@code UiObjectNotFoundException} when it matches nothing, which surfaces
+     * as {@code NoSuchElementException}. Code written to the contract therefore blows up instead
+     * of answering "none", and a method whose whole job is to return false — "is this tab
+     * present?" — throws out of the middle of a test.
+     *
+     * <p>Found the hard way: {@code BottomNavBar.hasTab} threw at the login screen, so
+     * {@code isClientShell()} could not answer "no" and the booking-payment test died before it
+     * had signed in.
+     */
+    /**
+     * Long-presses an element.
+     *
+     * <p>Needed wherever a Flutter screen hangs its actions off {@code onLongPress}. The usual
+     * alternative -- the little "more" icon beside the row -- is frequently an icon-only
+     * {@code GestureDetector} with no {@code Semantics} wrapper, which has no name and nothing to
+     * address, so a long-press on the row is the only accessible route to the same menu.
+     */
+    protected void longPress(org.openqa.selenium.WebElement element) {
+        driver.executeScript("mobile: longClickGesture", java.util.Map.of(
+                "elementId", ((org.openqa.selenium.remote.RemoteWebElement) element).getId(),
+                "duration", 1000));
+    }
+
+    protected java.util.List<org.openqa.selenium.WebElement> findAll(By by) {
+        try {
+            return driver.findElements(by);
+        } catch (org.openqa.selenium.NoSuchElementException e) {
+            return java.util.List.of();
+        }
+    }
+
+    protected void flingToBeginning() {
+        try {
+            driver.findElement(AppiumBy.androidUIAutomator(
+                    "new UiScrollable(new UiSelector().scrollable(true).instance(0))"
+                            + ".flingToBeginning(" + MAX_SCROLL_SWIPES + ")"));
+        } catch (RuntimeException e) {
+            LOG.debug("flingToBeginning found nothing scrollable: {}", e.getMessage());
+        }
+    }
+
     protected void flingToEnd() {
         try {
             driver.findElement(AppiumBy.androidUIAutomator(
@@ -182,6 +237,33 @@ public abstract class MobileBasePage {
     protected void scrollAndTap(String text) {
         scrollToDesc(text);
         tap(descContains(text));
+    }
+
+    /**
+     * Scrolls {@code label} into view and taps the node whose description is <b>exactly</b> that,
+     * falling back to a contains-match only if no exact node exists.
+     *
+     * <p><b>Why exact first.</b> Flutter merges a card's children into one semantics node, so a
+     * card containing a button also CONTAINS that button's label: the client Home feed exports
+     * {@code "Individual Appointment\nBook a one-on-one session…\nHair cut\nBeard trim\nBook
+     * Individual"} as a single node. {@link #scrollAndTap(String)} matches that node first and taps
+     * the card's centre, so the button is never pressed — and because the card is itself clickable
+     * the tap "succeeds", leaving the screen unchanged. The test then fails several steps later
+     * against a flow that was never opened.
+     *
+     * <p>The same shape is behind the bottom-nav labels and the rebook dialog, both of which
+     * needed the same correction. Prefer this for any control whose label also appears inside a
+     * parent card.
+     */
+    protected void scrollAndTapExact(String label) {
+        scrollToDesc(label);
+        By exact = accId(label);
+        if (isPresent(exact, SHORT_TIMEOUT)) {
+            tap(exact);
+            return;
+        }
+        LOG.debug("scrollAndTapExact('{}'): no exact node, falling back to contains", label);
+        tap(descContains(label));
     }
 
     /** True if {@code text} is on screen already, or can be reached by scrolling. */

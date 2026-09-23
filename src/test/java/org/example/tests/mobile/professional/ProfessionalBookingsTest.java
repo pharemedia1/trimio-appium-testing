@@ -53,7 +53,10 @@ public class ProfessionalBookingsTest extends RoleSessionTest {
             throw new SkipException("The professional has no bookings.");
         }
 
-        bookings.openFirstBooking().tapReportNoShow();
+        // The action sheet, not the detail page: "Report no-show" lives on the sheet bound to the
+        // card's long-press, while tapping the card opens a detail that ends at the earnings
+        // breakdown and offers no actions at all.
+        bookings.openBookingActions().tapReportNoShow();
 
         Assert.assertTrue(bookings.showsNoShowFeeNotice(),
                 "The no-show action must disclose that it charges the client a fee before it is "

@@ -32,7 +32,17 @@ public class AdminQueuesScreen extends MobileBasePage {
     public static final String REQUEST_CANCELED = "Request canceled";
 
     // ---- states -------------------------------------------------------------
-    public static final String STATES_ACTIVE_SUFFIX = "states active";
+    /**
+     * The states screen's summary note.
+     *
+     * <p>Replaces {@code "states active"}, which the screen never rendered: it shows a stat row —
+     * Active / Under review / Rejected / Total — above this sentence, not an
+     * "&lt;n&gt; states active" string. The old constant could not match, so the summary
+     * assertion failed on a screen that was summarising perfectly.
+     */
+    public static final String STATES_SUMMARY_NOTE = "Only Active states allow bookings";
+    /** A stat label from the same row, used as a second landmark. */
+    public static final String STATES_STAT_UNDER_REVIEW = "Under review";
     public static final String NO_STATES = "No states for this country.";
     public static final String APPROVE = "Approve";
     public static final String LAW_WATCH = "Law watch";
@@ -102,13 +112,14 @@ public class AdminQueuesScreen extends MobileBasePage {
     // ---- states -------------------------------------------------------------
 
     public boolean statesLoaded() {
-        return isPresentAfterScroll(STATES_ACTIVE_SUFFIX) || isPresentAfterScroll(NO_STATES)
+        return isPresentAfterScroll(STATES_SUMMARY_NOTE) || isPresentAfterScroll(NO_STATES)
                 || isPresent(descContains("States"), Duration.ofSeconds(20));
     }
 
     /** True when the "<active> of <total> states active" summary is rendered. */
     public boolean showsActiveStateCount() {
-        return isPresentAfterScroll(STATES_ACTIVE_SUFFIX);
+        return isPresentAfterScroll(STATES_SUMMARY_NOTE)
+                || isPresentAfterScroll(STATES_STAT_UNDER_REVIEW);
     }
 
     public boolean showsNoStatesForCountry() {

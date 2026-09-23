@@ -34,26 +34,69 @@ import java.time.Duration;
 public class ClientBookingReviewScreen extends MobileBasePage {
 
     // ---- the dialog ---------------------------------------------------------
-    public static final String TITLE = "Review & Cost Breakdown";
+    /**
+     * The page's own title.
+     *
+     * <p>Was "Review & Cost Breakdown", which is what the old <em>dialog</em> was called. The
+     * final price moved out of a pop-up and onto a page of its own — see the note on
+     * {@code pushReviewAndCost} in {@code ClientHomePageReviewAndCostDialog.dart}, which kept the
+     * class name and changed everything else — and the page is headed "Review & pay". The old
+     * title matched nothing, so isLoaded() was false on a page that had rendered.
+     */
+    public static final String TITLE = "Review & pay";
+    /** The breakdown block's heading. Everything below is merged into ONE node with it. */
+    public static final String PRICE_DETAILS = "Price details";
+    /** The breakdown's line labels, as the page renders them. */
+    public static final String LINE_SERVICES = "Services";
+    public static final String LINE_BOOKING_TRAVEL_FEE = "Booking & travel fee";
+    public static final String LINE_TOTAL = "Total";
     public static final String ASSIGNED_PROFESSIONAL = "Assigned Professional";
+    /** @deprecated the row is called {@link #LINE_SERVICES} now. */
+    @Deprecated
     public static final String SERVICE_CHARGE = "Selected Service Charge";
     public static final String DISTANCE_SURCHARGE = "Distance Surcharge";
     public static final String SELECTED_PROFESSIONAL = "Selected Professional";
     public static final String FINAL_BEFORE_AI = "Final price before AI:";
     public static final String AI_PRICE = "AI Price";
-    public static final String CONFIRM_AND_PAY = "Confirm & Pay";
+    /**
+     * The confirm button, which now carries the amount: "Pay $97.00".
+     *
+     * <p>Matched on the prefix because the rest is the total, which changes with the booking.
+     * It was "Confirm & Pay" when this was a dialog.
+     */
+    public static final String CONFIRM_AND_PAY = "Pay $";
     public static final String EDIT = "Edit";
 
     // ---- the success screen -------------------------------------------------
-    public static final String BOOKING_CONFIRMED = "Booking Confirmed";
-    public static final String PAYMENT_SUCCESSFUL = "Payment successful";
-    public static final String MAKE_RECURRING = "Yes, make it recurring";
+    /**
+     * The confirmation page's landmark.
+     *
+     * <p>Was "Booking Confirmed". The page is headed "You're booked!" and carries a
+     * "Booking number  #26532" row — that row is used instead of the headline because the
+     * headline's apostrophe is non-ASCII and a {@code UiSelector} cannot match it, the same trap
+     * that has already cost this suite nineteen dead locators.
+     */
+    public static final String BOOKING_CONFIRMED = "Booking number";
+    /**
+     * The line that states the charge was taken: "Paid $97.00".
+     *
+     * <p>Was "Payment successful", which the page never says. Matched on the prefix because the
+     * amount varies with the booking.
+     */
+    public static final String PAYMENT_SUCCESSFUL = "Paid $";
+    /**
+     * The confirmation page's recurring offer, now a pair of buttons rather than a dialog:
+     * "Keep my spot · every 2 weeks" to accept, "Done" to decline.
+     */
+    public static final String MAKE_RECURRING = "Keep my spot";
+    /** Declines the recurring offer and closes the confirmation. */
+    public static final String RECURRING_DECLINE = "Done";
 
     // ---- failure copy the app can raise ------------------------------------
     /** Snackbar from {@code PaymentHandlerService} when the charge is refused. */
     public static final String PAYMENT_FAILED = "Payment Failed!";
     /** A hard compliance refusal gets a dialog of its own, not a snackbar. */
-    public static final String BOOKING_UNAVAILABLE = "isn’t available in your area";
+    public static final String BOOKING_UNAVAILABLE = "available in your area";
     /** Raised when a membership credit part-covers the booking and no card is on file. */
     public static final String NEEDS_CARD = "Please add a card to cover the remaining amount.";
 
@@ -67,14 +110,26 @@ public class ClientBookingReviewScreen extends MobileBasePage {
      * shape of "the test passed yesterday". Verified on-device: answering it took the same booking
      * straight through to "Payment successful".
      */
-    public static final String DUPLICATE_WARNING = "Heads up";
+    /**
+     * The duplicate-booking dialog's title.
+     *
+     * <p>Was "Heads up"; it now reads <b>"Book another visit?"</b> above "You already have an
+     * appointment on … Book another for the same day?". The rename mattered more than a rename
+     * usually does: this dialog stands between "Pay" and the charge and <b>until it is answered
+     * no request is sent at all</b>, so failing to recognise it presents exactly as a silently
+     * refused payment — the test pressed Pay, waited ninety seconds, saw no confirmation and
+     * reported the charge as declined, while the app sat waiting for an answer nobody gave.
+     */
+    public static final String DUPLICATE_WARNING = "Book another visit?";
     /** Its proceed button. "Cancel" abandons the booking. */
     public static final String DUPLICATE_PROCEED = "Book anyway";
 
     /** How long to give the charge. It authorises, writes the booking, then captures. */
     private static final Duration PAYMENT_TIMEOUT = Duration.ofSeconds(90);
 
-    private final By confirmAndPay = accId(CONFIRM_AND_PAY);
+    // CONTAINS, not an exact accessibility id: the button reads "Pay $97.00" — the label
+    // carries the total, which changes with every booking.
+    private final By confirmAndPay = buttonDescContains(CONFIRM_AND_PAY);
 
     public ClientBookingReviewScreen(AndroidDriver driver) {
         super(driver);
@@ -97,11 +152,49 @@ public class ClientBookingReviewScreen extends MobileBasePage {
         return isPresent(descContains(TITLE), Duration.ofSeconds(30));
     }
 
-    /** True if the itemised breakdown is showing (service, distance and professional lines). */
+    /** True if the itemised price breakdown is showing. */
     public boolean showsBreakdown() {
-        return isPresentAfterScroll(SERVICE_CHARGE)
-                && isPresentAfterScroll(DISTANCE_SURCHARGE)
-                && isPresentAfterScroll(SELECTED_PROFESSIONAL);
+        return isPresentAfterScroll(PRICE_DETAILS)
+                && isPresentAfterScroll(LINE_SERVICES)
+                && isPresentAfterScroll(LINE_TOTAL);
+    }
+
+    /**
+     * Every line of the breakdown except the total, as label → amount.
+     *
+     * <p>The whole block is ONE merged node —
+     * {@code "Price details\nServices\n$85.00\nBooking & travel fee\n$12.00\nTotal\n$97.00"}
+     * — so the lines are read by walking its segments in pairs rather than by locating separate
+     * rows. Returning the lines rather than naming them means a test can assert the total is the
+     * sum of what is shown without having to know which lines this booking happens to have: a
+     * shop visit has no travel fee, a premium professional adds a line, and the assertion that
+     * matters ("the client can derive the total") holds either way.
+     */
+    public java.util.Map<String, Double> lineItems() {
+        java.util.Map<String, Double> lines = new java.util.LinkedHashMap<>();
+        String block = mergedBreakdown();
+        if (block == null) {
+            return lines;
+        }
+        String[] parts = block.split("\n");
+        for (int i = 0; i + 1 < parts.length; i++) {
+            String label = parts[i].trim();
+            double amount = ClientBookingFlowScreen.parseAmount(parts[i + 1].trim());
+            if (amount >= 0 && !label.isEmpty() && !label.startsWith("$")
+                    && !LINE_TOTAL.equalsIgnoreCase(label)) {
+                lines.put(label, amount);
+            }
+        }
+        return lines;
+    }
+
+    /** The merged "Price details" node, or null when it is not on screen. */
+    private String mergedBreakdown() {
+        if (!isPresentAfterScroll(PRICE_DETAILS)) {
+            return null;
+        }
+        WebElement node = find(descContains(PRICE_DETAILS));
+        return node == null ? null : node.getAttribute("content-desc");
     }
 
     /**
@@ -110,22 +203,39 @@ public class ClientBookingReviewScreen extends MobileBasePage {
      * <p>That row is the total the charge is built from. Returns -1 when it cannot be read.
      */
     public double total() {
-        return amountFrom(FINAL_BEFORE_AI);
+        return lineAmount(LINE_TOTAL);
     }
 
     /** The service line's own amount, so a test can check the total is built from it. */
     public double serviceCharge() {
-        return amountFrom(SERVICE_CHARGE);
+        return lineAmount(LINE_SERVICES);
     }
 
-    /** The professional-level premium line. */
-    public double professionalPremium() {
-        return amountFrom(SELECTED_PROFESSIONAL);
+    /** The booking &amp; travel fee line. */
+    public double bookingAndTravelFee() {
+        return lineAmount(LINE_BOOKING_TRAVEL_FEE);
     }
 
-    /** The distance surcharge line. */
-    public double distanceSurcharge() {
-        return amountFrom(DISTANCE_SURCHARGE);
+    /**
+     * Reads one line of the merged breakdown by its label.
+     *
+     * <p>The amount is the segment AFTER the label, not the last "$" in the node: the block holds
+     * every line, so taking the last one returns the total whichever line was asked for.
+     *
+     * @return the amount, or -1 when the page does not carry that line
+     */
+    public double lineAmount(String label) {
+        String block = mergedBreakdown();
+        if (block == null) {
+            return -1;
+        }
+        String[] parts = block.split("\n");
+        for (int i = 0; i + 1 < parts.length; i++) {
+            if (parts[i].trim().equalsIgnoreCase(label)) {
+                return ClientBookingFlowScreen.parseAmount(parts[i + 1].trim());
+            }
+        }
+        return -1;
     }
 
     /**
@@ -256,10 +366,20 @@ public class ClientBookingReviewScreen extends MobileBasePage {
         return isPresentAfterScroll(PAYMENT_SUCCESSFUL);
     }
 
-    /** Declines the recurring-booking upsell on the confirmation screen. */
+    /**
+     * Declines the recurring-booking offer on the confirmation screen.
+     *
+     * <p>The offer is no longer a dialog with "No, thanks" — the confirmation page asks "Want this
+     * time again?" under the receipt and gives two buttons, {@link #MAKE_RECURRING} to accept and
+     * {@link #RECURRING_DECLINE} to decline. Declining is also what dismisses the confirmation, so
+     * this is how a booking test gets back to the app.
+     *
+     * <p>Guarded rather than assumed: the offer only appears for a booking that could sensibly
+     * repeat, and a test that has just paid should not fail because it was not asked.
+     */
     public void declineRecurring() {
-        if (isPresentAfterScroll("No, thanks")) {
-            scrollAndTap("No, thanks");
+        if (isPresentAfterScroll(RECURRING_DECLINE)) {
+            scrollAndTapExact(RECURRING_DECLINE);
         }
     }
 }

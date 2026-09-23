@@ -19,7 +19,8 @@ import java.util.Map;
  *
  * <ul>
  *   <li><b>Negative</b> (data-driven): an incomplete code is blocked client-side; a wrong 6-digit
- *       code is rejected by the backend ("Invalid OTP").</li>
+ *       code is rejected by the backend ("Invalid code." -- the same text an UNKNOWN account
+ *       gets, so the endpoint cannot be used to enumerate accounts).</li>
  *   <li><b>Positive</b>: the real code — read from {@code users.two_factor_secret} via JDBC — is
  *       accepted. Self-skips unless {@code -Ddb.password=…} (or {@code DB_PASSWORD}) is provided.</li>
  * </ul>

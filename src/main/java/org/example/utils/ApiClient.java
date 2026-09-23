@@ -102,19 +102,88 @@ public final class ApiClient {
 
     /** GETs a path with optional headers. */
     public Response get(String path, Map<String, String> headers) {
+        return send("GET", path, null, headers);
+    }
+
+    /** PUTs JSON. */
+    public Response put(String path, Map<String, Object> payload, Map<String, String> headers) {
+        return send("PUT", path, payload, headers);
+    }
+
+    /** PATCHes JSON. */
+    public Response patch(String path, Map<String, Object> payload, Map<String, String> headers) {
+        return send("PATCH", path, payload, headers);
+    }
+
+    /** DELETEs a path. */
+    public Response delete(String path, Map<String, String> headers) {
+        return send("DELETE", path, null, headers);
+    }
+
+    /**
+     * Issues any HTTP method, with an optional JSON body.
+     *
+     * <p>The one entry point every verb helper routes through, so header handling, timeouts and
+     * error wrapping cannot drift between them. {@code payload} of {@code null} sends no body.
+     *
+     * <p>Unlike the verb helpers above it does <b>not</b> throw on a transport failure being an
+     * expected outcome — a refused connection is still an {@link IllegalStateException}, because a
+     * test that cannot reach the server has not learned anything about the server.
+     */
+    public Response send(String method, String path, Map<String, Object> payload,
+                         Map<String, String> headers) {
         try {
+            HttpRequest.BodyPublisher body = payload == null
+                    ? HttpRequest.BodyPublishers.noBody()
+                    : HttpRequest.BodyPublishers.ofString(MAPPER.writeValueAsString(payload));
+
             HttpRequest.Builder builder = HttpRequest.newBuilder()
                     .uri(URI.create(baseUrl + path))
                     .timeout(Duration.ofSeconds(30))
-                    .GET();
+                    .method(method, body);
+            if (payload != null) {
+                builder.header("Content-Type", "application/json");
+            }
             headers.forEach(builder::header);
 
             HttpResponse<String> response = http.send(builder.build(),
                     HttpResponse.BodyHandlers.ofString());
-            LOG.info("API GET {} -> {}", path, response.statusCode());
+            LOG.info("API {} {} -> {}", method, path, response.statusCode());
             return new Response(response.statusCode(), response.body(), parse(response.body()));
         } catch (Exception e) {
-            throw new IllegalStateException("GET " + path + " failed: " + e.getMessage(), e);
+            throw new IllegalStateException(method + " " + path + " failed: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Sends a raw string body with a caller-chosen content type.
+     *
+     * <p>Needed by the security probes, which have to send bodies that are deliberately not valid
+     * JSON — an oversized payload, a malformed document, a body whose {@code Content-Type} lies
+     * about what it contains. {@link #send} would serialise those through Jackson and so could
+     * never produce them.
+     */
+    public Response sendRaw(String method, String path, String body, String contentType,
+                            Map<String, String> headers) {
+        try {
+            HttpRequest.Builder builder = HttpRequest.newBuilder()
+                    .uri(URI.create(baseUrl + path))
+                    .timeout(Duration.ofSeconds(30))
+                    .method(method, body == null
+                            ? HttpRequest.BodyPublishers.noBody()
+                            : HttpRequest.BodyPublishers.ofString(body));
+            if (contentType != null) {
+                builder.header("Content-Type", contentType);
+            }
+            headers.forEach(builder::header);
+
+            HttpResponse<String> response = http.send(builder.build(),
+                    HttpResponse.BodyHandlers.ofString());
+            LOG.info("API {} {} (raw) -> {}", method, path, response.statusCode());
+            return new Response(response.statusCode(), response.body(), parse(response.body()));
+        } catch (Exception e) {
+            throw new IllegalStateException(method + " " + path + " (raw) failed: "
+                    + e.getMessage(), e);
         }
     }
 

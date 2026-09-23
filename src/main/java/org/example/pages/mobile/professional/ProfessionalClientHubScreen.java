@@ -11,7 +11,7 @@ import java.time.Duration;
  * profile it opens.
  *
  * <p>The professional's CRM: every client they have served, with visit count and lifetime spend, plus
- * private notes ("Preferences, allergies, reminders…"). Those notes are the professional's own —
+ * private notes ("Preferences, allergies, reminders"). Those notes are the professional's own —
  * they must never surface to the client, which is the assertion worth having alongside the
  * persistence check.
  */
@@ -23,12 +23,21 @@ public class ProfessionalClientHubScreen extends MobileBasePage {
     public static final String SEARCH_HINT = "Search by client name";
     public static final String NOTES = "Notes";
     public static final String ADD_NOTE = "+ Add";
-    public static final String NOTE_HINT = "Preferences, allergies, reminders…";
+    public static final String NOTE_HINT = "Preferences, allergies, reminders";
     public static final String APPOINTMENT_HISTORY = "Appointment history";
     public static final String BROUGHT_IN_CLIENT = "Your brought-in client";
 
     /** Empty state, verified on-device. */
     public static final String EMPTY = "No clients yet.";
+    /**
+     * The empty state a NON-MATCHING SEARCH produces — {@code 'No clients match "$_query".'}.
+     *
+     * <p>Distinct from {@link #EMPTY}, and the difference matters: "you have no clients" and "none
+     * of your clients match that" are different facts, and only the second one says the filter
+     * ran. Asserting the absence of the query string instead is not equivalent — the text the user
+     * just typed is still on screen, in the search field.
+     */
+    public static final String NO_SEARCH_MATCH = "No clients match";
 
     public ProfessionalClientHubScreen(AndroidDriver driver) {
         super(driver);
@@ -79,6 +88,35 @@ public class ProfessionalClientHubScreen extends MobileBasePage {
     }
 
     // ---- notes --------------------------------------------------------------
+
+    /**
+     * True when the search produced its no-match empty state.
+     *
+     * <p>Use this rather than "the query string is absent": after typing, that string is on the
+     * screen by definition.
+     */
+    public boolean showsNoSearchMatch() {
+        return isPresent(descContains(NO_SEARCH_MATCH), Duration.ofSeconds(10));
+    }
+
+    /**
+     * Opens the first client in the list, which is where the notes live.
+     *
+     * <p>The hub is a LIST; {@code '+ Add'}, the notes section and the appointment history are on
+     * {@code professional_client_profile.dart}, one tap in. Calling {@link #addNote(String)}
+     * straight from the hub looked for a control that is on the next screen.
+     *
+     * @return true if a client row was found and opened
+     */
+    public boolean openFirstClient() {
+        By row = descContains("visit");
+        if (!isPresent(row, Duration.ofSeconds(10))) {
+            LOG.warn("ClientHub: no client row to open");
+            return false;
+        }
+        tap(row);
+        return isPresent(descContains(NOTES), Duration.ofSeconds(15));
+    }
 
     /** Adds a private note to the open client profile. */
     public ProfessionalClientHubScreen addNote(String note) {

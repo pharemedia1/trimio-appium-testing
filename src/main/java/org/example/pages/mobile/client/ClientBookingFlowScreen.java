@@ -60,10 +60,29 @@ public class ClientBookingFlowScreen extends MobileBasePage {
 
     /** The step-4 CTA. It is NOT "Continue" — the last step hands off to the pay dialog. */
     public static final String REVIEW_AND_PAY = "Review & pay";
+    /** The review CTA when the booking is a shop visit rather than a home visit. */
+    public static final String FIND_A_SHOP = "Find a shop";
+    /** The step-advance CTA on steps 1-3. */
+    public static final String CONTINUE = "Continue";
 
     /** Matches a rendered slot label such as "4:30 PM". */
+    /**
+     * A bookable time chip, e.g. {@code "12:00 pm"}.
+     *
+     * <p><b>CASE_INSENSITIVE, and that is the whole point.</b> The chips render the meridiem in
+     * LOWER case — "12:00 pm", "1:15 pm" — and this pattern required "PM". It therefore matched
+     * nothing on a step that was showing twenty open afternoon slots, and the flow reported the
+     * day as unbookable: "'Afternoon' advertised times but rendered no slots", which reads as the
+     * app promising times it does not have.
+     *
+     * <p>It cost a real investigation. The symptom was "No bookable time … in the next 4 days —
+     * every period reports 'No times'", which points squarely at missing fixtures; the API was
+     * answering with 33 of 48 slots available for the same client, date and service throughout.
+     * Nothing needed seeding.
+     */
     private static final java.util.regex.Pattern SLOT =
-            java.util.regex.Pattern.compile("^\\d{1,2}:\\d{2}\\s?[AP]M$");
+            java.util.regex.Pattern.compile("^\\d{1,2}:\\d{2}\\s?[AP]M$",
+                    java.util.regex.Pattern.CASE_INSENSITIVE);
 
     /** Matches a day chip in the date strip, e.g. {@code "Sun\n30"}. */
     private static final java.util.regex.Pattern DAY_CHIP =
@@ -71,15 +90,34 @@ public class ClientBookingFlowScreen extends MobileBasePage {
 
     // ---- copy used as assertions -------------------------------------------
     public static final String NO_SERVICE_MATCH = "No services match that search.";
-    public static final String NO_OPEN_TIMES = "No open times on this day — try another day.";
+    public static final String NO_OPEN_TIMES = "No open times on this day";
     public static final String NO_ADDONS = "No add-ons available right now.";
-    public static final String CHECKING_AVAILABILITY = "Checking availability…";
-    public static final String FITTING_GROUP = "Fitting the group…";
+    public static final String CHECKING_AVAILABILITY = "Checking availability";
+    public static final String FITTING_GROUP = "Fitting the group";
     public static final String ADDRESS_HINT = "Where should the pro come? This updates your saved address.";
     public static final String SUBTOTAL = "SUBTOTAL";
 
     // ---- locators -----------------------------------------------------------
-    private final By serviceSearch = descContains("Search services…");
+    /**
+     * Step 1's service search — by EditText index, NOT by its hint.
+     *
+     * <p>Two independent reasons the old selector could never match, either of which alone was
+     * fatal: the field is a bare {@code TextField} whose only text is
+     * {@code hintText: 'Search services…'}, and a Flutter hint does not become a content-desc; and
+     * the literal carries a non-ASCII ellipsis (U+2026), which a {@code UiSelector} cannot match
+     * at all — the same trap that made {@code descContains("★")} find no professional cards that
+     * were plainly on screen.
+     *
+     * <p>Identical problem, and identical fix, to the on-demand flow's search box — see
+     * {@link ClientStyleMeNowScreen}. The real fix is upstream: a {@code Semantics(label:)} on the
+     * field, which would also let a screen reader announce it.
+     */
+    private final By serviceSearch = editText(0);
+    /** Title of the sheet "Add person" raises. */
+    public static final String ADD_TO_GROUP = "Add to the group";
+    /** Its option for someone with no saved profile. */
+    public static final String ADD_A_GUEST = "Add a guest";
+
     private final By addPerson = accId("Add person");
     private final By changeAddress = accId("Change");
     private final By saveAddress = accId("Save address");
@@ -123,17 +161,40 @@ public class ClientBookingFlowScreen extends MobileBasePage {
 
     // ---- step 1: what -------------------------------------------------------
 
-    /** Types into the service search box and returns this screen. */
+    /**
+     * Types into the service search box.
+     *
+     * @deprecated <b>Step 1 has no search box.</b> Verified on-device: it renders
+     *     "Pick a category, then the service you'd like." above a category row (Barbering, Hair,
+     *     Makeup artistry, Nail services, More categories) and a filtered service list — and there
+     *     is no {@code EditText} anywhere on the step. Filtering is done by CATEGORY, so use
+     *     {@link #selectCategory(String)} and {@link #hasService(String)}.
+     */
+    @Deprecated
     public ClientBookingFlowScreen searchService(String query) {
         LOG.info("Booking: searching services for '{}'", query);
         type(serviceSearch, query);
         return this;
     }
 
+    /** True when {@code serviceName} is offered in the currently selected category. */
+    public boolean hasService(String serviceName) {
+        return isPresentAfterScroll(serviceName);
+    }
+
     /** True when the search produced no matches. */
     public boolean showsNoServiceMatch() {
         return isPresent(descContains(NO_SERVICE_MATCH), Duration.ofSeconds(10));
     }
+
+    /** The pager that advances the horizontal category row. */
+    public static final String MORE_CATEGORIES = "More categories";
+    /** Its counterpart, which appears once the row has been paged. */
+    public static final String PREVIOUS_CATEGORIES = "Previous categories";
+    /** How many times to page the category row before giving up. */
+    private static final int MAX_CATEGORY_PAGES = 6;
+    /** Narrower than this and a chip is clipped at the edge, not genuinely tappable. */
+    private static final int MIN_TAPPABLE_CHIP_WIDTH = 80;
 
     /** Selects a service by its visible name. */
     public ClientBookingFlowScreen selectService(String serviceName) {
@@ -142,7 +203,13 @@ public class ClientBookingFlowScreen extends MobileBasePage {
     }
 
     /**
-     * Picks a service category ("Barbering (beard & shave)", "Hair (cut, colour & styling)", …).
+     * Picks a service category by its CHIP label — "Barbering", "Hair", "Makeup artistry",
+     * "Nail services", not the full catalogue name.
+     *
+     * <p>{@code _shortCategoryLabel} trims everything from the first "(" or "/", so the
+     * catalogue's "Barbering (beard & shave)" and "Hair (cut, colour & styling)" appear as one
+     * word. The full names still exist — in the licence model and the admin console, where the
+     * scope is the point — but never on this screen.
      *
      * <p>Step 1 is category-then-service: the service list is filtered by the selected category, so
      * a service is only tappable once its category is showing. The default category is Hair, which
@@ -150,9 +217,45 @@ public class ClientBookingFlowScreen extends MobileBasePage {
      */
     public ClientBookingFlowScreen selectCategory(String category) {
         LOG.info("Booking: category '{}'", category);
+        for (int page = 0; page < MAX_CATEGORY_PAGES; page++) {
+            org.openqa.selenium.WebElement chip = find(accId(category));
+            if (chip != null && isFullyOnScreen(chip)) {
+                chip.click();
+                sleepBriefly();
+                return this;
+            }
+            // The chip is either absent or CLIPPED at the screen edge. Page the row rather than
+            // tapping it: a clipped chip's centre can land outside its own hit area, and the tap
+            // then goes to whatever is underneath — here, the "More categories" pager, which
+            // advances the row and leaves the category unselected. That is silent: the service
+            // list simply does not change, and an assertion about filtering fails against a filter
+            // that works.
+            if (!isPresent(accId(MORE_CATEGORIES), SHORT_TIMEOUT)) {
+                break;
+            }
+            LOG.debug("Booking: '{}' is not fully visible — paging the category row", category);
+            tap(accId(MORE_CATEGORIES));
+            sleepBriefly();
+        }
+        // Last resort: it may simply be on screen in a layout this loop cannot page.
         scrollAndTap(category);
         sleepBriefly();
         return this;
+    }
+
+    /**
+     * True when {@code element} lies wholly inside the viewport.
+     *
+     * <p>The category row is a horizontal pager, and a chip at the edge is reported with real
+     * bounds while being only a few pixels wide — 34px against the 208-394px of a full one. It is
+     * "present" and "clickable" and tapping it does the wrong thing.
+     */
+    private boolean isFullyOnScreen(org.openqa.selenium.WebElement element) {
+        org.openqa.selenium.Dimension screen = driver.manage().window().getSize();
+        org.openqa.selenium.Rectangle box = element.getRect();
+        return box.getX() >= 0
+                && box.getX() + box.getWidth() <= screen.getWidth()
+                && box.getWidth() >= MIN_TAPPABLE_CHIP_WIDTH;
     }
 
     // ---- step 2: who & where ------------------------------------------------
@@ -179,7 +282,32 @@ public class ClientBookingFlowScreen extends MobileBasePage {
 
     /** Group flow — adds another participant. */
     public ClientBookingFlowScreen addPerson() {
+        return addPerson(null);
+    }
+
+    /**
+     * Adds someone to the group, <b>completing the chooser sheet</b>.
+     *
+     * <p>Tapping "Add person" does not add anyone — it raises an "{@value #ADD_TO_GROUP}" sheet
+     * listing the client's saved family members plus "{@value #ADD_A_GUEST}". The sheet carries a
+     * scrim, so until it is answered the step's Continue button is covered and unreachable: the
+     * old one-line version left it open, and the next call failed with "No 'Continue' button" on a
+     * step whose button was simply behind a modal.
+     *
+     * @param name a saved family member to add, or null to add an unnamed guest
+     */
+    public ClientBookingFlowScreen addPerson(String name) {
         tap(addPerson);
+        if (!isPresent(descContains(ADD_TO_GROUP), Duration.ofSeconds(10))) {
+            LOG.warn("Booking: 'Add person' raised no chooser sheet");
+            return this;
+        }
+        String choice = name == null ? ADD_A_GUEST : name;
+        LOG.info("Booking: adding '{}' to the group", choice);
+        scrollAndTap(choice);
+        // The sheet closes on selection; wait for it so the caller's next tap is not swallowed by
+        // the scrim on its way out.
+        waitForAbsence(descContains(ADD_TO_GROUP), Duration.ofSeconds(10));
         return this;
     }
 
@@ -257,7 +385,7 @@ public class ClientBookingFlowScreen extends MobileBasePage {
         return java.util.List.of();
     }
 
-    /** Waits out the "Checking availability…" spinner; true once slots (or the empty state) settle. */
+    /** Waits out the "Checking availability" spinner; true once slots (or the empty state) settle. */
     public boolean waitForAvailability() {
         waitForAbsence(descContains(CHECKING_AVAILABILITY), Duration.ofSeconds(30));
         return !isPresent(descContains(CHECKING_AVAILABILITY), Duration.ofSeconds(2));
@@ -351,10 +479,28 @@ public class ClientBookingFlowScreen extends MobileBasePage {
     /** Every slot label currently rendered, in screen order. */
     public java.util.List<String> visibleSlots() {
         java.util.List<String> out = new java.util.ArrayList<>();
-        for (WebElement e : driver.findElements(descContains(":"))) {
+        for (WebElement e : findAll(descContains(":"))) {
             String desc = e.getAttribute("content-desc");
-            if (desc != null && SLOT.matcher(desc.trim()).matches()) {
-                out.add(desc.trim());
+            if (desc == null) {
+                continue;
+            }
+            // MATCH A SEGMENT, NOT THE WHOLE DESCRIPTION.
+            //
+            // A slot chip is a Semantics(label: '12:00 PM') wrapping a Text('12:00 pm'), and
+            // Flutter MERGES the two: the node arrives as "12:00 PM\n12:00 pm". An anchored
+            // ^...$ match against that can never succeed, whatever the case, so every chip was
+            // skipped and the flow reported "'Afternoon' advertised times but rendered no slots"
+            // on a screen showing twenty of them.
+            //
+            // The first segment is the Semantics label — the accessible name, and the stable half
+            // (the visible Text is lower-case and cosmetic) — so that is what is returned and what
+            // selectSlot() then matches on.
+            for (String segment : desc.split("\n")) {
+                String candidate = segment.trim();
+                if (SLOT.matcher(candidate).matches()) {
+                    out.add(candidate);
+                    break;
+                }
             }
         }
         return out;
@@ -511,17 +657,54 @@ public class ClientBookingFlowScreen extends MobileBasePage {
         return readAmountNear(SUBTOTAL);
     }
 
-    /** Reads the first "$…" amount that follows {@code anchor}; -1 when absent. */
+    /**
+     * Reads the amount belonging to {@code anchor}; -1 when it cannot be read.
+     *
+     * <p><b>This ignored its own anchor until 2026-09-23</b>, and the bug is worth recording
+     * because it produced a green-looking value rather than a miss. It matched
+     * {@code descContains("$")} — the <em>first</em> dollar amount anywhere on the step — so
+     * {@code subtotal()} returned whatever happened to render first. On the extras step that is an
+     * add-on's own "+$10.00" chip, which never changes, so {@code addOnUpdatesSubtotal} compared
+     * 10.0 against 10.0 and could not have passed whatever the app did. A locator that reads the
+     * wrong number is worse than one that reads none: it fails as a product defect.
+     *
+     * <p>Two shapes are handled, because Flutter's {@code Semantics} merging decides which one
+     * appears and the choice is not ours. Usually label and amount merge into a single node
+     * ("SUBTOTAL\n$85.00"), and then the amount is the <b>last</b> "$" in the row — the trailing
+     * one — for the reason the review screen documents: a row may show its own arithmetic
+     * ("(20 % x $85.00)\n$17.00") and the first "$" is an operand, not the total. When they do not
+     * merge, the amount is a separate node and the nearest "$" at or below the anchor's baseline
+     * is taken instead.
+     */
     private double readAmountNear(String anchor) {
-        By amount = descContains("$");
-        if (!isPresent(amount, Duration.ofSeconds(5))) {
+        WebElement label = find(descContains(anchor));
+        if (label == null) {
             return -1;
         }
-        String raw = getText(amount);
-        if (raw == null || raw.isBlank()) {
-            raw = find(amount) == null ? "" : find(amount).getAttribute("content-desc");
+        // Case 1: label and amount merged into one node.
+        String row = label.getAttribute("content-desc");
+        LOG.debug("readAmountNear('{}'): row is '{}'", anchor, row);
+        double merged = ClientBookingReviewScreen.trailingAmount(row);
+        if (merged >= 0) {
+            return merged;
         }
-        return parseAmount(raw);
+        // Case 2: the amount is its own node. Take the first one that is not above the label,
+        // rather than the first on screen, so a price printed higher up cannot stand in for it.
+        int baseline = label.getLocation().getY();
+        double best = -1;
+        int bestY = Integer.MAX_VALUE;
+        for (WebElement node : findAll(descContains("$"))) {
+            int y = node.getLocation().getY();
+            double value = ClientBookingReviewScreen.trailingAmount(node.getAttribute("content-desc"));
+            if (value >= 0 && y >= baseline && y < bestY) {
+                best = value;
+                bestY = y;
+            }
+        }
+        if (best < 0) {
+            LOG.warn("Could not read an amount for '{}' (row was '{}')", anchor, row);
+        }
+        return best;
     }
 
     /** Parses "$1,234.56" (possibly with surrounding text) into 1234.56; -1 if nothing parses. */
@@ -543,15 +726,40 @@ public class ClientBookingFlowScreen extends MobileBasePage {
 
     // ---- flow control -------------------------------------------------------
 
-    /** Taps the primary advance CTA ("Continue" / "Next"). */
+    /**
+     * Taps the step's primary CTA, whatever it is called on this step.
+     *
+     * <p>The flow uses ONE button and relabels it: {@code 'Continue'} on steps 1-3, then
+     * {@code 'Review & pay'} on the review step — or {@code 'Find a shop'} when the booking is a
+     * shop visit rather than a home visit. There is no {@code 'Next'} anywhere in
+     * {@code booking_flow_screen.dart}; the old fallback tapped an accessibility id that could
+     * never exist, so a step where "Continue" had not yet rendered produced a 30-second timeout
+     * naming a button nobody had ever seen.
+     *
+     * <p>Only {@code 'Continue'} advances a step, so only that is tapped — the review labels are
+     * recognised solely to explain the failure.
+     *
+     * <p>When the CTA is genuinely absent this says so, and lists what it looked for, rather than
+     * timing out against the last candidate.
+     */
     public ClientBookingFlowScreen continueStep() {
         hideKeyboard();
-        if (isPresent(accId("Continue"), SHORT_TIMEOUT)) {
-            tap(accId("Continue"));
-        } else {
-            tap(accId("Next"));
+        if (isPresent(accId(CONTINUE), SHORT_TIMEOUT)) {
+            tap(accId(CONTINUE));
+            return this;
         }
-        return this;
+        // Not found — say why, precisely, instead of timing out against a button that does not
+        // exist. The likeliest cause is that we are already ON the review step, where the same
+        // control is relabelled.
+        String onReview = isPresent(accId(REVIEW_AND_PAY), SHORT_TIMEOUT) ? REVIEW_AND_PAY
+                : isPresent(accId(FIND_A_SHOP), SHORT_TIMEOUT) ? FIND_A_SHOP : "";
+        throw new org.openqa.selenium.NoSuchElementException(
+                onReview.isEmpty()
+                        ? "No '" + CONTINUE + "' button on this step. The step may not have "
+                          + "rendered, or the CTA may be disabled because the step's requirements "
+                          + "are unmet."
+                        : "No '" + CONTINUE + "' button: the flow is already on the REVIEW step, "
+                          + "where the same control reads '" + onReview + "'. Use reviewAndPay().");
     }
 
     /** True if the flow refused to advance — i.e. we are still on {@code step}. */

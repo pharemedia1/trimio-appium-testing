@@ -79,7 +79,16 @@ import java.util.List;
 public class ClientIndividualBookingPaymentTest extends RoleSessionTest {
 
     /** A per-person service priced above zero, so the charge is a real amount. */
-    private static final String CATEGORY = "Barbering (beard & shave)";
+    /**
+     * The category CHIP's label, which is the catalogue name trimmed.
+     *
+     * <p>Was {@code "Barbering (beard & shave)"} — the full catalogue name, which the chip does
+     * not show. {@code booking_flow_screen.dart _shortCategoryLabel} cuts everything from the
+     * first "(" or "/", deliberately: the parenthetical disambiguates a regulated scope for the
+     * licence model and the admin console, and "a definition does not belong on a chip". The full
+     * name therefore matched nothing on step 1 and the payment path could not select a service.
+     */
+    private static final String CATEGORY = "Barbering";
     private static final String SERVICE = "Men's Haircut + Beard";
     private static final double SERVICE_PRICE = 85.00;
 
@@ -141,15 +150,20 @@ public class ClientIndividualBookingPaymentTest extends RoleSessionTest {
                 "The client must see what they are paying for before paying");
 
         double service = review.serviceCharge();
-        double premium = review.professionalPremium();
-        double distance = review.distanceSurcharge();
         double total = review.total();
+        java.util.Map<String, Double> lines = review.lineItems();
 
         Assert.assertEquals(service, SERVICE_PRICE, 0.01,
                 "The service line should carry the catalogue price");
-        Assert.assertEquals(total, service + premium + distance, 0.01,
-                "The total must be the sum of the lines shown — a total the client cannot derive "
-                        + "from the breakdown is worse than no breakdown");
+
+        // Sum whatever lines this booking actually has, rather than naming three fixed ones.
+        // The breakdown is not constant — a shop visit carries no travel fee, a premium
+        // professional adds a line — and the property worth asserting is that the client can
+        // DERIVE the total from what is in front of them, whichever lines those are.
+        double sum = lines.values().stream().mapToDouble(Double::doubleValue).sum();
+        Assert.assertEquals(total, sum, 0.01,
+                "The total must be the sum of the lines shown (" + lines + ") — a total the client "
+                        + "cannot derive from the breakdown is worse than no breakdown");
 
         long before = DbHelper.countAppointmentsFor(pros.get(0));
 

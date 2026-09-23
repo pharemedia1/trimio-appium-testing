@@ -62,6 +62,22 @@ public class RegistrationScreen extends MobileBasePage {
     public static final String EMAIL_INVALID = "Please enter a valid email address";
     public static final String PHONE_REQUIRED = "Please enter your phone number";
     public static final String PHONE_INVALID = "Phone number must be 10 digits";
+    /**
+     * The second, newer phone rule — and the one that quietly broke this suite.
+     *
+     * <p>Since 2026-09-14 {@code utils/validators.dart usPhone()} mirrors the server
+     * ({@code backend/shared/auth/registrationRules.js}) and applies the North American Numbering
+     * Plan on top of the digit count: {@code ^[2-9]\d{2}[2-9]\d{6}$}, so neither the area code nor
+     * the <b>exchange</b> may start with 0 or 1, and one digit repeated ten times is rejected
+     * outright because {@code (000) 000-0000} used to register.
+     *
+     * <p>"Ten digits" and "a real US number" are therefore two different checks with two different
+     * messages, and only the first was ever asserted. The number this suite used as its valid
+     * phone — {@code 5551234567}, exchange 123 — became invalid on that day, which is why every
+     * positive registration test failed on a form that was otherwise filled in perfectly.
+     * {@code defaultPhone} is now {@code 2025550123}.
+     */
+    public static final String PHONE_NOT_A_US_NUMBER = "Please enter a valid US phone number";
     public static final String PASSWORD_REQUIRED = "Please enter your password";
     public static final String PASSWORD_TOO_SHORT = "Password must be at least 8 characters long";
     public static final String PASSWORD_NO_UPPER = "Password must include at least one uppercase letter";

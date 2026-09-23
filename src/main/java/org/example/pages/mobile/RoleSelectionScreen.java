@@ -28,6 +28,24 @@ public class RoleSelectionScreen extends MobileBasePage {
         return isPresent(client);
     }
 
+    // ---- which variant of the page is this? --------------------------------
+    // The SAME widget serves signup and password-reset (WantUserRolePage.isForgotPasswordFlow),
+    // and both render the Client and Professional cards. So isLoaded() cannot tell them apart —
+    // it is true for either, which meant the "Forgot password? opens the reset page" and
+    // "Register returns to signup" tests were asserting the identical condition and neither could
+    // fail if the app opened the wrong one. These two discriminate on the one control that
+    // actually differs: the admin card, added only under isForgotPasswordFlow.
+
+    /** The admin card exists ONLY in the reset flow — want_user_role.dart, `if (isForgotPasswordFlow)`. */
+    public boolean isResetVariant() {
+        return isPresent(admin, SHORT_TIMEOUT);
+    }
+
+    /** The signup variant is the same page WITHOUT the admin card. */
+    public boolean isSignupVariant() {
+        return isLoaded() && isAbsent(admin);
+    }
+
     public RegistrationScreen chooseClient() {
         LOG.info("Role page: choosing Client");
         tap(client);

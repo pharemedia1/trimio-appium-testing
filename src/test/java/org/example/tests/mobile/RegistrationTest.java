@@ -197,7 +197,12 @@ public class RegistrationTest extends MobileBaseTest {
         RegistrationScreen form = onboarding().goToRegister().chooseClient();
         Assert.assertTrue(form.isLoaded(), "The registration form should open");
 
-        form.fillForm("keyboard+" + System.currentTimeMillis() + "@example.com", "5551234567", "Trimio@2580");
+        // Phone and password come from the shared data, not from literals here: both are
+        // policy-bound and both have moved. The phone gained NANP validation on 2026-09-14,
+        // which turned the literal that used to sit here into a field error -- harmless for
+        // what this test asserts, and exactly the kind of drift that hides a real failure.
+        form.fillForm("keyboard+" + System.currentTimeMillis() + "@example.com",
+                TestAccounts.defaultPhone(), TestAccounts.genericPassword());
 
         Assert.assertTrue(form.areTermsAndSubmitReachable(),
                 "The state dropdown and 'Create account' must remain in the accessibility tree "

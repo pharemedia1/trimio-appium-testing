@@ -13,7 +13,7 @@ import java.time.Duration;
  * <p>This is the marketplace's control panel. Three behaviours are worth guarding above the rest:
  * <ul>
  *   <li>creating a vendor login / approving an application issues <em>credentials</em>, shown once —
- *       and the flow must survive an invite-email failure ("Approved — invite email failed") rather
+ *       and the flow must survive an invite-email failure ("invite email failed") rather
  *       than losing the account it just created;</li>
  *   <li>marking a group shipped releases the vendor's payout ("Payout on ship: $x"), so the ship
  *       action and the money movement are the same event;</li>
@@ -31,7 +31,7 @@ public class AdminStoreScreen extends MobileBasePage {
     public static final String EDIT_VENDOR = "Edit vendor";
     public static final String NAME_REQUIRED = "Name *";
     public static final String SLUG_REQUIRED = "Slug *";
-    public static final String COMMISSION_HINT = "Commission rate (0–1, e.g. 0.15)";
+    public static final String COMMISSION_HINT = "Commission rate";
     public static final String CREATE = "Create";
     public static final String CREATE_LOGIN = "Create login";
     public static final String CREATE_VENDOR_LOGIN = "Create vendor login";
@@ -56,7 +56,7 @@ public class AdminStoreScreen extends MobileBasePage {
     public static final String REJECT = "Reject";
     public static final String REJECT_APPLICATION = "Reject application";
     public static final String INTERNAL_NOTE = "Internal note (optional)";
-    public static final String INVITE_EMAIL_FAILED = "Approved — invite email failed";
+    public static final String INVITE_EMAIL_FAILED = "invite email failed";
     public static final String APPLIED_PREFIX = "Applied ";
 
     // ---- products -----------------------------------------------------------

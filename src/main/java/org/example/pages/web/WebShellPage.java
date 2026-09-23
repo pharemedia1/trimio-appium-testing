@@ -22,6 +22,12 @@ public class WebShellPage extends WebBasePage {
     public static final String SERVICES = "Services";
     public static final String QUALITY = "Quality Control";
     public static final String REPORTS = "Reports";
+    /**
+     * @deprecated The destination was removed from the product on 2026-08-07 — platform-set
+     *     pricing is prong A of the ABC test. Kept only so a stale reference fails to compile
+     *     rather than silently matching nothing.
+     */
+    @Deprecated
     public static final String PRICING = "Price Overrides";
     public static final String ENFORCEMENTS = "Enforcements";
     public static final String TRAINING = "Training";
@@ -59,7 +65,7 @@ public class WebShellPage extends WebBasePage {
     public static final String NOTIFICATIONS = "Notifications";
     public static final String ACCOUNT = "Account";
     public static final String LOG_OUT = "Log out";
-    public static final String SEARCH_HINT = "Search users, orders, services…";
+    public static final String SEARCH_HINT = "Search users, orders, services";
 
     public WebShellPage(Page page) {
         super(page);

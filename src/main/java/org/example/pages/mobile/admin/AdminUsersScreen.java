@@ -52,8 +52,8 @@ public class AdminUsersScreen extends MobileBasePage {
     public static final String AUTO_CHECK_NOT_RUN = "Automated check not run";
     public static final String DMV_MATCH = "DMV attribute match";
     public static final String RAW_RESPONSE = "Raw provider response";
-    public static final String REASON_SHARED = "Reason (optional) — shared with the professional";
-    public static final String REASON_SHOWN = "Reason (optional) — shown to the professional";
+    public static final String REASON_SHARED = "shared with the professional";
+    public static final String REASON_SHOWN = "shown to the professional";
     public static final String CANCEL = "Cancel";
     public static final String SHOWING_PREFIX = "Showing ";
 
@@ -62,13 +62,20 @@ public class AdminUsersScreen extends MobileBasePage {
     }
 
     public boolean isLoaded() {
-        return isPresentAfterScroll("clients") || isPresentAfterScroll("pros")
-                || isPresent(descContains("Users"), Duration.ofSeconds(20));
+        // The appbar title first. UiSelector matching is CASE-SENSITIVE, and the old lower-case
+        // "clients" / "pros" never matched the cards, which render as "Clients" and
+        // "Professionals" — the third clause ("Users") was carrying this method on its own.
+        return isPresent(descContains("All Users"), Duration.ofSeconds(20))
+                || (isPresentAfterScroll(CARD_CLIENTS) && isPresentAfterScroll(CARD_PROFESSIONALS));
     }
 
     /** True when both client and professional counts are rendered. */
     public boolean showsUserCounts() {
-        return isPresentAfterScroll("clients") && isPresentAfterScroll("pros");
+        // "Clients" and "Professionals", capitalised as the app renders them — all_users_page.dart
+        // builds two cards with those exact titles and a count each. The old lower-case "clients"
+        // and "pros" could never match: UiSelector is case-sensitive, and "pros" is not a word
+        // that appears on this screen at all.
+        return isPresentAfterScroll(CARD_CLIENTS) && isPresentAfterScroll(CARD_PROFESSIONALS);
     }
 
     /** Opens the Professionals card — the segments live inside it, not on the All Users hub. */
@@ -89,6 +96,11 @@ public class AdminUsersScreen extends MobileBasePage {
      * <p>The segment tile merges its count into the label ("55\nPending"), so this matches on
      * contains rather than an exact id.
      */
+    /** True when {@code segment} is offered on the professionals page. */
+    public boolean hasSegment(String segment) {
+        return isPresentAfterScroll(segment);
+    }
+
     public AdminUsersScreen openSegment(String segment) {
         LOG.info("AdminUsers: opening the '{}' segment", segment);
         scrollAndTap(segment);

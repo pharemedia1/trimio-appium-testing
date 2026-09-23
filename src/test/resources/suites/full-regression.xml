@@ -43,7 +43,20 @@
         </classes>
     </test>
 
-    <!-- 2. Signed-in mobile journeys — need seeded role accounts -->
+    <!--
+      2. Signed-in mobile journeys — need seeded role accounts.
+
+      THE AUTH BLOCK ABOVE COSTS THESE TESTS THEIR FIRST SIGN-IN. It spends roughly forty logins,
+      registrations and OTP requests, and the backend's auth limiter is per-source and shared, so
+      the first journey here meets "Too many attempts. Please wait a few minutes and try again."
+      — while the very same credentials still work from curl in the same second.
+
+      Left in this order deliberately: a release should be checked auth-first, and the alternative
+      (two invocations) is easy to get wrong. RoleSessionTest.loginAs() absorbs it instead — it
+      tells a rate-limit refusal apart from a credential one, waits out the window once
+      (-Dauth.rateLimitCooldownSeconds, default 90) and retries. If it still cannot sign in it
+      says so in those words, rather than blaming the account.
+    -->
     <test name="Client journeys">
         <classes>
             <class name="org.example.tests.mobile.client.ClientNavigationTest"/>
@@ -90,10 +103,47 @@
         </classes>
     </test>
 
-    <test name="Social Sign-up (API)">
+    <!-- 4. API contract — no device, no browser. Runs after the UI suites so a shared-backend
+         hiccup is attributed to the right layer, and because these finish in seconds either way. -->
+    <test name="API contract">
         <classes>
             <class name="org.example.tests.api.SocialRegistrationTest"/>
+            <class name="org.example.tests.api.MembershipApiTest"/>
+            <class name="org.example.tests.api.ObjectScopingTest"/>
         </classes>
     </test>
+
+    <!-- 5. Security — the read-only half only. See the note below for what is left out. -->
+    <test name="Security — authorization and input handling">
+        <classes>
+            <class name="org.example.tests.security.AuthenticationEnforcementTest"/>
+            <class name="org.example.tests.security.RoleAuthorizationMatrixTest"/>
+            <class name="org.example.tests.security.SuperAdminBoundaryTest"/>
+            <class name="org.example.tests.security.InjectionAndInputHandlingTest"/>
+        </classes>
+    </test>
+
+    <!--
+      DELIBERATELY ABSENT from this suite, and each for a reason rather than an oversight:
+
+        AccountEnumerationTest, RateLimitAndLockoutTest, TransportAndHeadersTest
+            All three consume login attempts against a SHARED, per-source rate limiter, and the
+            abuse tests trip it on purpose. A tripped limiter answers 429 to everything after it —
+            including this suite's own mobile logins, which then fail for a reason that has nothing
+            to do with them. Observed: a brute-force probe locked the seeded client for an hour and
+            took the password-reset tests down with it.
+            Run them with suites/security-testng.xml, which orders them last.
+
+        OnDemandDispatchTest (suites/paired-testng.xml)
+            Needs a SECOND emulator and holds both for the whole class, which would fight this
+            suite's per-method driver. It also accepts a live offer, creating a real appointment.
+
+        ClientIndividualBookingPaymentTest (suites/booking-payment.xml)
+            Captures a real charge and leaves a real booking. Stripe test mode, but still a write.
+
+        ApiLatencyTest, ApiConcurrencyTest (run with -Dtest=…)
+            Timing assertions are meaningless on a machine that is simultaneously driving an
+            emulator, which is exactly what this suite is doing.
+    -->
 
 </suite>

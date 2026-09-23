@@ -17,6 +17,10 @@ public class AdminTrainingScreen extends MobileBasePage {
 
     // ---- copy used as assertions -------------------------------------------
     public static final String NEW = "New";
+    /** The create dialog's submit button. */
+    public static final String SUBMIT_CREATE = "Create";
+    /** The edit dialog's submit button — the same control, relabelled. */
+    public static final String SUBMIT_SAVE = "Save";
     public static final String TITLE_REQUIRED = "Title *";
     public static final String TYPE_REQUIRED = "Type *";
     public static final String FILE_URL_REQUIRED = "File URL *";
@@ -70,9 +74,21 @@ public class AdminTrainingScreen extends MobileBasePage {
         return this;
     }
 
-    /** Saves the material. */
+    /**
+     * Submits the material form.
+     *
+     * <p><b>The button is labelled "Create" for a new material and "Save" only when editing</b>
+     * ({@code Text(isEdit ? 'Save' : 'Create')}). Tapping "Save" on the create dialog therefore
+     * waited out a 30-second timeout on a button that was never going to be there, and the
+     * required-fields test failed as though the validation were missing. Both labels are accepted
+     * so one helper serves both paths.
+     */
     public AdminTrainingScreen save() {
-        scrollAndTap("Save");
+        if (isPresent(accId(SUBMIT_CREATE), SHORT_TIMEOUT)) {
+            tap(accId(SUBMIT_CREATE));
+        } else {
+            scrollAndTap(SUBMIT_SAVE);
+        }
         return this;
     }
 

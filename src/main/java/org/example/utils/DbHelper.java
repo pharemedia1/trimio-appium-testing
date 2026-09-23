@@ -288,6 +288,124 @@ public final class DbHelper {
         return queryOneByName(sql, professionalName);
     }
 
+    /**
+     * How many rows a table holds — or {@code -1} when the database is not configured.
+     *
+     * <p>Used by the injection suite as the check that does not depend on the API answering
+     * correctly: the stacked-statement payloads include {@code DROP TABLE users}, and if one ever
+     * lands, every status-code assertion still passes while the table is gone.
+     *
+     * <p>The table name is interpolated rather than bound, because a table name cannot be a bound
+     * parameter in SQL. That is safe here and only here: the argument is rejected unless it is a
+     * plain identifier, and every caller passes a literal.
+     */
+    public static long count(String table) {
+        if (!table.matches("[A-Za-z_][A-Za-z0-9_]*")) {
+            throw new IllegalArgumentException("Not a plain table identifier: " + table);
+        }
+        if (!isConfigured()) {
+            return -1;
+        }
+        String url = ConfigReader.get("db.url", DEFAULT_URL);
+        String user = ConfigReader.get("db.user", "postgres");
+        String pass = ConfigReader.get("db.password", "");
+        try (Connection c = DriverManager.getConnection(url, user, pass);
+             PreparedStatement ps = c.prepareStatement("select count(*) from " + table);
+             ResultSet rs = ps.executeQuery()) {
+            return rs.next() ? rs.getLong(1) : -1;
+        } catch (SQLException e) {
+            // Thrown rather than swallowed, unlike the lookups above that return null for an
+            // absent row. A count that cannot run is not "no rows" — and the caller's whole
+            // question is whether the table still exists.
+            throw new IllegalStateException("count(" + table + ") failed: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Releases a brute-force lockout on an account, returning how many rows changed.
+     *
+     * <p>The security suite locks accounts on purpose, and a lockout lasts an hour — long enough
+     * to skip every signed-in test that follows. This is the teardown that stops a security run
+     * from taking the functional run down with it.
+     */
+    public static int clearLockout(String email) {
+        if (!isConfigured()) {
+            return 0;
+        }
+        String sql = "update users set failed_login_attempts = 0, locked_until = null, "
+                + " failed_login_window_started_at = null where email = ?";
+        String url = ConfigReader.get("db.url", DEFAULT_URL);
+        String user = ConfigReader.get("db.user", "postgres");
+        String pass = ConfigReader.get("db.password", "");
+        try (Connection c = DriverManager.getConnection(url, user, pass);
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, email);
+            return ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new IllegalStateException("Failed to clear the lockout on " + email + ": "
+                    + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Deletes a reviewer's unfinished review DRAFTS, returning how many were removed.
+     *
+     * <p><b>Why the review tests need this.</b> The review flow saves a draft as it goes -- a
+     * {@code reviews} row with {@code status = 'draft'} and a {@code step_progress}. Any test that
+     * opens the flow and abandons it, which is every one of them since submitting a review is
+     * deliberately left manual, leaves that draft behind. The next run reopens the same visit and
+     * finds step 1 already answered, so "with no star chosen, Continue must be disabled" fails
+     * against a wizard that is half-filled from last time.
+     *
+     * <p>That makes the difference between a suite that can be run twice and one that cannot, so
+     * it is reset before each review test rather than being left to a manual cleanup.
+     */
+    public static int clearReviewDrafts(long reviewerUserId) {
+        if (!isConfigured()) {
+            return 0;
+        }
+        String sql = "delete from reviews where reviewer_user_id = ? and status = 'draft'";
+        String url = ConfigReader.get("db.url", DEFAULT_URL);
+        String user = ConfigReader.get("db.user", "postgres");
+        String pass = ConfigReader.get("db.password", "");
+        try (Connection c = DriverManager.getConnection(url, user, pass);
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setLong(1, reviewerUserId);
+            int removed = ps.executeUpdate();
+            if (removed > 0) {
+                System.out.println("[DbHelper] Cleared " + removed + " review draft(s) for reviewer "
+                        + reviewerUserId);
+            }
+            return removed;
+        } catch (SQLException e) {
+            throw new IllegalStateException("Failed to clear review drafts for " + reviewerUserId
+                    + ": " + e.getMessage(), e);
+        }
+    }
+
+    /** True when {@code table} has a column named {@code column}. */
+    public static boolean hasColumn(String table, String column) {
+        if (!isConfigured()) {
+            return false;
+        }
+        String sql = "select 1 from information_schema.columns "
+                + " where table_name = ? and column_name = ?";
+        String url = ConfigReader.get("db.url", DEFAULT_URL);
+        String user = ConfigReader.get("db.user", "postgres");
+        String pass = ConfigReader.get("db.password", "");
+        try (Connection c = DriverManager.getConnection(url, user, pass);
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, table);
+            ps.setString(2, column);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("Column lookup for " + table + "." + column
+                    + " failed: " + e.getMessage(), e);
+        }
+    }
+
     /** Runs a single-column, single-row query keyed on a name; null when unconfigured or absent. */
     private static String queryOneByName(String sql, String name) {
         if (!isConfigured()) {

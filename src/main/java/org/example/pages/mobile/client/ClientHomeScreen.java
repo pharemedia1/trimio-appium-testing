@@ -35,7 +35,14 @@ public class ClientHomeScreen extends MobileBasePage {
     private final By rebookButton = accId("Rebook");
 
     // ---- Book (discovery) ---------------------------------------------------
-    private final By bookSearchBox = descContains("Search haircut, color, beard");
+    /**
+     * The Book tab's search field — by EditText index, NOT by its hint.
+     *
+     * <p>{@code hintText: 'Search haircut, color, beard…'} is a hint, and a Flutter hint never
+     * becomes a content-desc: the node arrives as a bare {@code EditText} with an empty one. The
+     * old selector could therefore never match, on a tab that was rendering perfectly.
+     */
+    private final By bookSearchBox = editText(0);
     private final By browseAllServices = accId("Browse all services");
     private final By bookCta = descContains("Book");
 
@@ -44,17 +51,76 @@ public class ClientHomeScreen extends MobileBasePage {
     public static final String BOOK_INDIVIDUAL = "Book Individual";
     /** The group/events booking CTA, which drives the same widget in group mode. */
     public static final String PLAN_GROUP_BOOKING = "Plan Group Booking";
+    /**
+     * The on-demand CTA. A third, separate entry point — NOT a mode of the booking flow above.
+     * It opens {@code StyleMeNowFlowScreen}, which no other button on this screen reaches.
+     */
+    public static final String STYLE_ME_NOW = "Style Me Now";
+    /** What the app says when on-demand is refused because one is already running. */
+    public static final String ON_DEMAND_IN_PROGRESS =
+            "You cannot go online with an OnDemand appointment in progress.";
 
-    /** The rebook prompt raised between Home and the flow once the client has booking history. */
-    public static final String REBOOK_PROMPT = "Book your professional?";
-    /** Its "take me through the normal shortlist" option. */
-    public static final String REBOOK_NEW_PRO = "New professional";
+    // ---- the venue chooser (shop-visit model) -------------------------------
+    /**
+     * The sheet that now stands between "Book Individual" and the booking flow.
+     *
+     * <p><b>A new, MANDATORY step with no automation coverage until now.</b> Tapping the booking
+     * CTA no longer opens the flow: it raises "Where should your appointment be?" and waits for
+     * the client to choose between a professional who travels to them ({@code 'mobile'}) and a
+     * chair at a licensed shop ({@code 'shop'}) — the shop-visit booking model. The source calls
+     * it "deliberately the very first question" because it decides what the client is buying.
+     *
+     * <p>Every booking test therefore stopped at a sheet the page object did not know existed:
+     * {@code flow.isLoaded()} looked for "Step " on a screen showing two venue cards, and the
+     * whole booking suite skipped itself reporting "the booking flow did not open — the entry
+     * point may require a saved address or an active service catalogue". Neither was ever true.
+     */
+    public static final String VENUE_PROMPT = "Where should your appointment be?";
+    /** The 'mobile' venue — a professional travels to the client. The default for these tests. */
+    public static final String VENUE_COME_TO_ME = "Come to me";
+    /** The 'shop' venue — the client books a chair at a licensed shop. ASCII-safe anchor: the
+     *  label is "I'll go to a shop" and carries a curly apostrophe. */
+    public static final String VENUE_GO_TO_SHOP = "go to a shop";
+
+    /**
+     * The rebook prompt raised between the venue sheet and the flow, once the client has history.
+     *
+     * <p><b>Rewritten in the app, so all three of these constants moved.</b> It used to be titled
+     * "Book your professional?" with a "New professional" option; it now reads
+     * "Book &lt;Name&gt; again?" (or "Book your last professional?" when the name is unknown) and
+     * offers "Book &lt;Name&gt;" / "Choose someone new" — see {@code _askReturning} in
+     * {@code home_screen.dart}.
+     *
+     * <p>Detected by the CAPTION rather than the title, because the title carries the
+     * professional's name and therefore changes with the fixture; "Your last professional" is
+     * constant and name-independent.
+     */
+    public static final String REBOOK_PROMPT = "Your last professional";
+    /** Its "take me through the normal shortlist" option. Was "New professional". */
+    public static final String REBOOK_NEW_PRO = "Choose someone new";
     /** Its "same professional as last time" option — the label carries the pro's name. */
     public static final String REBOOK_SAME_PRO = "Book ";
 
     // ---- copy used as assertions -------------------------------------------
+    /**
+     * The discovery hero's tagline.
+     *
+     * <p><b>Kept for reference and NOT used as a locator.</b> It contains an em-dash (U+2014), and
+     * a non-ASCII anchor in a {@code UiSelector} matches nothing — the same trap that made
+     * {@code descContains("★")} find no professional cards that were plainly on screen. Combined
+     * with the hint-based search box above, it meant {@code isDiscoveryLoaded()} was false on a
+     * tab that renders correctly, and three Book-tab tests failed pointing at the app.
+     *
+     * <p>Use {@link #DISCOVERY_HEADING} or {@link #DISCOVERY_CATEGORIES} to detect the tab.
+     */
     public static final String DISCOVERY_TAGLINE =
             "A licensed pro comes to you — pick a service to get started.";
+    /** ASCII landmark for the discovery hero. Merges with the tagline into one node. */
+    public static final String DISCOVERY_HEADING = "Book your next appointment";
+    /** ASCII landmark further down the discovery tab. */
+    public static final String DISCOVERY_CATEGORIES = "Popular categories";
+    /** Every discovery category card reads "<Service>\nfrom $<price>\nBook". */
+    public static final String CATEGORY_PRICE_HINT = "from $";
     public static final String HANDOFF_HINT = "Open the Home tab to start a booking.";
     public static final String MIN_REVIEWS_NOTICE = "Minimum 3 reviews required to calculate rating.";
     public static final String REBOOK_FAILED = "Could not start rebooking. Please try again.";
@@ -96,13 +162,26 @@ public class ClientHomeScreen extends MobileBasePage {
 
     /** True once the Book/discovery tab has painted. */
     public boolean isDiscoveryLoaded() {
+        // Three ASCII landmarks, any one of which is enough. Deliberately not the tagline: see
+        // DISCOVERY_TAGLINE for why a non-ASCII anchor silently matches nothing.
         return isPresent(bookSearchBox, Duration.ofSeconds(25))
-                || isPresentAfterScroll(DISCOVERY_TAGLINE);
+                || isPresentAfterScroll(DISCOVERY_HEADING)
+                || isPresentAfterScroll(DISCOVERY_CATEGORIES);
     }
 
     // ---- search -------------------------------------------------------------
 
-    /** Types into the Home search box (services, pros or styles). */
+    /**
+     * Types into the Home search box.
+     *
+     * @deprecated <b>Home has no search box.</b> The {@code TextField} with the hint
+     *     "Search services, pros, or styles" is commented out in {@code home_screen.dart}, just
+     *     below the "Book trusted professionals—anytime" line — the feed offers the booking cards
+     *     and Style Me Now instead. Calling this waits out a 30-second timeout on an
+     *     {@code EditText} the app never builds, which reads as a broken selector rather than as a
+     *     feature that moved. Use {@link #searchServices(String)} on the Book tab.
+     */
+    @Deprecated
     public ClientHomeScreen searchFromHome(String query) {
         LOG.info("ClientHome: searching '{}'", query);
         type(editText(0), query);
@@ -156,11 +235,52 @@ public class ClientHomeScreen extends MobileBasePage {
      *     "New professional" and go through the normal shortlist
      */
     public ClientBookingFlowScreen bookIndividual(boolean withPreviousProfessional) {
-        LOG.info("ClientHome: starting an INDIVIDUAL booking");
-        scrollAndTap(BOOK_INDIVIDUAL);
+        return bookIndividual(withPreviousProfessional, true);
+    }
+
+    /**
+     * Opens the individual booking flow, choosing a venue and answering the rebook prompt.
+     *
+     * @param withPreviousProfessional true to accept "Book &lt;pro&gt;" on the rebook prompt
+     * @param comeToMe                 true for the mobile venue (a pro travels to the client),
+     *                                 false to book a chair at a shop — a different product, a
+     *                                 different price and a different set of steps, so it is the
+     *                                 caller's choice rather than a default buried here
+     */
+    public ClientBookingFlowScreen bookIndividual(boolean withPreviousProfessional,
+                                                  boolean comeToMe) {
+        LOG.info("ClientHome: starting an INDIVIDUAL booking ({})",
+                comeToMe ? VENUE_COME_TO_ME : VENUE_GO_TO_SHOP);
+        scrollAndTapExact(BOOK_INDIVIDUAL);
+        chooseVenueIfAsked(comeToMe);
         answerRebookPromptIfPresent(withPreviousProfessional);
         allowLocationIfAsked();
         return new ClientBookingFlowScreen(driver);
+    }
+
+    /**
+     * Answers the venue sheet if it is up.
+     *
+     * <p>Conditional, not unconditional: the sheet is skipped when only one venue is open in the
+     * client's state (the app asks {@code _venueOpenOrExplain} first), so a test that insisted on
+     * it would fail in exactly the jurisdictions where the question does not arise.
+     *
+     * @return true if the sheet was present and answered
+     */
+    public boolean chooseVenueIfAsked(boolean comeToMe) {
+        if (!isPresent(descContains(VENUE_PROMPT), Duration.ofSeconds(12))) {
+            return false;
+        }
+        String choice = comeToMe ? VENUE_COME_TO_ME : VENUE_GO_TO_SHOP;
+        LOG.info("ClientHome: venue sheet is up, choosing '{}'", choice);
+        scrollAndTap(choice);
+        sleepBriefly();
+        return true;
+    }
+
+    /** True while the venue sheet is asking where the appointment should be. */
+    public boolean showsVenuePrompt() {
+        return isPresent(descContains(VENUE_PROMPT), Duration.ofSeconds(10));
     }
 
     /**
@@ -193,10 +313,80 @@ public class ClientHomeScreen extends MobileBasePage {
         return true;
     }
 
+    /**
+     * Opens Style-Me-Now, the on-demand flow, from its own Home CTA.
+     *
+     * <p><b>This is not the generic booking button.</b> The Home feed carries three separate
+     * entries — {@code Book Individual}, {@code Plan Group Booking} and {@code Style Me Now} — and
+     * only this one reaches {@code StyleMeNowFlowScreen}. The on-demand tests used to arrive here
+     * through the deprecated {@link #startBooking()}, which taps a bare "Book"; that lands in the
+     * scheduled flow (or on the nav tab), so the two-step assertion failed and the test skipped
+     * itself with "the flow was not reached", which reads as an environment problem and is not one.
+     *
+     * <p>The button is gated before it navigates: {@code home_screen.dart} refuses to open the flow
+     * when an on-demand appointment is already in progress, and it needs a location — GPS if it is
+     * granted, otherwise a manual-address dialog. {@link #allowLocationIfAsked()} answers the
+     * system prompt; the in-app dialog is the caller's to handle, because typing an address is a
+     * different test from dispatching a request.
+     */
+    public ClientStyleMeNowScreen styleMeNow() {
+        LOG.info("ClientHome: opening Style Me Now (on-demand)");
+        allowLocationIfAsked();
+        scrollAndTapExact(STYLE_ME_NOW);
+        allowLocationIfAsked();
+        return new ClientStyleMeNowScreen(driver);
+    }
+
+    /** True while the app is refusing on-demand because one is already running. */
+    public boolean showsOnDemandInProgress() {
+        return isPresent(descContains(ON_DEMAND_IN_PROGRESS), Duration.ofSeconds(8));
+    }
+
+    /**
+     * Books from a <b>category card on the Book (discovery) tab</b> — the tab's own way into the
+     * booking flow.
+     *
+     * <p>Not {@link #startBooking()}, which taps a bare "Book" and on this tab matches the hero's
+     * merged node first ({@code "IN-HOME\nBook your next appointment\n…\nBrowse all services"}),
+     * hitting the hero container rather than a booking control. The category cards are
+     * unambiguous: each reads {@code "<Service>\nfrom $<price>\nBook"}, so the price prefix
+     * identifies one without hard-coding a service the catalogue may not carry.
+     *
+     * <p>What happens next is worth knowing, because it is not a plain tab switch:
+     * {@code activityPage._openBooking} calls {@code BottomnavigationBar.switchTab(0)} and then,
+     * a frame later, {@code HomePage.startIndividualBooking} with the tapped category
+     * pre-selected. The end state is the booking flow, hosted on the Home tab.
+     */
+    /**
+     * Books from a category card on the Book tab.
+     *
+     * <p><b>Tapped low and left, not in the centre, and the reason is in the card's layout.</b>
+     * The whole card is one {@code GestureDetector} — "Book" is a Text inside it, not a control of
+     * its own, so there is nothing separate to click and the merged node IS the target. But the
+     * card's {@code Stack} holds a {@code Positioned(right: -24, top: -24)} 96px circle that
+     * overflows the card, and the merged semantics rect grows to contain it. The rect's centre is
+     * therefore ABOVE and RIGHT of the real hit area, which is why a plain tap landed on nothing
+     * and the test concluded the hand-off was not automatable.
+     *
+     * <p>(0.25, 0.80) is inside the padded container on every category card — near the "Book"
+     * pill at the bottom-left, and far from the overflowing decoration.
+     */
+    public ClientBookingFlowScreen bookFromDiscoveryCategory() {
+        LOG.info("ClientHome: booking from a Book-tab category card");
+        scrollToDesc(CATEGORY_PRICE_HINT);
+        tapWithin(descContains(CATEGORY_PRICE_HINT), 0.25, 0.80);
+        allowLocationIfAsked();
+        return new ClientBookingFlowScreen(driver);
+    }
+
     /** Opens the group booking flow ("Plan Group Booking"). */
     public ClientBookingFlowScreen planGroupBooking() {
         LOG.info("ClientHome: starting a GROUP booking");
-        scrollAndTap(PLAN_GROUP_BOOKING);
+        scrollAndTapExact(PLAN_GROUP_BOOKING);
+        // A group booking is ALWAYS a home visit (home_screen.dart calls _venueOpenOrExplain
+        // with 'mobile' directly), so no venue sheet is expected — but answering one if it
+        // appears costs nothing and survives that decision changing.
+        chooseVenueIfAsked(true);
         allowLocationIfAsked();
         return new ClientBookingFlowScreen(driver);
     }

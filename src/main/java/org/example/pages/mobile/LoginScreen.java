@@ -41,6 +41,24 @@ public class LoginScreen extends MobileBasePage {
     public static final String EMAIL_INVALID = "Please enter a valid email address";
     public static final String PASSWORD_REQUIRED = "Please enter your password";
     public static final String INVALID_CREDENTIALS = "Invalid email or password.";
+    /**
+     * The backend's rate-limit refusal ({@code 429 RATE_LIMITED}), shown as an ordinary error
+     * snackbar and therefore indistinguishable on screen from a wrong password.
+     *
+     * <p>It has to be told apart, because the two mean opposite things for a test run. A wrong
+     * password is a defect or bad data; this is the suite having made too many sign-in attempts
+     * too quickly, and it is <b>not</b> about the account at all — the same credentials work from
+     * curl at the same moment.
+     *
+     * <p>It is not hypothetical: {@code full-regression.xml} runs the auth block (which spends
+     * something like forty logins, registrations and OTP requests) immediately before the
+     * signed-in journeys, and the limiter is per-source and shared. Every client journey then
+     * skipped with "the account may be unverified, suspended, or the password may have changed",
+     * which sent the reader to look at an account that was in perfect order.
+     */
+    public static final String RATE_LIMITED = "Too many attempts";
+    /** What the app says when the per-account lockout (423) has engaged rather than the limiter. */
+    public static final String ACCOUNT_LOCKED = "temporarily locked";
 
     public LoginScreen(AndroidDriver driver) {
         super(driver);
@@ -98,6 +116,50 @@ public class LoginScreen extends MobileBasePage {
     /** True if we left the login form (login accepted) — the submit button disappears. */
     public boolean isLoginAccepted() {
         return waitForAbsence(loginButton, Duration.ofSeconds(20));
+    }
+
+    /** What a sign-in attempt actually resulted in. */
+    public enum LoginOutcome {
+        /** The form is gone — we are in a shell. */
+        ACCEPTED,
+        /** The backend refused because of the rate limiter or the per-account lockout. */
+        RATE_LIMITED,
+        /** Still on the form for some other reason (bad credentials, unverified account…). */
+        REJECTED
+    }
+
+    /**
+     * Waits for the sign-in to resolve and reports <em>which</em> way, distinguishing a
+     * rate-limit refusal from a credential one.
+     *
+     * <p><b>Why this cannot be two separate checks.</b> The obvious shape — call
+     * {@link #isLoginAccepted()}, and if it is false look for the rate-limit snackbar — does not
+     * work, and quietly: {@code isLoginAccepted()} spends up to 20 seconds waiting for the submit
+     * button to disappear, and the snackbar lives about four. By the time anybody asks, the only
+     * evidence has been gone for a quarter of a minute, so every rate-limited sign-in is reported
+     * as a bad password. That is exactly what happened across a full regression run — twenty-odd
+     * journeys skipped pointing at accounts that were in perfect order.
+     *
+     * <p>So both conditions are polled together, and the first one to become true wins.
+     */
+    public LoginOutcome awaitLoginOutcome() {
+        return awaitLoginOutcome(Duration.ofSeconds(20));
+    }
+
+    /** As {@link #awaitLoginOutcome()}, with an explicit budget. */
+    public LoginOutcome awaitLoginOutcome(Duration timeout) {
+        long deadline = System.currentTimeMillis() + timeout.toMillis();
+        while (System.currentTimeMillis() < deadline) {
+            if (isAbsent(loginButton)) {
+                return LoginOutcome.ACCEPTED;
+            }
+            if (isPresent(descContains(RATE_LIMITED), Duration.ofMillis(250))
+                    || isPresent(descContains(ACCOUNT_LOCKED), Duration.ofMillis(250))) {
+                LOG.warn("Login: refused by the backend's RATE LIMITER, not by the credentials");
+                return LoginOutcome.RATE_LIMITED;
+            }
+        }
+        return isAbsent(loginButton) ? LoginOutcome.ACCEPTED : LoginOutcome.REJECTED;
     }
 
     // ---- post-login interstitials ------------------------------------------
@@ -229,6 +291,19 @@ public class LoginScreen extends MobileBasePage {
     /** True while the password field masks its input (AUTH-033). */
     public boolean isPasswordMasked() {
         var field = find(editText(1));
+        return field != null && "true".equalsIgnoreCase(field.getAttribute("password"));
+    }
+
+    /**
+     * True if the EMAIL field reports itself as masked — which it must never be.
+     *
+     * <p>The control for {@link #isPasswordMasked()}. Asserting only that the password field says
+     * "password=true" cannot distinguish a correctly-masked field from a platform that reports
+     * every text field that way; a broken masking check would look identical. Reading the same
+     * attribute off a field that is known to be plain text makes the pair discriminating.
+     */
+    public boolean isEmailMasked() {
+        var field = find(editText(0));
         return field != null && "true".equalsIgnoreCase(field.getAttribute("password"));
     }
 

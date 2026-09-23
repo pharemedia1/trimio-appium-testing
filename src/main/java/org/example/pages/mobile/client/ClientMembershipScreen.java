@@ -19,9 +19,30 @@ import java.time.Duration;
 public class ClientMembershipScreen extends MobileBasePage {
 
     // ---- copy used as assertions -------------------------------------------
-    public static final String CHOOSE_PLAN = "Choose your plan";
+    /**
+     * The plan chooser's heading, as the app actually renders it.
+     *
+     * <p>Was {@code "Choose your plan"}. The card on the account page reads
+     * <b>"Choose Your Membership"</b> — different words and different capitalisation, and
+     * UiSelector matching is case-sensitive, so the old value matched nothing and the whole
+     * membership suite skipped with "the membership area was not reachable from the profile".
+     *
+     * <p>Worth knowing: the chooser is an inline card ON the Profile tab, not a separate screen.
+     */
+    public static final String CHOOSE_PLAN = "Choose Your Membership";
     public static final String NO_PLANS = "No plans available right now.";
     public static final String MANAGE_PLAN = "Manage plan";
+    /**
+     * The card on the PROFILE tab that leads to the manage screen, and the button on it.
+     *
+     * <p>Not the same string as {@link #MANAGE_PLAN}, which is a control ON the manage screen. The
+     * profile's button is the shorter "Manage", so looking for "Manage plan" from the profile
+     * found nothing and every membership test concluded the client had no membership at all --
+     * with an active subscription and a rendered card reading "Trimio Membership | Active |
+     * Current plan: Standard" right there on screen.
+     */
+    public static final String MEMBERSHIP_CARD = "Trimio Membership";
+    public static final String MANAGE_ENTRY = "Manage";
     public static final String UPGRADE_PLAN = "Upgrade your plan";
     public static final String BILLING_HISTORY = "Billing history";
     public static final String NO_INVOICES = "No invoices yet";
@@ -29,11 +50,18 @@ public class ClientMembershipScreen extends MobileBasePage {
     public static final String CANCEL_CONFIRM = "Cancel membership?";
     public static final String KEEP_MEMBERSHIP = "Keep my membership";
     public static final String PAUSE_INSTEAD = "Pause for up to 2 months instead";
-    public static final String CALCULATING_REFUND = "Calculating your refund…";
+    public static final String CALCULATING_REFUND = "Calculating your refund";
     public static final String PAUSE_CONFIRM = "Pause membership?";
     public static final String ACTIVATED = "Membership activated successfully";
     public static final String CONFIRM_MEMBERSHIP = "Confirm membership";
-    public static final String CREDITS_SUFFIX = "credits left";
+    /**
+     * The credit balance's own word. The manage screen renders the count and its caption as
+     * separate nodes -- "1" above "credit | available" -- so there is no "<a> of <b> credits left"
+     * line anywhere, which is what this used to look for.
+     */
+    public static final String CREDITS_SUFFIX = "available";
+    /** The renewal caption. The screen says "Next renewal", never "renews". */
+    public static final String RENEWAL_LINE = "Next renewal";
 
     public ClientMembershipScreen(AndroidDriver driver) {
         super(driver);
@@ -54,9 +82,21 @@ public class ClientMembershipScreen extends MobileBasePage {
         return isPresentAfterScroll("Choose ");
     }
 
-    /** True if a plan advertises a monthly in-home allotment. */
-    public boolean showsAllotment() {
-        return isPresentAfterScroll("in-home cuts/month");
+    /**
+     * True when a plan card states its billing period — the "/mo" or "/yr" beside the price.
+     *
+     * <p>Replaces {@code showsAllotment()}, which looked for "in-home cuts/month". No plan says
+     * that: {@code accountPage.dart} builds each card from the plan's name, its price suffixed
+     * {@code '/mo'} or {@code '/yr'}, and up to four benefit lines drawn from
+     * {@code membership_plan_benefits} — whose seeded labels read "10% member pricing on all
+     * services", "Priority booking window" and the like. The old anchor could never match, so the
+     * assertion failed on a chooser that was describing the plans perfectly well.
+     *
+     * <p>The period is the right thing to assert: it is the one fact that turns a price into a
+     * commitment, and a card that omits it is genuinely misleading.
+     */
+    public boolean showsBillingPeriod() {
+        return isPresentAfterScroll("/mo") || isPresentAfterScroll("/yr");
     }
 
     /** Selects a plan by name ("Choose <plan>"). */
@@ -98,14 +138,31 @@ public class ClientMembershipScreen extends MobileBasePage {
         return isPresent(descContains(MANAGE_PLAN), Duration.ofSeconds(25));
     }
 
-    /** True when the "<a> of <b> credits left" line is rendered. */
+    /** True when the credit balance is rendered ("1" over "credit / available"). */
     public boolean showsCreditsRemaining() {
         return isPresentAfterScroll(CREDITS_SUFFIX);
     }
 
-    /** True when the renewal line ("$x/mo · renews <date>") is rendered. */
+    /** True when the renewal line ("Next renewal" over the date) is rendered. */
     public boolean showsRenewalLine() {
-        return isPresentAfterScroll("renews");
+        return isPresentAfterScroll(RENEWAL_LINE);
+    }
+
+    /** True when the profile tab is showing the membership summary card. */
+    public boolean showsMembershipCard() {
+        return isPresent(descContains(MEMBERSHIP_CARD), Duration.ofSeconds(15));
+    }
+
+    /**
+     * Opens the manage screen from the profile tab's membership card.
+     *
+     * <p>Needed because the card and the manage screen are different screens: the card carries the
+     * plan name, the credit count and a "Manage" button, and everything the manage tests assert on
+     * -- "Manage plan", "Upgrade plan", "Cancel membership" -- is one tap further in.
+     */
+    public ClientMembershipScreen openManage() {
+        scrollAndTapExact(MANAGE_ENTRY);
+        return this;
     }
 
     public boolean showsActiveStatus() {

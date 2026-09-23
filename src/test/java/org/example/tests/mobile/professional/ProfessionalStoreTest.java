@@ -60,10 +60,14 @@ public class ProfessionalStoreTest extends RoleSessionTest {
 
     @Test(description = "Only verified purchasers can review a product")
     public void onlyPurchasersCanReview() {
-        String product = TestAccounts.storeProductName();
+        // The PROFESSIONAL store's catalogue, not the client shop's. This used to read
+        // clientVisibleProduct, which names a retail product the pro store does not carry, so the
+        // test spent 30 seconds looking for a product that could not be on that screen.
+        String product = TestAccounts.proReviewableProductName();
         if (product.isBlank()) {
-            throw new SkipException("Set storeFixtures.clientVisibleProduct in test-accounts.json to "
-                    + "a product the signed-in professional has NOT purchased.");
+            throw new SkipException("Set storeFixtures.proReviewableProduct in test-accounts.json "
+                    + "to a product the professional store lists and the signed-in professional "
+                    + "has NOT purchased.");
         }
 
         ProfessionalStoreScreen store = openStore();

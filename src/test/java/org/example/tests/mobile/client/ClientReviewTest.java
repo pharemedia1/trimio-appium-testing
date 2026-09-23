@@ -22,21 +22,43 @@ import org.testng.annotations.Test;
  */
 public class ClientReviewTest extends RoleSessionTest {
 
+    /** The reviewer these tests sign in as — Postgres user 41501, roleAccounts.client. */
+    private static final long REVIEWER_USER_ID = 41501;
+
+    /**
+     * Clears any half-finished review left by an earlier run.
+     *
+     * <p>Every test here opens the flow and abandons it -- submitting is deliberately manual,
+     * because a submitted review is public and attached to a real professional -- and the app
+     * saves a draft as it goes. Without this reset the second run of the suite starts on a
+     * part-filled wizard and the gate assertions fail against last run's answers rather than
+     * against the app.
+     */
+    @org.testng.annotations.BeforeMethod(alwaysRun = true)
+    public void clearReviewDrafts() {
+        org.example.utils.DbHelper.clearReviewDrafts(REVIEWER_USER_ID);
+    }
+
     private ClientReviewScreen openReviewFlow() {
         loginAsClient();
         new BottomNavBar(driver).open(BottomNavBar.CLIENT_APPOINTMENTS);
 
+        // Via HISTORY, not the first appointment. The review flow hangs off a past visit's
+        // "Rate your visit" button; the appointment DETAIL page has no review control at all, and
+        // the first appointment is an upcoming booking, so the old route could never arrive.
         ClientAppointmentsScreen appointments = new ClientAppointmentsScreen(driver);
-        if (!appointments.hasAnyAppointment()) {
-            throw new SkipException("The signed-in client has no completed appointment to review — "
-                    + "seed one to exercise the review flow.");
+        appointments.openHistory();
+        if (!appointments.hasRateableVisit()) {
+            throw new SkipException("No completed, not-yet-reviewed visit in the client's history — "
+                    + "every past visit has been reviewed already. Seed one by clearing a review: "
+                    + "DELETE FROM reviews WHERE booking_id = <a completed appointment>;");
         }
-        appointments.openFirst();
+        appointments.rateFirstVisit();
 
         ClientReviewScreen review = new ClientReviewScreen(driver);
         if (!review.isLoaded()) {
-            throw new SkipException("The review flow was not reachable from the appointment — it is "
-                    + "offered only for completed, not-yet-reviewed appointments.");
+            throw new SkipException("'" + ClientAppointmentsScreen.RATE_VISIT + "' did not open the "
+                    + "review flow — its entry point may differ in this build.");
         }
         return review;
     }
@@ -45,34 +67,66 @@ public class ClientReviewTest extends RoleSessionTest {
     public void ratingIsRequired() {
         ClientReviewScreen review = openReviewFlow();
 
+        // The flow refuses by DISABLING its Continue button, not by raising a message: with no
+        // star chosen the CTA renders enabled="false" clickable="false". Asserting on a refusal
+        // message was asserting against a design the app does not use — it stayed silent and
+        // stayed on step 1, and the test read that silence as a defect. Disabling is the stronger
+        // gate of the two, since there is nothing to press in the first place.
+        Assert.assertFalse(review.canAdvance(),
+                "With no star chosen, the step's Continue button must not be pressable");
+
         review.submit();
 
-        Assert.assertTrue(review.showsRatingRequired(),
-                "Submitting with no rating should explain why — '"
-                        + ClientReviewScreen.RATING_REQUIRED + "'");
+        Assert.assertTrue(review.isOnStep(1),
+                "Pressing a disabled Continue must not advance the wizard past step 1");
         Assert.assertFalse(review.showsSubmitted(), "No review should be submitted");
     }
 
     @Test(description = "Every service received must be rated")
     public void allServicesMustBeRated() {
+        // The per-service gate is on STEP 3 of a four-step wizard ("Each service"), so step 1
+        // (overall star + "would you book them again") and step 2 (the aspect rows) have to be
+        // completed to reach it. The old version pressed submit on step 1 and read the silence as
+        // "there is only one service".
         ClientReviewScreen review = openReviewFlow();
-        review.rateOverall(5);
-
+        review.completeStepOne(5);
+        review.rateAllAspects(5);
         review.submit();
 
-        if (!review.showsServicesRequired()) {
-            throw new SkipException("The appointment has a single service already rated, so the "
-                    + "per-service gate cannot trigger — use an appointment with two services.");
+        Assert.assertTrue(review.isOnStep(3),
+                "Completing steps 1 and 2 should land on the per-service step");
+        int services = review.unratedRowCount();
+        if (services < 2) {
+            throw new SkipException("The appointment has " + services + " service(s), so the "
+                    + "per-service gate cannot trigger — it needs two. Seed one with: INSERT INTO "
+                    + "appointment_services (appointment_id, service_id, final_price, quoted_price) "
+                    + "VALUES (<completed appt>, 21, 85.00, 85.00);");
         }
-        Assert.assertTrue(review.showsServicesRequired(),
-                "Leaving a service unrated should be refused with '"
-                        + ClientReviewScreen.SERVICES_REQUIRED + "'");
+
+        // Rate ONE service and leave the other: the step must not advance.
+        review.rateFirstUnratedRow(5);
+
+        Assert.assertTrue(review.unratedRowCount() > 0, "One service should still be unrated");
+        Assert.assertFalse(review.canAdvance(),
+                "Leaving a service unrated must keep the step's Continue disabled — a rating that "
+                        + "skips a service silently misattributes the whole visit to the rest");
+        review.submit();
+        Assert.assertTrue(review.isOnStep(3), "The wizard must not advance past the unrated service");
     }
 
     @Test(description = "The public review must be at least 20 characters")
     public void publicReviewMinimumLength() {
+        // The public-review field is on STEP 4 ("Anything else?"), so the three steps before it
+        // have to be completed first — there is no EditText on step 1 at all, which is what the
+        // old version timed out looking for.
         ClientReviewScreen review = openReviewFlow();
-        review.rateOverall(5);
+        review.completeStepOne(5);
+        review.rateAllAspects(5);
+        review.submit();
+        review.rateAllAspects(5);
+        review.submit();
+        Assert.assertTrue(review.isOnStep(4), "Completing steps 1-3 should land on the final step");
+
         review.enterPublicReview("great");
 
         review.submit();

@@ -3,7 +3,8 @@
   "_passwordPolicyNote": "genericPassword must satisfy the REDESIGNED signup policy (8+ chars, upper+lower+digit+special, NO sequential digits like 123). The old 'Trimio@1234' is now rejected client-side because of the '1234' sequence.",
   "genericPassword": "Trimio@2580",
   "resetPassword": "Reset@2080",
-  "defaultPhone": "5551234567",
+  "_defaultPhoneNote": "NANP-VALID, and it has to be. On 2026-09-14 utils/validators.dart usPhone() started mirroring backend/shared/auth/registrationRules.js: ^[2-9]\\d{2}[2-9]\\d{6}$ -- neither the area code nor the EXCHANGE may start with 0 or 1. The old 5551234567 has exchange 123, so it began failing with 'Please enter a valid US phone number' and took every positive registration test with it. 202-555-0123 uses the NANP fictional 555-01xx range and satisfies both halves of the rule.",
+  "defaultPhone": "2025550123",
   "newClientEmailTemplate": "trimiotest+client{unique}@gmail.com",
   "newProfessionalEmailTemplate": "trimiotest+professional{unique}@gmail.com",
   "verifiedAccount": {
@@ -33,21 +34,38 @@
       "email": "trimiotest+admin1@gmail.com",
       "password": "Trimio123!"
     },
+    "clientNoMembership": {
+      "_comment": "Postgres user 41616 ('Devon Client'), trimiotest+client3. Has NO membership_subscriptions row in any live status, which is the point: ClientMembershipTest.plansAreListed exercises the plan CHOOSER, and a client who already has a plan is shown the manage screen instead. roleAccounts.client cannot serve because 41501 now carries the seeded active membership the manage tests need. Keeps its card, so it is otherwise a normal client.",
+      "email": "trimiotest+client3@gmail.com",
+      "password": "Trimio123!"
+    },
+    "clientNoCard": {
+      "_comment": "Postgres user 41617 ('Sasha Client'), trimiotest+client4. Deliberately has NO row in client_payment_methods, which is the whole point of it: ClientStyleMeNowTest.noCardBlocksBooking asserts the app refuses an on-demand booking when there is nothing to charge, and roleAccounts.client cannot serve because 41501 must KEEP its card or the booking and payment suites lose their charge. Fully provisioned otherwise (active, email-verified, profile + address), so it signs in and reaches the flow. Restore its card with: node backend/scripts/seed_login_pair.js",
+      "email": "trimiotest+client4@gmail.com",
+      "password": "Trimio123!"
+    },
+    "professionalNoPayouts": {
+      "_comment": "Postgres user 41621 = professional_id 881 ('Noor Pro'), trimiotest+pro4. Its professional_stripe_accounts row has payouts_enabled = false, so ProfessionalEarningsTest.withdrawalRequiresPayoutOnboarding can prove a withdrawal is refused before Connect onboarding is finished. roleAccounts.professional (878) must keep payouts enabled. Professional 1508 also has payouts disabled but is email-unverified with no user_profile and cannot sign in. Restore with: UPDATE professional_stripe_accounts SET payouts_enabled=true WHERE professional_id=881;",
+      "email": "trimiotest+pro4@gmail.com",
+      "password": "Trimio123!"
+    },
     "vendor": {
       "_comment": "Postgres user 41506, user_type_id = 9 with a store_vendors row, seeded by seed_login_pair.js.",
       "email": "trimiotest+store1@gmail.com",
       "password": "Trimio123!"
     },
     "support": {
-      "_comment": "NOT user_type_id 4 any more -- that id was reassigned from 'support' to 'super_admin' on 2026-08-29, and user_types has no support row at all now. Support sits at 5-8 per backend middleware/requireStaff.js (STAFF_TYPE_IDS = 3,4,5,6,7,8 = admin, super-admin, support L0-L3) and reaches the portal by role name via web_portal_access.dart. Leave blank until such an account is seeded.",
-      "email": "",
-      "password": ""
+      "_comment": "SEEDED after all: Postgres user 54124, user_type_id 5 ('Level 0: Self-Service & Community Support'), active. Support is NOT user_type_id 4 any more -- that id was reassigned to super_admin on 2026-08-29. Support occupies 5-8 per backend middleware/requireStaff.js (STAFF_TYPE_IDS = 3,4,5,6,7,8). Verified 2026-09-21: requireStaff ADMITS it to /refund/*, adminAuth REFUSES it from /admin/* with 403 'Admin access required' -- which is the whole point of having it, because that boundary is otherwise untested.",
+      "email": "trimiotest+support1@gmail.com",
+      "password": "Trimio123!"
     }
   },
-  "_storeFixturesNote": "Names of seeded catalogue items used by the store visibility assertions. Leave blank to skip those tests.",
+  "_storeFixturesNote": "Names of seeded catalogue items used by the store visibility assertions. Leave blank to skip those tests. Filled 2026-09-23: the catalogue ALREADY held these (store_products 13-18 client-visible, 19-23 is_pro_only) -- the tests were skipping only because these two strings were empty, so no seeding was needed. clientVisibleProduct must be one the signed-in professional has NOT purchased: pro 878 / user 41504 has no store_orders at all, so any of 13-18 qualifies.",
   "storeFixtures": {
-    "clientVisibleProduct": "",
-    "proOnlyProduct": "",
+    "clientVisibleProduct": "Argan Repair Shampoo",
+    "proOnlyProduct": "Clipper Blade Oil",
+    "_proReviewableProductNote": "A product the PROFESSIONAL store lists and that roleAccounts.professional (878 / user 41504) has NOT purchased -- it has no store_orders row at all. onlyPurchasersCanReview used clientVisibleProduct for this, but that names a product in the CLIENT shop: the professional store lists the pro-only catalogue, so 'Argan Repair Shampoo' was never on that screen and the test timed out looking for it.",
+    "proReviewableProduct": "Blade Wash Concentrate",
     "shippingStreet": "1 Test Street",
     "shippingCity": "Miami"
   }

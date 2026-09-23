@@ -1,0 +1,4427 @@
+{
+ "_comment": "Every HTTP endpoint the Trimio backend mounts, harvested from backend/server.js and backend/routes/*.js (including routers nested through router.use and the three reached via normalizeRouter inside if-blocks). This is the contract the API, security and performance suites iterate: a route that appears here and is not covered is a gap the coverage report names. Regenerate with scripts/harvest_api.py after any backend routing change.",
+ "_guards": {
+  "PUBLIC": "no authentication middleware - reachable by anyone",
+  "AUTH": "firebaseAuth - any signed-in user",
+  "PRO": "requireProAuth - professionals only",
+  "VENDOR": "requireVendor - store vendors only",
+  "STAFF": "requireStaff - admin, super admin and support tiers 5-8",
+  "ADMIN": "adminAuth - user_type_id 3 or 4 only",
+  "SUPER_ADMIN": "adminAuth + requireSuperAdmin - the single super-admin seat only"
+ },
+ "_observedNote": "'observed' holds the status codes a live sweep on 2026-09-21 got for [anon, client, professional, vendor, admin, superAdmin] on the parameterless GETs. It is evidence, not an expectation: the suites assert the guard, not these numbers.",
+ "_generated": "2026-09-21",
+ "_counts": {
+  "PUBLIC": 54,
+  "PRO": 15,
+  "AUTH": 237,
+  "ADMIN": 96,
+  "SUPER_ADMIN": 10,
+  "VENDOR": 21,
+  "STAFF": 7
+ },
+ "endpoints": [
+  {
+   "method": "GET",
+   "path": "/additional-services/",
+   "guard": "PUBLIC",
+   "router": "additionalServicesRoutes.js",
+   "parameterised": false,
+   "observed": [
+    200,
+    200,
+    200,
+    200,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/admin/all-professionals",
+   "guard": "ADMIN",
+   "router": "adminRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    403,
+    403,
+    403,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/admin/identity-documents",
+   "guard": "ADMIN",
+   "router": "adminRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    403,
+    403,
+    403,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "PUT",
+   "path": "/admin/images/:imageId/status",
+   "guard": "ADMIN",
+   "router": "adminRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/admin/insights/",
+   "guard": "SUPER_ADMIN",
+   "router": "trimioReportRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    403,
+    403,
+    403,
+    403,
+    200
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/admin/invitations/",
+   "guard": "SUPER_ADMIN",
+   "router": "adminInvitationRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    403,
+    403,
+    403,
+    403,
+    200
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/admin/invitations/",
+   "guard": "SUPER_ADMIN",
+   "router": "adminInvitationRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/admin/invitations/:invitationId/revoke",
+   "guard": "SUPER_ADMIN",
+   "router": "adminInvitationRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/admin/jurisdictions",
+   "guard": "ADMIN",
+   "router": "adminRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    403,
+    403,
+    403,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/admin/jurisdictions/:id",
+   "guard": "ADMIN",
+   "router": "adminRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "PATCH",
+   "path": "/admin/jurisdictions/:id",
+   "guard": "ADMIN",
+   "router": "adminRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/admin/jurisdictions/:id/history",
+   "guard": "ADMIN",
+   "router": "adminRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "PUT",
+   "path": "/admin/jurisdictions/:id/modes/:mode",
+   "guard": "ADMIN",
+   "router": "adminRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/admin/jurisdictions/:id/offering",
+   "guard": "ADMIN",
+   "router": "adminRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/admin/jurisdictions/:id/recheck",
+   "guard": "ADMIN",
+   "router": "adminRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/admin/jurisdictions/:id/services/:serviceId/venues/:venueClass/:action",
+   "guard": "ADMIN",
+   "router": "adminRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/admin/jurisdictions/:id/sources",
+   "guard": "ADMIN",
+   "router": "adminRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "PUT",
+   "path": "/admin/jurisdictions/:id/status",
+   "guard": "SUPER_ADMIN",
+   "router": "adminRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/admin/jurisdictions/law-alerts",
+   "guard": "ADMIN",
+   "router": "adminRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    403,
+    403,
+    403,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "PUT",
+   "path": "/admin/jurisdictions/law-alerts/:alertId",
+   "guard": "ADMIN",
+   "router": "adminRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "DELETE",
+   "path": "/admin/jurisdictions/sources/:sourceId",
+   "guard": "ADMIN",
+   "router": "adminRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/admin/legal/documents",
+   "guard": "ADMIN",
+   "router": "adminLegalRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    403,
+    403,
+    403,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/admin/legal/documents",
+   "guard": "ADMIN",
+   "router": "adminLegalRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/admin/legal/documents/:id",
+   "guard": "ADMIN",
+   "router": "adminLegalRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "PATCH",
+   "path": "/admin/legal/documents/:id",
+   "guard": "ADMIN",
+   "router": "adminLegalRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/admin/legal/documents/:id/approve",
+   "guard": "ADMIN",
+   "router": "adminLegalRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/admin/legal/documents/:id/publish",
+   "guard": "SUPER_ADMIN",
+   "router": "adminLegalRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/admin/legal/documents/:id/reject",
+   "guard": "ADMIN",
+   "router": "adminLegalRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/admin/legal/documents/:id/submit",
+   "guard": "ADMIN",
+   "router": "adminLegalRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/admin/notifications",
+   "guard": "ADMIN",
+   "router": "adminRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    403,
+    403,
+    403,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/admin/notifications/:id/read",
+   "guard": "ADMIN",
+   "router": "adminRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/admin/notifications/badge",
+   "guard": "ADMIN",
+   "router": "adminRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    403,
+    403,
+    403,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/admin/notifications/seen",
+   "guard": "ADMIN",
+   "router": "adminRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/admin/professional-licenses",
+   "guard": "ADMIN",
+   "router": "adminRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    403,
+    403,
+    403,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/admin/professional-licenses/:id/reverify",
+   "guard": "ADMIN",
+   "router": "adminRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "PUT",
+   "path": "/admin/professional-licenses/:id/review",
+   "guard": "ADMIN",
+   "router": "adminRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "PUT",
+   "path": "/admin/professional-licenses/:id/tier",
+   "guard": "ADMIN",
+   "router": "adminRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/admin/professional-licenses/:id/tier-options",
+   "guard": "ADMIN",
+   "router": "adminRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/admin/professional-licenses/untiered",
+   "guard": "ADMIN",
+   "router": "adminRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    403,
+    403,
+    403,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/admin/professional-status-counts",
+   "guard": "ADMIN",
+   "router": "adminRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    403,
+    403,
+    403,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/admin/professionals/:professionalId",
+   "guard": "ADMIN",
+   "router": "adminRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "PUT",
+   "path": "/admin/professionals/:professionalId/about-status",
+   "guard": "ADMIN",
+   "router": "adminRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "PUT",
+   "path": "/admin/professionals/:professionalId/business-name",
+   "guard": "ADMIN",
+   "router": "adminRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/admin/professionals/:professionalId/verifications",
+   "guard": "ADMIN",
+   "router": "adminRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/admin/regions/countries",
+   "guard": "ADMIN",
+   "router": "adminRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    403,
+    403,
+    403,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/admin/regions/countries/:id",
+   "guard": "SUPER_ADMIN",
+   "router": "adminRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/admin/regions/countries/:id/states",
+   "guard": "ADMIN",
+   "router": "adminRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "PATCH",
+   "path": "/admin/regions/states/:id",
+   "guard": "SUPER_ADMIN",
+   "router": "adminRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/admin/reports",
+   "guard": "ADMIN",
+   "router": "adminRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    403,
+    403,
+    403,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/admin/reports/:reportId",
+   "guard": "ADMIN",
+   "router": "adminRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/admin/reports/:reportId/action",
+   "guard": "ADMIN",
+   "router": "adminRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/admin/services",
+   "guard": "ADMIN",
+   "router": "adminRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    403,
+    403,
+    403,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/admin/shops",
+   "guard": "ADMIN",
+   "router": "adminRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    403,
+    403,
+    403,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "PUT",
+   "path": "/admin/shops/:shopId/review",
+   "guard": "ADMIN",
+   "router": "adminRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/admin/super/activity",
+   "guard": "SUPER_ADMIN",
+   "router": "superAdminRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    403,
+    403,
+    403,
+    403,
+    200
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/admin/super/seat",
+   "guard": "SUPER_ADMIN",
+   "router": "superAdminRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    403,
+    403,
+    403,
+    403,
+    200
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/admin/training-materials",
+   "guard": "ADMIN",
+   "router": "adminRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    403,
+    403,
+    403,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/admin/training-materials",
+   "guard": "ADMIN",
+   "router": "adminRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "DELETE",
+   "path": "/admin/training-materials/:id",
+   "guard": "ADMIN",
+   "router": "adminRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "PUT",
+   "path": "/admin/training-materials/:id",
+   "guard": "ADMIN",
+   "router": "adminRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "PUT",
+   "path": "/admin/update-professional-status/:professionalProfileId",
+   "guard": "ADMIN",
+   "router": "adminRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/admin/user-counts",
+   "guard": "ADMIN",
+   "router": "adminRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    403,
+    403,
+    403,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/admin/venue-findings",
+   "guard": "ADMIN",
+   "router": "adminRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    403,
+    403,
+    403,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "PUT",
+   "path": "/admin/venue-findings/:id/review",
+   "guard": "ADMIN",
+   "router": "adminRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/admin/verifications",
+   "guard": "ADMIN",
+   "router": "adminRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    403,
+    403,
+    403,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/admin/verifications/:id/recheck",
+   "guard": "ADMIN",
+   "router": "adminRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "PUT",
+   "path": "/admin/verifications/:id/review",
+   "guard": "ADMIN",
+   "router": "adminRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/api/documents/:key",
+   "guard": "PUBLIC",
+   "router": "documentRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/api/documents/license/:licenseId/signed-url",
+   "guard": "AUTH",
+   "router": "documentRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/api/family-members/",
+   "guard": "AUTH",
+   "router": "familyRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    200,
+    200,
+    200,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/api/family-members/",
+   "guard": "AUTH",
+   "router": "familyRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/api/group-bookings/:id",
+   "guard": "AUTH",
+   "router": "groupBookingRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/api/group-bookings/availability",
+   "guard": "AUTH",
+   "router": "groupBookingRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/api/group-bookings/commit",
+   "guard": "AUTH",
+   "router": "groupBookingRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/performance/goals",
+   "guard": "AUTH",
+   "router": "professionalPerformanceRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/api/performance/goals",
+   "guard": "AUTH",
+   "router": "professionalPerformanceRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    401,
+    200,
+    401,
+    401,
+    401
+   ]
+  },
+  {
+   "method": "PUT",
+   "path": "/api/performance/goals",
+   "guard": "AUTH",
+   "router": "professionalPerformanceRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/api/performance/summary",
+   "guard": "AUTH",
+   "router": "professionalPerformanceRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    401,
+    200,
+    401,
+    401,
+    401
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/api/pro/admin/payouts/run-weekly",
+   "guard": "PRO",
+   "router": "proWallet.routes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/pro/cancellation-policy",
+   "guard": "PRO",
+   "router": "proWallet.routes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/api/pro/cancellation-policy",
+   "guard": "PRO",
+   "router": "proWallet.routes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    401,
+    200,
+    401,
+    401,
+    401
+   ]
+  },
+  {
+   "method": "PUT",
+   "path": "/api/pro/cancellation-policy",
+   "guard": "PRO",
+   "router": "proWallet.routes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/api/pro/payouts/instant",
+   "guard": "PRO",
+   "router": "proWallet.routes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/api/pro/payouts/instant/quote",
+   "guard": "PRO",
+   "router": "proWallet.routes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/api/pro/stripe/onboarding-link",
+   "guard": "PRO",
+   "router": "proWallet.routes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/pro/visit-minimum",
+   "guard": "PRO",
+   "router": "proWallet.routes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/api/pro/visit-minimum",
+   "guard": "PRO",
+   "router": "proWallet.routes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    401,
+    200,
+    401,
+    401,
+    401
+   ]
+  },
+  {
+   "method": "PUT",
+   "path": "/api/pro/visit-minimum",
+   "guard": "PRO",
+   "router": "proWallet.routes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/api/pro/wallet",
+   "guard": "PRO",
+   "router": "proWallet.routes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    401,
+    200,
+    401,
+    401,
+    401
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/api/professional/payouts/instant",
+   "guard": "PRO",
+   "router": "professionalPayoutRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/api/professional/payouts/schedule/verify",
+   "guard": "PRO",
+   "router": "professionalPayoutRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    401,
+    200,
+    401,
+    401,
+    401
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/api/professional/payouts/schedule/weekly-monday",
+   "guard": "PRO",
+   "router": "professionalPayoutRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/api/professional/payouts/summary",
+   "guard": "PRO",
+   "router": "professionalPayoutRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    401,
+    200,
+    401,
+    401,
+    401
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/api/professionalStripe/createProfessionalStripeAccount",
+   "guard": "AUTH",
+   "router": "professionalStripeRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/api/professionalStripe/createProfessionalStripeDashboardLink",
+   "guard": "AUTH",
+   "router": "professionalStripeRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/api/professionalStripe/createProfessionalStripeOnboardingLink",
+   "guard": "AUTH",
+   "router": "professionalStripeRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/api/professionalStripe/getProfessionalStripeStatus",
+   "guard": "AUTH",
+   "router": "professionalStripeRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/api/professionalStripe/onboardingRefresh",
+   "guard": "PUBLIC",
+   "router": "professionalStripePublic.routes.js",
+   "parameterised": false,
+   "observed": [
+    400,
+    400,
+    400,
+    400,
+    400,
+    400
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/api/professionalStripe/onboardingReturn",
+   "guard": "PUBLIC",
+   "router": "professionalStripePublic.routes.js",
+   "parameterised": false,
+   "observed": [
+    400,
+    400,
+    400,
+    400,
+    400,
+    400
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/api/professionalStripe/reconnectProfessionalStripeAccount",
+   "guard": "AUTH",
+   "router": "professionalStripeRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/api/professionalStripe/refreshProfessionalStripeStatus",
+   "guard": "AUTH",
+   "router": "professionalStripeRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/api/professionaltransaction/getProfessionalTransactions",
+   "guard": "AUTH",
+   "router": "professionalTransactionRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/api/shop/bookings",
+   "guard": "AUTH",
+   "router": "shopRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/api/shop/bookings/:appointmentId/client-confirm",
+   "guard": "AUTH",
+   "router": "shopRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/api/shop/bookings/:appointmentId/pro-done",
+   "guard": "AUTH",
+   "router": "shopRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/api/shop/bookings/:appointmentId/suggest-time",
+   "guard": "AUTH",
+   "router": "shopRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/api/shop/bookings/mine",
+   "guard": "AUTH",
+   "router": "shopRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    403,
+    200,
+    403,
+    403,
+    403
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/api/shop/requests",
+   "guard": "AUTH",
+   "router": "shopRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/api/shop/requests/:id/approve",
+   "guard": "AUTH",
+   "router": "shopRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/api/shop/requests/:id/decline",
+   "guard": "AUTH",
+   "router": "shopRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/api/shop/requests/mine",
+   "guard": "AUTH",
+   "router": "shopRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    403,
+    200,
+    403,
+    403,
+    403
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/api/shop/reviews",
+   "guard": "AUTH",
+   "router": "shopRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    200,
+    200,
+    200,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/api/shop/search",
+   "guard": "AUTH",
+   "router": "shopRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    400,
+    400,
+    400,
+    400,
+    400
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/api/shop/service-availability",
+   "guard": "AUTH",
+   "router": "shopRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    200,
+    200,
+    200,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/api/shop/slots",
+   "guard": "AUTH",
+   "router": "shopRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    400,
+    400,
+    400,
+    400,
+    400
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/api/sms/inbound",
+   "guard": "PUBLIC",
+   "router": "smsRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/api/sms/opt-in",
+   "guard": "AUTH",
+   "router": "smsRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/api/sms/opt-out",
+   "guard": "AUTH",
+   "router": "smsRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/api/user-addresses/",
+   "guard": "AUTH",
+   "router": "userAddressesRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    200,
+    200,
+    200,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/api/user-addresses/",
+   "guard": "AUTH",
+   "router": "userAddressesRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/user-addresses/:addressId",
+   "guard": "AUTH",
+   "router": "userAddressesRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/user-addresses/:addressId",
+   "guard": "AUTH",
+   "router": "userAddressesRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/user-addresses/:addressId/default",
+   "guard": "AUTH",
+   "router": "userAddressesRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/user-addresses/:addressId/default",
+   "guard": "AUTH",
+   "router": "userAddressesRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "PUT",
+   "path": "/api/venues/:venueId/chairs",
+   "guard": "AUTH",
+   "router": "venueRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/api/venues/:venueId/claim",
+   "guard": "AUTH",
+   "router": "venueRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/api/venues/:venueId/invites",
+   "guard": "AUTH",
+   "router": "venueRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/api/venues/:venueId/join-code",
+   "guard": "AUTH",
+   "router": "venueRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/api/venues/:venueId/listing/quote",
+   "guard": "AUTH",
+   "router": "venueRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/api/venues/:venueId/listing/subscribe",
+   "guard": "AUTH",
+   "router": "venueRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/api/venues/:venueId/members",
+   "guard": "AUTH",
+   "router": "venueRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/api/venues/:venueId/members",
+   "guard": "AUTH",
+   "router": "venueRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/venues/:venueId/members/:professionalId",
+   "guard": "AUTH",
+   "router": "venueRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/api/venues/:venueId/members/accept",
+   "guard": "AUTH",
+   "router": "venueRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/api/venues/:venueId/membership",
+   "guard": "AUTH",
+   "router": "venueRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/api/venues/:venueId/requests/:professionalId",
+   "guard": "AUTH",
+   "router": "venueRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/api/venues/:venueId/suggestions",
+   "guard": "AUTH",
+   "router": "venueRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/api/venues/join",
+   "guard": "AUTH",
+   "router": "venueRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/api/venues/memberships",
+   "guard": "AUTH",
+   "router": "venueRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    403,
+    200,
+    403,
+    403,
+    403
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/api/venues/mine",
+   "guard": "AUTH",
+   "router": "venueRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    200,
+    200,
+    200,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/appointment/:appointmentId/cancel",
+   "guard": "AUTH",
+   "router": "appointmentRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/appointment/:appointmentId/cancel-or-reassign",
+   "guard": "AUTH",
+   "router": "appointmentRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/appointment/:appointmentId/cancel/quote",
+   "guard": "AUTH",
+   "router": "appointmentRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/appointment/:appointmentId/disclosure",
+   "guard": "AUTH",
+   "router": "appointmentRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/appointment/:appointmentId/no-show",
+   "guard": "AUTH",
+   "router": "appointmentRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/appointment/:appointmentId/offer",
+   "guard": "AUTH",
+   "router": "appointmentRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/appointment/:appointmentId/pro-cancel",
+   "guard": "AUTH",
+   "router": "appointmentRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/appointment/:appointmentId/pro-cancel-single",
+   "guard": "AUTH",
+   "router": "appointmentRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "PUT",
+   "path": "/appointment/:appointmentId/status",
+   "guard": "AUTH",
+   "router": "appointmentRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "PUT",
+   "path": "/appointment/:id/finalize-update",
+   "guard": "AUTH",
+   "router": "appointmentRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/appointment/:id/prepare-update",
+   "guard": "AUTH",
+   "router": "appointmentRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/appointment/available-professional",
+   "guard": "AUTH",
+   "router": "appointmentRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    400,
+    400,
+    400,
+    400,
+    400
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/appointment/booking-options",
+   "guard": "AUTH",
+   "router": "appointmentRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    200,
+    200,
+    200,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/appointment/client-appointments/:clientId",
+   "guard": "AUTH",
+   "router": "appointmentRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/appointment/day-availability",
+   "guard": "AUTH",
+   "router": "appointmentRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    400,
+    400,
+    400,
+    400,
+    400
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/appointment/last-booking/:clientId",
+   "guard": "AUTH",
+   "router": "appointmentRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/appointment/last-professional/:clientId",
+   "guard": "AUTH",
+   "router": "appointmentRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/appointment/last-shop/:clientId",
+   "guard": "AUTH",
+   "router": "appointmentRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/appointment/offer/:offerId/choose",
+   "guard": "AUTH",
+   "router": "appointmentRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/appointment/pending-actions",
+   "guard": "AUTH",
+   "router": "appointmentRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    200,
+    200,
+    200,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/appointment/request-service-now",
+   "guard": "AUTH",
+   "router": "appointmentRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/appointment/request-service-now/:requestId/cancel",
+   "guard": "AUTH",
+   "router": "appointmentRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/appointment/service-price-range",
+   "guard": "AUTH",
+   "router": "appointmentRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    200,
+    200,
+    200,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/appointment/service-request/:requestId/select",
+   "guard": "AUTH",
+   "router": "appointmentRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/appointment/service-request/:requestId/shortlist",
+   "guard": "AUTH",
+   "router": "appointmentRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/appointment/upcoming/:clientId",
+   "guard": "AUTH",
+   "router": "appointmentRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/auth/admin-invitation/accept",
+   "guard": "PUBLIC",
+   "router": "authRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/auth/change-password",
+   "guard": "PUBLIC",
+   "router": "authRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/auth/checkUserExists",
+   "guard": "PUBLIC",
+   "router": "authRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/auth/generateOTP",
+   "guard": "PUBLIC",
+   "router": "authRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/auth/login",
+   "guard": "PUBLIC",
+   "router": "authRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/auth/login/verify-otp",
+   "guard": "PUBLIC",
+   "router": "authRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/auth/register",
+   "guard": "PUBLIC",
+   "router": "authRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/auth/registerGoogleUser",
+   "guard": "PUBLIC",
+   "router": "authRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/auth/registration-availability",
+   "guard": "PUBLIC",
+   "router": "authRoutes.js",
+   "parameterised": false,
+   "observed": [
+    200,
+    200,
+    200,
+    200,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/auth/updateTwoFactorStatus",
+   "guard": "AUTH",
+   "router": "authRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/auth/verifyOTP",
+   "guard": "PUBLIC",
+   "router": "authRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/client-reviews/",
+   "guard": "AUTH",
+   "router": "clientReviews.routes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/client-reviews/check",
+   "guard": "AUTH",
+   "router": "clientReviews.routes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    400,
+    400,
+    400,
+    400,
+    400
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/client-reviews/draft",
+   "guard": "AUTH",
+   "router": "clientReviews.routes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    400,
+    400,
+    400,
+    400,
+    400
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/client-reviews/draft",
+   "guard": "AUTH",
+   "router": "clientReviews.routes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/images/register",
+   "guard": "AUTH",
+   "router": "imageRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/legal/document",
+   "guard": "PUBLIC",
+   "router": "legalRoutes.js",
+   "parameterised": false,
+   "observed": [
+    200,
+    200,
+    200,
+    200,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/legal/registration-documents",
+   "guard": "PUBLIC",
+   "router": "legalRoutes.js",
+   "parameterised": false,
+   "observed": [
+    409,
+    409,
+    409,
+    409,
+    409,
+    409
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/legal/registration-states",
+   "guard": "PUBLIC",
+   "router": "legalRoutes.js",
+   "parameterised": false,
+   "observed": [
+    200,
+    200,
+    200,
+    200,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/memberships/account-credit",
+   "guard": "AUTH",
+   "router": "membership.routes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    200,
+    200,
+    200,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/memberships/auto-renew",
+   "guard": "AUTH",
+   "router": "membership.routes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/memberships/benefit-preview",
+   "guard": "AUTH",
+   "router": "membership.routes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/memberships/billing-portal",
+   "guard": "AUTH",
+   "router": "membership.routes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/memberships/bookings",
+   "guard": "AUTH",
+   "router": "membershipRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/memberships/cancel",
+   "guard": "AUTH",
+   "router": "membership.routes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/memberships/cancel/quote",
+   "guard": "AUTH",
+   "router": "membership.routes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    404,
+    400,
+    404,
+    404,
+    404
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/memberships/catalog",
+   "guard": "AUTH",
+   "router": "membershipRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    200,
+    200,
+    200,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/memberships/change-plan",
+   "guard": "AUTH",
+   "router": "membership.routes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/memberships/change-plan/preview",
+   "guard": "AUTH",
+   "router": "membership.routes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/memberships/credit-history",
+   "guard": "AUTH",
+   "router": "membership.routes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    404,
+    200,
+    404,
+    404,
+    404
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/memberships/invoices",
+   "guard": "AUTH",
+   "router": "membership.routes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    404,
+    500,
+    404,
+    404,
+    404
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/memberships/overview",
+   "guard": "AUTH",
+   "router": "membership.routes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    200,
+    200,
+    200,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/memberships/pause",
+   "guard": "AUTH",
+   "router": "membership.routes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/memberships/plan-options",
+   "guard": "AUTH",
+   "router": "membership.routes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    200,
+    200,
+    200,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/memberships/plans",
+   "guard": "AUTH",
+   "router": "membershipRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    200,
+    200,
+    200,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/memberships/reactivate",
+   "guard": "AUTH",
+   "router": "membership.routes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/memberships/resume",
+   "guard": "AUTH",
+   "router": "membership.routes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/memberships/subscribe",
+   "guard": "AUTH",
+   "router": "membershipRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/notifications/",
+   "guard": "AUTH",
+   "router": "notificationRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    200,
+    200,
+    200,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/notifications/:id/read",
+   "guard": "AUTH",
+   "router": "notificationRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/notifications/read-all",
+   "guard": "AUTH",
+   "router": "notificationRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/open",
+   "guard": "PUBLIC",
+   "router": "deeplink.js",
+   "parameterised": false,
+   "observed": [
+    200,
+    200,
+    200,
+    200,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/password/forgotPassword",
+   "guard": "PUBLIC",
+   "router": "passwordRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/password/resetPassword",
+   "guard": "PUBLIC",
+   "router": "passwordRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/password/resetPasswordPhone",
+   "guard": "PUBLIC",
+   "router": "passwordRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/password/sendEmailVerificationOtp",
+   "guard": "PUBLIC",
+   "router": "passwordRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/password/sendOtpForPhoneNumber",
+   "guard": "PUBLIC",
+   "router": "passwordRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/password/sendOtpForRegistration",
+   "guard": "PUBLIC",
+   "router": "passwordRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/password/verifyEmailVerificationOtp",
+   "guard": "PUBLIC",
+   "router": "passwordRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/password/verifyFirebasePhoneNumber",
+   "guard": "PUBLIC",
+   "router": "passwordRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/password/verifyResetOtp",
+   "guard": "PUBLIC",
+   "router": "passwordRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/payment/card-details-save",
+   "guard": "AUTH",
+   "router": "paymentRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "DELETE",
+   "path": "/payment/cards/:cardId",
+   "guard": "AUTH",
+   "router": "paymentRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/payment/cards/:cardId/default",
+   "guard": "AUTH",
+   "router": "paymentRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/payment/cards/:clientId",
+   "guard": "AUTH",
+   "router": "paymentRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/payment/create-customer",
+   "guard": "AUTH",
+   "router": "paymentRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/payment/create-intent",
+   "guard": "AUTH",
+   "router": "paymentRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/payment/create-setup-intent",
+   "guard": "AUTH",
+   "router": "paymentRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/payment/create-subscription",
+   "guard": "AUTH",
+   "router": "paymentRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/payment/quote",
+   "guard": "AUTH",
+   "router": "paymentRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/payment/tip",
+   "guard": "AUTH",
+   "router": "paymentRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/payment/tip/eligibility/:appointmentId",
+   "guard": "AUTH",
+   "router": "paymentRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/policy/admin/professionals/:id/deactivate",
+   "guard": "ADMIN",
+   "router": "adminPolicyRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/policy/admin/professionals/:id/header",
+   "guard": "ADMIN",
+   "router": "adminPolicyRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/policy/admin/professionals/:id/reactivate",
+   "guard": "ADMIN",
+   "router": "adminPolicyRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/policy/admin/professionals/:id/suspend",
+   "guard": "ADMIN",
+   "router": "adminPolicyRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/policy/admin/professionals/:id/warn",
+   "guard": "ADMIN",
+   "router": "adminPolicyRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/policy/admin/quality/list",
+   "guard": "ADMIN",
+   "router": "adminPolicyRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    403,
+    403,
+    403,
+    400,
+    400
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/policy/admin/quality/summary",
+   "guard": "ADMIN",
+   "router": "adminPolicyRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    403,
+    403,
+    403,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/policy/appointments/:id/accept",
+   "guard": "AUTH",
+   "router": "appointmentGuardRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/policy/reviews/",
+   "guard": "AUTH",
+   "router": "reviewsPolicyRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/pricing/compute",
+   "guard": "PUBLIC",
+   "router": "pricingRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/professionalProfile/:userId/notifications",
+   "guard": "AUTH",
+   "router": "professionalProfileRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/professionalProfile/:userId/reviews",
+   "guard": "AUTH",
+   "router": "professionalProfileRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/professionalProfile/:userId/reviews/latest",
+   "guard": "AUTH",
+   "router": "professionalProfileRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/professionalProfile/appointment/:appointmentId",
+   "guard": "AUTH",
+   "router": "professionalProfileRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/professionalProfile/appointments/:appointmentId/sanitation",
+   "guard": "AUTH",
+   "router": "professionalProfileRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/professionalProfile/appointments/:appointmentId/sanitation",
+   "guard": "AUTH",
+   "router": "professionalProfileRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/professionalProfile/business-name",
+   "guard": "AUTH",
+   "router": "professionalProfileRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/professionalProfile/cancellation-policy/:professional_id",
+   "guard": "AUTH",
+   "router": "professionalProfileRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/professionalProfile/clearance/:professional_id",
+   "guard": "AUTH",
+   "router": "professionalProfileRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/professionalProfile/client-notes",
+   "guard": "AUTH",
+   "router": "professionalProfileRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    400,
+    400,
+    400,
+    400,
+    400
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/professionalProfile/client-notes",
+   "guard": "AUTH",
+   "router": "professionalProfileRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/professionalProfile/clients",
+   "guard": "AUTH",
+   "router": "professionalProfileRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    400,
+    200,
+    400,
+    400,
+    400
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/professionalProfile/clients/export.csv",
+   "guard": "AUTH",
+   "router": "professionalProfileRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    400,
+    200,
+    400,
+    400,
+    400
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/professionalProfile/countries",
+   "guard": "AUTH",
+   "router": "professionalProfileRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    200,
+    200,
+    200,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/professionalProfile/countries/:countryId/states",
+   "guard": "AUTH",
+   "router": "professionalProfileRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/professionalProfile/create",
+   "guard": "AUTH",
+   "router": "professionalProfileRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/professionalProfile/identity/session",
+   "guard": "AUTH",
+   "router": "professionalProfileRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/professionalProfile/license-types",
+   "guard": "AUTH",
+   "router": "professionalProfileRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    200,
+    200,
+    200,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/professionalProfile/licenses",
+   "guard": "AUTH",
+   "router": "professionalProfileRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "DELETE",
+   "path": "/professionalProfile/licenses/:id",
+   "guard": "AUTH",
+   "router": "professionalProfileRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/professionalProfile/listing",
+   "guard": "AUTH",
+   "router": "professionalProfileRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    403,
+    200,
+    403,
+    403,
+    403
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/professionalProfile/listing/quote",
+   "guard": "AUTH",
+   "router": "professionalProfileRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    403,
+    200,
+    403,
+    403,
+    403
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/professionalProfile/listing/subscribe",
+   "guard": "AUTH",
+   "router": "professionalProfileRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/professionalProfile/my-licenses/:professional_id",
+   "guard": "AUTH",
+   "router": "professionalProfileRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/professionalProfile/notifications/mark-read/:notificationId",
+   "guard": "AUTH",
+   "router": "professionalProfileRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/professionalProfile/price-guidance",
+   "guard": "AUTH",
+   "router": "professionalProfileRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    403,
+    400,
+    403,
+    403,
+    403
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/professionalProfile/pricing-delegation",
+   "guard": "AUTH",
+   "router": "professionalProfileRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    403,
+    200,
+    403,
+    403,
+    403
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/professionalProfile/pricing-delegation",
+   "guard": "AUTH",
+   "router": "professionalProfileRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "DELETE",
+   "path": "/professionalProfile/pricing-delegation/:service_id",
+   "guard": "AUTH",
+   "router": "professionalProfileRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/professionalProfile/professional-calendar",
+   "guard": "AUTH",
+   "router": "professionalProfileRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    400,
+    200,
+    400,
+    400,
+    400
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/professionalProfile/professional-data",
+   "guard": "AUTH",
+   "router": "professionalProfileRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    200,
+    200,
+    200,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/professionalProfile/professional_services",
+   "guard": "AUTH",
+   "router": "professionalProfileRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/professionalProfile/profile",
+   "guard": "AUTH",
+   "router": "professionalProfileRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/professionalProfile/profile-photo",
+   "guard": "AUTH",
+   "router": "professionalProfileRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/professionalProfile/profile-photo/:professional_id",
+   "guard": "AUTH",
+   "router": "professionalProfileRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/professionalProfile/readiness/:professional_id",
+   "guard": "AUTH",
+   "router": "professionalProfileRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/professionalProfile/rebooking-invite",
+   "guard": "AUTH",
+   "router": "professionalProfileRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/professionalProfile/requirements/:professional_id",
+   "guard": "AUTH",
+   "router": "professionalProfileRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/professionalProfile/schedule",
+   "guard": "AUTH",
+   "router": "professionalProfileRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/professionalProfile/schedule-exceptions",
+   "guard": "AUTH",
+   "router": "professionalProfileRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "DELETE",
+   "path": "/professionalProfile/schedule-exceptions/:exception_id",
+   "guard": "AUTH",
+   "router": "professionalProfileRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/professionalProfile/schedule-exceptions/:professional_id",
+   "guard": "AUTH",
+   "router": "professionalProfileRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/professionalProfile/schedule/:professional_id",
+   "guard": "AUTH",
+   "router": "professionalProfileRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "DELETE",
+   "path": "/professionalProfile/schedule/:schedule_id",
+   "guard": "AUTH",
+   "router": "professionalProfileRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "PUT",
+   "path": "/professionalProfile/schedule/:schedule_id",
+   "guard": "AUTH",
+   "router": "professionalProfileRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/professionalProfile/service-gaps/:professional_id",
+   "guard": "AUTH",
+   "router": "professionalProfileRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/professionalProfile/service-modes",
+   "guard": "AUTH",
+   "router": "professionalProfileRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    403,
+    200,
+    403,
+    403,
+    403
+   ]
+  },
+  {
+   "method": "PUT",
+   "path": "/professionalProfile/service-modes",
+   "guard": "AUTH",
+   "router": "professionalProfileRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/professionalProfile/services/:professional_id",
+   "guard": "AUTH",
+   "router": "professionalProfileRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/professionalProfile/shop-reviews",
+   "guard": "AUTH",
+   "router": "professionalProfileRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    200,
+    200,
+    200,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/professionalProfile/shops",
+   "guard": "AUTH",
+   "router": "professionalProfileRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    200,
+    200,
+    200,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/professionalProfile/shops",
+   "guard": "AUTH",
+   "router": "professionalProfileRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "PUT",
+   "path": "/professionalProfile/shops/:shopId",
+   "guard": "AUTH",
+   "router": "professionalProfileRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/professionalProfile/training-materials",
+   "guard": "AUTH",
+   "router": "professionalProfileRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    200,
+    200,
+    200,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/professionalProfile/update-about",
+   "guard": "AUTH",
+   "router": "professionalProfileRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/professionalProfile/updateBarberSensitivityData",
+   "guard": "AUTH",
+   "router": "professionalProfileRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/professionalProfile/updateOnDutyStatus",
+   "guard": "AUTH",
+   "router": "professionalProfileRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/professionalProfile/user-training-progress",
+   "guard": "AUTH",
+   "router": "professionalProfileRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/quality/professionals/:id/summary",
+   "guard": "AUTH",
+   "router": "qualityRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/recurringappointments/recurring",
+   "guard": "AUTH",
+   "router": "recurringAppointmentRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/recurringappointments/series/:seriesId/cancel",
+   "guard": "AUTH",
+   "router": "recurringAppointmentRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/reference/catalog",
+   "guard": "PUBLIC",
+   "router": "referenceRoutes.js",
+   "parameterised": false,
+   "observed": [
+    200,
+    200,
+    200,
+    200,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/reference/countries",
+   "guard": "PUBLIC",
+   "router": "referenceRoutes.js",
+   "parameterised": false,
+   "observed": [
+    200,
+    200,
+    200,
+    200,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/reference/ethnicities",
+   "guard": "PUBLIC",
+   "router": "referenceRoutes.js",
+   "parameterised": false,
+   "observed": [
+    200,
+    200,
+    200,
+    200,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/reference/regions",
+   "guard": "PUBLIC",
+   "router": "referenceRoutes.js",
+   "parameterised": false,
+   "observed": [
+    200,
+    200,
+    200,
+    200,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/reference/services",
+   "guard": "PUBLIC",
+   "router": "referenceRoutes.js",
+   "parameterised": false,
+   "observed": [
+    200,
+    200,
+    200,
+    200,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/reference/states",
+   "guard": "PUBLIC",
+   "router": "referenceRoutes.js",
+   "parameterised": false,
+   "observed": [
+    200,
+    200,
+    200,
+    200,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/referrals/capture",
+   "guard": "AUTH",
+   "router": "referralRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/referrals/my-stats",
+   "guard": "AUTH",
+   "router": "referralRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    401,
+    200,
+    401,
+    401,
+    401
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/referrals/my-token",
+   "guard": "AUTH",
+   "router": "referralRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    401,
+    200,
+    401,
+    401,
+    401
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/refund/",
+   "guard": "STAFF",
+   "router": "refundRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "PATCH",
+   "path": "/refund/:id/cancel",
+   "guard": "STAFF",
+   "router": "refundRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/refund/:id/process",
+   "guard": "STAFF",
+   "router": "refundRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/refund/count",
+   "guard": "STAFF",
+   "router": "refundRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    403,
+    403,
+    403,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/refund/list",
+   "guard": "STAFF",
+   "router": "refundRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    403,
+    403,
+    403,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/reports/:reportId",
+   "guard": "PUBLIC",
+   "router": "reportRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/reports/client/:clientId",
+   "guard": "PUBLIC",
+   "router": "reportRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/reports/create",
+   "guard": "PUBLIC",
+   "router": "reportRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/reports/mine/update",
+   "guard": "PUBLIC",
+   "router": "reportRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/reports/stats/:clientId",
+   "guard": "PUBLIC",
+   "router": "reportRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/reports/timeline",
+   "guard": "STAFF",
+   "router": "reportRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/reports/update",
+   "guard": "STAFF",
+   "router": "reportRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/reviews/",
+   "guard": "AUTH",
+   "router": "reviewsRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "PATCH",
+   "path": "/reviews/:id",
+   "guard": "AUTH",
+   "router": "reviewsRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/reviews/:id/helpful",
+   "guard": "AUTH",
+   "router": "reviewsRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/reviews/:id/photos",
+   "guard": "PUBLIC",
+   "router": "reviewsRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/reviews/:id/response",
+   "guard": "AUTH",
+   "router": "reviewsRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/reviews/:id/submit",
+   "guard": "AUTH",
+   "router": "reviewsRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/reviews/draft",
+   "guard": "AUTH",
+   "router": "reviewsRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    400,
+    400,
+    400,
+    400,
+    400
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/reviews/draft",
+   "guard": "AUTH",
+   "router": "reviewsRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/reviews/exists",
+   "guard": "PUBLIC",
+   "router": "reviewsRoutes.js",
+   "parameterised": false,
+   "observed": [
+    400,
+    400,
+    400,
+    400,
+    400,
+    400
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/reviews/professionals/:professionalId/reviews",
+   "guard": "PUBLIC",
+   "router": "reviewsRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/reviews/professionals/:professionalId/reviews/stats",
+   "guard": "PUBLIC",
+   "router": "reviewsRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/store-vendor/stripe/refresh",
+   "guard": "PUBLIC",
+   "router": "storeVendorStripeReturn.routes.js",
+   "parameterised": false,
+   "observed": [
+    200,
+    200,
+    200,
+    200,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/store-vendor/stripe/return",
+   "guard": "PUBLIC",
+   "router": "storeVendorStripeReturn.routes.js",
+   "parameterised": false,
+   "observed": [
+    200,
+    200,
+    200,
+    200,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/store/admin/applications",
+   "guard": "ADMIN",
+   "router": "storeAdminRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    403,
+    403,
+    403,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/store/admin/applications/:id/approve",
+   "guard": "ADMIN",
+   "router": "storeAdminRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/store/admin/applications/:id/reject",
+   "guard": "ADMIN",
+   "router": "storeAdminRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "DELETE",
+   "path": "/store/admin/images/:imageId",
+   "guard": "ADMIN",
+   "router": "storeAdminRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/store/admin/orders",
+   "guard": "ADMIN",
+   "router": "storeAdminRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    403,
+    403,
+    403,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/store/admin/orders/:id",
+   "guard": "ADMIN",
+   "router": "storeAdminRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/store/admin/products",
+   "guard": "ADMIN",
+   "router": "storeAdminRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    403,
+    403,
+    403,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/store/admin/products",
+   "guard": "ADMIN",
+   "router": "storeAdminRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/store/admin/products/:id",
+   "guard": "ADMIN",
+   "router": "storeAdminRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "PATCH",
+   "path": "/store/admin/products/:id",
+   "guard": "ADMIN",
+   "router": "storeAdminRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/store/admin/products/:productId/images",
+   "guard": "ADMIN",
+   "router": "storeAdminRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/store/admin/products/:productId/variants",
+   "guard": "ADMIN",
+   "router": "storeAdminRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "DELETE",
+   "path": "/store/admin/variants/:variantId",
+   "guard": "ADMIN",
+   "router": "storeAdminRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "PATCH",
+   "path": "/store/admin/variants/:variantId",
+   "guard": "ADMIN",
+   "router": "storeAdminRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/store/admin/vendors",
+   "guard": "ADMIN",
+   "router": "storeAdminRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    403,
+    403,
+    403,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/store/admin/vendors",
+   "guard": "ADMIN",
+   "router": "storeAdminRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "PATCH",
+   "path": "/store/admin/vendors/:vendorId",
+   "guard": "ADMIN",
+   "router": "storeAdminRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/store/admin/vendors/:vendorId/groups",
+   "guard": "ADMIN",
+   "router": "storeAdminRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/store/admin/vendors/:vendorId/invite",
+   "guard": "ADMIN",
+   "router": "storeAdminRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/store/admin/vendors/:vendorId/login",
+   "guard": "ADMIN",
+   "router": "storeAdminRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/store/admin/vendors/:vendorId/payouts",
+   "guard": "ADMIN",
+   "router": "storeAdminRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/store/apply/",
+   "guard": "PUBLIC",
+   "router": "storeApply.routes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/store/brands",
+   "guard": "AUTH",
+   "router": "storeRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    200,
+    200,
+    200,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/store/cart",
+   "guard": "AUTH",
+   "router": "storeRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    401,
+    200,
+    401,
+    401,
+    401
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/store/cart/items",
+   "guard": "AUTH",
+   "router": "storeRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "DELETE",
+   "path": "/store/cart/items/:id",
+   "guard": "AUTH",
+   "router": "storeRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "PATCH",
+   "path": "/store/cart/items/:id",
+   "guard": "AUTH",
+   "router": "storeRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/store/categories",
+   "guard": "AUTH",
+   "router": "storeRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    200,
+    200,
+    200,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/store/checkout",
+   "guard": "AUTH",
+   "router": "storeRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/store/client/bundles",
+   "guard": "AUTH",
+   "router": "storeClient.routes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    200,
+    200,
+    200,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/store/client/cart",
+   "guard": "AUTH",
+   "router": "storeClient.routes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    200,
+    200,
+    200,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/store/client/cart/bundles",
+   "guard": "AUTH",
+   "router": "storeClient.routes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/store/client/cart/items",
+   "guard": "AUTH",
+   "router": "storeClient.routes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "DELETE",
+   "path": "/store/client/cart/items/:id",
+   "guard": "AUTH",
+   "router": "storeClient.routes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "PATCH",
+   "path": "/store/client/cart/items/:id",
+   "guard": "AUTH",
+   "router": "storeClient.routes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/store/client/categories",
+   "guard": "AUTH",
+   "router": "storeClient.routes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    200,
+    200,
+    200,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/store/client/checkout",
+   "guard": "AUTH",
+   "router": "storeClient.routes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/store/client/orders",
+   "guard": "AUTH",
+   "router": "storeClient.routes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    200,
+    200,
+    200,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/store/client/orders/:id",
+   "guard": "AUTH",
+   "router": "storeClient.routes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/store/client/products",
+   "guard": "AUTH",
+   "router": "storeClient.routes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    200,
+    200,
+    200,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/store/loyalty",
+   "guard": "AUTH",
+   "router": "storeRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    401,
+    200,
+    401,
+    401,
+    401
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/store/orders",
+   "guard": "AUTH",
+   "router": "storeRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    401,
+    200,
+    401,
+    401,
+    401
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/store/orders/:id",
+   "guard": "AUTH",
+   "router": "storeRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/store/orders/:orderId/groups/:groupId/ship",
+   "guard": "ADMIN",
+   "router": "storeRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/store/products",
+   "guard": "AUTH",
+   "router": "storeRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    200,
+    200,
+    200,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/store/products/:id",
+   "guard": "AUTH",
+   "router": "storeRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/store/products/:id/reviews",
+   "guard": "AUTH",
+   "router": "storeRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/store/products/:id/reviews",
+   "guard": "AUTH",
+   "router": "storeRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/store/recommendations",
+   "guard": "AUTH",
+   "router": "storeRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    401,
+    200,
+    401,
+    401,
+    401
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/store/reorder",
+   "guard": "AUTH",
+   "router": "storeRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    401,
+    200,
+    401,
+    401,
+    401
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/store/saved",
+   "guard": "AUTH",
+   "router": "storeRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    401,
+    200,
+    401,
+    401,
+    401
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/store/saved",
+   "guard": "AUTH",
+   "router": "storeRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "DELETE",
+   "path": "/store/saved/:productId",
+   "guard": "AUTH",
+   "router": "storeRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "DELETE",
+   "path": "/store/vendor/images/:imageId",
+   "guard": "VENDOR",
+   "router": "storeVendorRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/store/vendor/me",
+   "guard": "VENDOR",
+   "router": "storeVendorRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    401,
+    401,
+    200,
+    401,
+    401
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/store/vendor/me",
+   "guard": "VENDOR",
+   "router": "storeVendorRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/store/vendor/notifications",
+   "guard": "VENDOR",
+   "router": "storeVendorRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    401,
+    401,
+    200,
+    401,
+    401
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/store/vendor/notifications/read",
+   "guard": "VENDOR",
+   "router": "storeVendorRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/store/vendor/orders",
+   "guard": "VENDOR",
+   "router": "storeVendorRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    401,
+    401,
+    200,
+    401,
+    401
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/store/vendor/orders/:orderId",
+   "guard": "VENDOR",
+   "router": "storeVendorRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/store/vendor/orders/:orderId/groups/:groupId/ship",
+   "guard": "VENDOR",
+   "router": "storeVendorRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/store/vendor/overview",
+   "guard": "VENDOR",
+   "router": "storeVendorRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    401,
+    401,
+    200,
+    401,
+    401
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/store/vendor/payouts",
+   "guard": "VENDOR",
+   "router": "storeVendorRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    401,
+    401,
+    200,
+    401,
+    401
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/store/vendor/products",
+   "guard": "VENDOR",
+   "router": "storeVendorRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    401,
+    401,
+    200,
+    401,
+    401
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/store/vendor/products",
+   "guard": "VENDOR",
+   "router": "storeVendorRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/store/vendor/products/:id",
+   "guard": "VENDOR",
+   "router": "storeVendorRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "PATCH",
+   "path": "/store/vendor/products/:id",
+   "guard": "VENDOR",
+   "router": "storeVendorRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/store/vendor/products/:productId/images",
+   "guard": "VENDOR",
+   "router": "storeVendorRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/store/vendor/products/:productId/variants",
+   "guard": "VENDOR",
+   "router": "storeVendorRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/store/vendor/stripe/dashboard-link",
+   "guard": "VENDOR",
+   "router": "storeVendorRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/store/vendor/stripe/onboarding-link",
+   "guard": "VENDOR",
+   "router": "storeVendorRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/store/vendor/stripe/refresh",
+   "guard": "VENDOR",
+   "router": "storeVendorRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "DELETE",
+   "path": "/store/vendor/variants/:variantId",
+   "guard": "VENDOR",
+   "router": "storeVendorRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "PATCH",
+   "path": "/store/vendor/variants/:variantId",
+   "guard": "VENDOR",
+   "router": "storeVendorRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/store/vendors/:vendorId/stripe/account",
+   "guard": "ADMIN",
+   "router": "storeRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/store/vendors/:vendorId/stripe/onboarding-link",
+   "guard": "ADMIN",
+   "router": "storeRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/store/vendors/:vendorId/stripe/refresh",
+   "guard": "ADMIN",
+   "router": "storeRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/store/vendors/:vendorId/stripe/status",
+   "guard": "ADMIN",
+   "router": "storeRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/stripe/refresh",
+   "guard": "PUBLIC",
+   "router": "stripeOnboardingReturn.routes.js",
+   "parameterised": false,
+   "observed": [
+    200,
+    200,
+    200,
+    200,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/stripe/return",
+   "guard": "PUBLIC",
+   "router": "stripeOnboardingReturn.routes.js",
+   "parameterised": false,
+   "observed": [
+    200,
+    200,
+    200,
+    200,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/training/pending/:userId",
+   "guard": "AUTH",
+   "router": "trainingMaterialRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/userprofile/:email",
+   "guard": "AUTH",
+   "router": "userProfileRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/userprofile/create",
+   "guard": "AUTH",
+   "router": "userProfileRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/userprofile/ethnicities",
+   "guard": "AUTH",
+   "router": "userProfileRoutes.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    200,
+    200,
+    200,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/userprofile/family_members",
+   "guard": "AUTH",
+   "router": "userProfileRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "DELETE",
+   "path": "/userprofile/family_members/:family_member_id",
+   "guard": "AUTH",
+   "router": "userProfileRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/userprofile/family_members/:user_id",
+   "guard": "AUTH",
+   "router": "userProfileRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/users/available-services",
+   "guard": "PUBLIC",
+   "router": "userRoutes.js",
+   "parameterised": false,
+   "observed": [
+    200,
+    200,
+    200,
+    200,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/users/client-pdf-documents",
+   "guard": "PUBLIC",
+   "router": "userRoutes.js",
+   "parameterised": false,
+   "observed": [
+    200,
+    200,
+    200,
+    200,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/users/client/:clientId",
+   "guard": "AUTH",
+   "router": "userRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/users/getUserDetails",
+   "guard": "AUTH",
+   "router": "userRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/users/images",
+   "guard": "AUTH",
+   "router": "userRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/users/portfolio",
+   "guard": "AUTH",
+   "router": "userRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "DELETE",
+   "path": "/users/portfolio/:imageId",
+   "guard": "AUTH",
+   "router": "userRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "PUT",
+   "path": "/users/portfolio/:imageId",
+   "guard": "AUTH",
+   "router": "userRoutes.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/users/saveFcmToken",
+   "guard": "AUTH",
+   "router": "userRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/users/service-images",
+   "guard": "PUBLIC",
+   "router": "userRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/users/services",
+   "guard": "PUBLIC",
+   "router": "userRoutes.js",
+   "parameterised": false,
+   "observed": [
+    200,
+    200,
+    200,
+    200,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "PUT",
+   "path": "/users/update-address",
+   "guard": "AUTH",
+   "router": "userRoutes.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/v1/admin/enforcements",
+   "guard": "ADMIN",
+   "router": "enforcement.admin.router.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    403,
+    403,
+    403,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/v1/admin/enforcements",
+   "guard": "ADMIN",
+   "router": "enforcement.admin.router.js",
+   "parameterised": false,
+   "observed": null
+  },
+  {
+   "method": "DELETE",
+   "path": "/v1/admin/enforcements/:id",
+   "guard": "ADMIN",
+   "router": "enforcement.admin.router.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/v1/admin/enforcements/:id",
+   "guard": "ADMIN",
+   "router": "enforcement.admin.router.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/admin/enforcements/:id",
+   "guard": "ADMIN",
+   "router": "enforcement.admin.router.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "POST",
+   "path": "/v1/admin/enforcements/:id/decision",
+   "guard": "ADMIN",
+   "router": "enforcement.admin.router.js",
+   "parameterised": true,
+   "observed": null
+  },
+  {
+   "method": "GET",
+   "path": "/v1/admin/enforcements/stats",
+   "guard": "ADMIN",
+   "router": "enforcement.admin.router.js",
+   "parameterised": false,
+   "observed": [
+    401,
+    403,
+    403,
+    403,
+    200,
+    200
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/webhooks/stripe",
+   "guard": "PUBLIC",
+   "router": "stripeWebhook.routes.js",
+   "parameterised": false,
+   "observed": null
+  }
+ ]
+}

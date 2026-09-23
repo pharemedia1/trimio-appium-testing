@@ -18,7 +18,21 @@ import java.time.Duration;
 public class AdminQualityScreen extends MobileBasePage {
 
     // ---- copy used as assertions -------------------------------------------
-    public static final String SEARCH_HINT = "Search by Email/ID…";
+    /** The appbar title — the screen's only reliable landmark. */
+    public static final String TITLE = "Quality Control";
+    /** Summary cards on the Quality page; each opens a status list. */
+    public static final String CARD_WARNING = "Warning";
+    public static final String CARD_SUSPENDED = "Suspended";
+    public static final String CARD_DEACTIVATED = "Deactivated";
+    /**
+     * The search field's placeholder.
+     *
+     * @deprecated as a LOCATOR — it is a Flutter {@code hintText} and never reaches the
+     *     accessibility tree. Kept because the copy is worth recording. Locate the field with
+     *     {@code editText(0)}.
+     */
+    @Deprecated
+    public static final String SEARCH_HINT = "Search by Email/ID";
     public static final String REFRESH = "Refresh";
     public static final String ACTIONS = "Actions";
     public static final String SUSPEND = "Suspend";
@@ -28,16 +42,42 @@ public class AdminQualityScreen extends MobileBasePage {
     public static final String CANCEL = "Cancel";
     public static final String SUBMIT = "Submit";
     public static final String ARE_YOU_SURE = "Are you sure?";
-    public static final String REASON_REQUIRED = "Reason (required)";
+    /**
+     * The refusal the app shows when a suspension is submitted with no reason.
+     *
+     * <p>Was {@code "Reason (required)"}, which is the dialog field's {@code hintText} -- a Flutter
+     * hint never reaches the accessibility tree, so it could not have matched even while the
+     * dialog was open. And the dialog does not stay open: submitting empty CLOSES it and raises a
+     * SnackBar reading exactly "Reason is required". Verified on-device 2026-09-23, along with the
+     * fact that the gate genuinely holds -- professional 1203 stayed on WARNING.
+     */
+    public static final String REASON_REQUIRED = "Reason is required";
+    /** The dialog's title, e.g. "Suspend #1203". The reason field itself is editText(0). */
+    public static final String SUSPEND_DIALOG = "Suspend #";
     public static final String REASON_PREFIX = "Reason:";
+    /**
+     * A professional's row inside a status list, e.g. "Pro #1212 | SUSPENDED | ID 1212 ...".
+     *
+     * <p>The list is rows only. {@link #ACTIONS} and the buttons under it live on the
+     * professional's own page, one tap in, which is why looking for "Actions" on the list found
+     * nothing and every caller concluded the list was empty.
+     */
+    public static final String PROFESSIONAL_ROW = "Pro #";
 
     public AdminQualityScreen(AndroidDriver driver) {
         super(driver);
     }
 
     public boolean isLoaded() {
-        return isPresent(descContains(SEARCH_HINT), Duration.ofSeconds(25))
-                || isPresent(accId(REFRESH), Duration.ofSeconds(10));
+        // The APPBAR TITLE, not the search hint.
+        //
+        // SEARCH_HINT is a Flutter `hintText`, and a hint never becomes a content-desc: the field
+        // arrives as a bare EditText with an empty one. The REFRESH fallback does not exist either
+        // — admin_quality_page.dart's appBar carries only a conditional "Back" action. So this
+        // method could never return true, and two tests failed with "Quality Control should
+        // render" against a screen that was rendering.
+        return isPresent(descContains(TITLE), Duration.ofSeconds(25))
+                || isPresent(editText(0), SHORT_TIMEOUT);
     }
 
     /** Searches by email or user id. */
@@ -62,6 +102,46 @@ public class AdminQualityScreen extends MobileBasePage {
     // ---- actions ------------------------------------------------------------
 
     /** Opens the action menu for the first listed user. */
+    /**
+     * Opens a status list from one of the Quality summary cards.
+     *
+     * <p>The "Actions" panel is <b>two hops</b> from the Quality page, and the page object went
+     * looking for it on the first. {@code admin_quality_page.dart} shows summary cards — Warning,
+     * Suspended, Deactivated — each of which opens {@code admin_status_list_page.dart}, and only
+     * that page renders "Actions" alongside a professional row. Calling {@link #openActions()}
+     * straight from Quality waited out a 30s timeout on a panel one screen away.
+     *
+     * @param statusCard one of {@link #CARD_WARNING}, {@link #CARD_SUSPENDED},
+     *                   {@link #CARD_DEACTIVATED}
+     */
+    public AdminQualityScreen openStatusList(String statusCard) {
+        LOG.info("AdminQuality: opening the '{}' status list", statusCard);
+        scrollAndTap(statusCard);
+        return this;
+    }
+
+    /** True once a status list is showing its Actions panel for a professional. */
+    /**
+     * Opens the first professional in the current status list.
+     *
+     * @return false when the list has no professional to open
+     */
+    public boolean openFirstProfessional() {
+        java.util.List<org.openqa.selenium.WebElement> rows = findAll(descContains(PROFESSIONAL_ROW));
+        if (rows.isEmpty()) {
+            return false;
+        }
+        LOG.info("AdminQuality: opening {}", rows.get(0).getAttribute("content-desc"));
+        rows.get(0).click();
+        return true;
+    }
+
+    /** True once an Actions panel is reachable, stepping into the professional if needed. */
+    public boolean statusListHasActions() {
+        return isPresentAfterScroll(ACTIONS)
+                || (openFirstProfessional() && isPresentAfterScroll(ACTIONS));
+    }
+
     public AdminQualityScreen openActions() {
         scrollAndTap(ACTIONS);
         return this;

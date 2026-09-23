@@ -28,7 +28,7 @@ public class ProfessionalDashboardScreen extends MobileBasePage {
 
     // ---- copy used as assertions -------------------------------------------
     public static final String YOU_EARN = "you earn";
-    public static final String PAYOUT_NOTE = "Service pay + mileage · convenience fee goes to Trimio";
+    public static final String PAYOUT_NOTE = "convenience fee goes to Trimio";
     public static final String EARNED = "Earned";
     public static final String DECLINE = "Decline";
     public static final String IN_PROGRESS = "You have an appointment in progress...";

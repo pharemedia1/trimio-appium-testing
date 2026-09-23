@@ -58,11 +58,14 @@ public class ClientAppointmentsTest extends RoleSessionTest {
             throw new SkipException("The signed-in client has no appointments.");
         }
 
-        appointments.openFirst().tapCancel();
+        // Cancel from the LIST. The detail page has no cancel control — it ends at Payment and
+        // Mileage Tracking — while every schedule card carries its own "Cancel appointment".
+        // Opening the detail first therefore looked for a button that is not on that screen.
+        appointments.openSchedule().tapCancel();
         appointments.keepAppointment();
 
-        Assert.assertTrue(appointments.detailIsLoaded(),
-                "'Keep appointment' should abort the cancellation and leave the appointment intact");
+        Assert.assertTrue(appointments.hasCardsListed(),
+                "'Keep appointment' should abort the cancellation and leave the schedule intact");
     }
 
     @Test(description = "A recurring appointment asks which visits to cancel")
