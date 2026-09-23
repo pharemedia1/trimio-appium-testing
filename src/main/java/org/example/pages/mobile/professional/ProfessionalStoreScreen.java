@@ -102,6 +102,24 @@ public class ProfessionalStoreScreen extends MobileBasePage {
      */
     public ProfessionalStoreScreen addFirstProduct() {
         scrollToDesc(RECOMMENDED);
+        // ADD FROM THE CARD. The control is on the storefront itself -- the "Trending tools" row
+        // renders "Neck Strips, carton of 500 | $18 • Pro-grade | In stock" beside an "Add" --
+        // so there is no need to open the product at all.
+        //
+        // The old version tapped a price FIRST, and that is what broke it: tapping a product
+        // opens its REVIEW sheet ("Only verified purchasers can leave a review", over a scrim),
+        // which carries no add control. The test then looked for "Add" on a screen it had just
+        // navigated away from, found nothing and reported the button unreachable -- which read as
+        // the accessibility defect that used to be real here, long after it had been fixed.
+        if (isPresent(accId("Add"), SHORT_TIMEOUT)) {
+            LOG.info("ProStore: adding from the storefront card");
+            tap(accId("Add"));
+            return this;
+        }
+        if (tapAddToCart()) {
+            return this;
+        }
+        // Only now open a product and look again, for layouts that keep the action on the detail.
         tap(descContains("$"));
         if (isPresent(accId("Add"), SHORT_TIMEOUT)) {
             tap(accId("Add"));

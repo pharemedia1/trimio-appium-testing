@@ -454,4 +454,30 @@ public class ScreenDumpTest extends RoleSessionTest {
             pause();
         }
     }
+
+    @Test(description = "DIAG: the professional store, and what a product tap opens")
+    public void proStoreProduct() {
+        loginAsProfessional();
+        new BottomNavBar(driver).open(BottomNavBar.PRO_STORE);
+        pause();
+        pause();
+        dump("pro store landing");
+        String src = driver.getPageSource();
+        DUMP.info("hasRecommended={} hasAddToCart={} hasCart={}",
+                src.contains("Recommended"), src.contains("add_to_cart"), src.contains("cart"));
+        tapDesc("$");
+        pause();
+        pause();
+        dump("pro store after tapping a price");
+        scrollAndDump("pro store product", 2);
+    }
+
+    @Test(description = "DIAG: where the no-payouts professional lands after signing in")
+    public void noPayoutProfessionalLanding() {
+        loginAs(PROFESSIONAL_NO_PAYOUTS);
+        pause();
+        pause();
+        dump("pro4 (no payouts) after login");
+        scrollAndDump("pro4 landing", 2);
+    }
 }

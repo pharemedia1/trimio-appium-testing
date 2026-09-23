@@ -128,9 +128,17 @@ public class AdminUsersScreen extends MobileBasePage {
         }
         for (org.openqa.selenium.WebElement e : findAll(descContains(status))) {
             String desc = e.getAttribute("content-desc");
-            // The row merges name and status; the segment CHIP is the bare word on its own.
-            if (desc != null && desc.toUpperCase(java.util.Locale.ROOT).contains(status)
-                    && desc.length() > status.length() + 1) {
+            if (desc == null) {
+                continue;
+            }
+            // A ROW is two lines -- "Amara Pereira\nPENDING". The screen TITLE, "Pending
+            // Professionals", is one line and was being accepted by a looser length check: the
+            // test then "opened" the title, which does nothing, and skipped because no
+            // professional had been opened. Requiring the newline separates the two cleanly.
+            String[] parts = desc.split("\n");
+            if (parts.length >= 2
+                    && parts[parts.length - 1].trim().toUpperCase(java.util.Locale.ROOT)
+                            .contains(status)) {
                 rows.add(e);
             }
         }
