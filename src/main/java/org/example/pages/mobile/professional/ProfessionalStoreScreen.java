@@ -66,6 +66,34 @@ public class ProfessionalStoreScreen extends MobileBasePage {
     }
 
     /**
+     * Taps the add-to-cart control, accepting either labelling convention.
+     *
+     * <p>TWO conventions exist in the app and this has to cope with both. The client shop uses
+     * {@code Semantics(label: 'add_to_cart <name>')}; the professional store's button was given a
+     * label in the same round of fixes but a READABLE one, "Add &lt;product&gt; to cart", because
+     * "add_to_cart" announces as "add underscore cart" to a screen reader and this label exists
+     * for that user before it exists for this test. Neither contains the literal "Add to cart"
+     * the old locator looked for, since the product name sits in the middle.
+     *
+     * @return false when no add-to-cart control is on screen
+     */
+    private boolean tapAddToCart() {
+        for (org.openqa.selenium.WebElement e : findAll(descContains("cart"))) {
+            String desc = e.getAttribute("content-desc");
+            if (desc == null) {
+                continue;
+            }
+            String d = desc.trim();
+            if (d.startsWith("add_to_cart") || (d.startsWith("Add ") && d.endsWith("to cart"))) {
+                LOG.info("ProStore: {}", d);
+                e.click();
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * Opens the first recommended product and adds it to the cart.
      *
      * <p>The storefront has no per-card "Add" button: verified on-device, the browse screen renders
@@ -79,8 +107,7 @@ public class ProfessionalStoreScreen extends MobileBasePage {
             tap(accId("Add"));
             return this;
         }
-        if (isPresentAfterScroll("Add to cart")) {
-            scrollAndTap("Add to cart");
+        if (tapAddToCart()) {
             return this;
         }
         throw new org.testng.SkipException(

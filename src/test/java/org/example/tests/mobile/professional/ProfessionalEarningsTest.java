@@ -23,18 +23,18 @@ public class ProfessionalEarningsTest extends RoleSessionTest {
 
     /** As {@link #openEarnings()}, signed in as a named professional role. */
     private ProfessionalEarningsScreen openEarnings(String role) {
+        // Stay on the DASHBOARD -- loginAsProfessional already lands there, and the dashboard
+        // carries a labelled "Earnings" control that pushes the same ProfessionalBalance page.
+        // The account tab's money section renders only "Shop membership" on-device: "Services &
+        // rates", "Get paid" and "Earnings" are missing from the accessibility tree entirely, so
+        // routing through Account reached a menu that no longer offers the destination.
         loginAsProfessional(role);
-        new BottomNavBar(driver).open(BottomNavBar.PRO_ACCOUNT);
 
-        // The Account tab is a menu, not the balance. Earnings sit behind its own row --
-        // "Earnings | Balance, payouts and history" -- and the old version expected the balance to
-        // BE the account tab, so it reported the screen unreachable while its entry point was on
-        // screen the whole time.
         ProfessionalEarningsScreen earnings = new ProfessionalEarningsScreen(driver);
-        earnings.openFromAccountTab();
+        earnings.openFromDashboard();
         if (!earnings.isLoaded()) {
-            throw new SkipException("The balance screen was not reachable from the account tab's '"
-                    + ProfessionalEarningsScreen.ACCOUNT_ROW + "' row in this build.");
+            throw new SkipException("The balance screen was not reachable from the dashboard's '"
+                    + ProfessionalEarningsScreen.ACCOUNT_ROW + "' control in this build.");
         }
         return earnings;
     }

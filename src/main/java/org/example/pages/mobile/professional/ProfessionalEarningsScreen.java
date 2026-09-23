@@ -44,14 +44,43 @@ public class ProfessionalEarningsScreen extends MobileBasePage {
         super(driver);
     }
 
-    /** Taps the account tab's "Earnings" row, if this screen is not already showing. */
-    public ProfessionalEarningsScreen openFromAccountTab() {
+    /**
+     * Opens the balance screen from the professional DASHBOARD.
+     *
+     * <p><b>Not from the account tab.</b> professionalProfileForm.dart does list an "Earnings |
+     * Balance, payouts and history" row under "3 · WORK &amp; MONEY", and it opens the same
+     * {@code ProfessionalBalance} page -- but on-device that section renders only its last row,
+     * "Shop membership". "Services &amp; rates", "Get paid" and "Earnings" are absent from the
+     * accessibility tree entirely: searched across every scroll position after a 15-second wait,
+     * {@code getPageSource()} contains neither "Earnings" nor "Balance, payouts". The rows are
+     * unconditional in the source and the file has not changed since 2026-09-16, well before this
+     * build, so they are being dropped at runtime for a reason that lives in the app, not here.
+     *
+     * <p>The dashboard carries a properly labelled {@code Semantics(label: 'Earnings')} control
+     * that pushes the same page, and {@code loginAsProfessional()} already lands on the dashboard
+     * -- so this is both the shorter route and the one that works. The account-tab row is kept as
+     * a fallback in case that section starts rendering again.
+     */
+    public ProfessionalEarningsScreen openFromDashboard() {
         if (isLoaded()) {
             return this;
         }
-        LOG.info("ProEarnings: opening '{}' from the account tab", ACCOUNT_ROW);
-        scrollAndTap(ACCOUNT_ROW);
+        if (isPresent(accId(ACCOUNT_ROW), SHORT_TIMEOUT)) {
+            LOG.info("ProEarnings: opening '{}' from the dashboard", ACCOUNT_ROW);
+            tap(accId(ACCOUNT_ROW));
+            return this;
+        }
+        if (isPresentAfterScroll(ACCOUNT_ROW)) {
+            LOG.info("ProEarnings: opening '{}' after scrolling", ACCOUNT_ROW);
+            scrollAndTap(ACCOUNT_ROW);
+        }
         return this;
+    }
+
+    /** @deprecated the account tab's money rows do not render — use {@link #openFromDashboard()}. */
+    @Deprecated
+    public ProfessionalEarningsScreen openFromAccountTab() {
+        return openFromDashboard();
     }
 
     public boolean isLoaded() {

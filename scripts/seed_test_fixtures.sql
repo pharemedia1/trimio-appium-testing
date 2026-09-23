@@ -232,6 +232,25 @@ DELETE FROM reviews WHERE reviewer_user_id = 41501 AND status = 'draft';
 UPDATE professional_schedule SET is_available = false WHERE weekday = 0;
 
 -- ---------------------------------------------------------------------------
+-- IF THE EMULATOR DIES MID-RUN
+--   It happened on 2026-09-23 and it does NOT announce itself as an environment failure. It
+--   presents as one test FAILING and then every later test SKIPPING, which reads exactly like a
+--   cascade of test defects. The reliable tell is in the timestamps: ">>> START" and "<<< SKIP"
+--   on the SAME MILLISECOND means no test body ran at all -- TestNG is skipping because driver
+--   creation failed. Confirm with `adb devices` (empty) and look for "device offline" in the log.
+--
+--   Recovery is two steps, and the second is easy to forget:
+--       ~/Library/Android/sdk/emulator/emulator -avd <name> -no-snapshot-load -no-boot-anim &
+--       adb -s emulator-5554 emu geo fix -96.7970 32.7767     # Dallas, the test client's city
+--   Without the GPS fix the booking and Style-Me-Now flows are gated on a location the device
+--   does not have, and the app correctly raises a manual-address dialog the suite does not drive
+--   -- so bookTabHandsOffToHome and friends skip on a perfectly healthy build. A long-lived
+--   emulator usually has a fix set from earlier, which is why this only shows up after a restart.
+--
+--   Run ONE emulator for the mobile regression. The paired suite needs both, but two emulators
+--   plus Appium plus the Maven JVM is a plausible cause of the crash above and was not ruled out.
+
+-- ---------------------------------------------------------------------------
 -- RUNNING THE SUITE
 --   The mobile suite needs the database password to reset state between tests. It is deliberately
 --   NOT in config.properties -- no credentials in the repo -- so pass it in the environment:

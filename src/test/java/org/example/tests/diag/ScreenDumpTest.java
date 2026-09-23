@@ -389,4 +389,69 @@ public class ScreenDumpTest extends RoleSessionTest {
         }
         dump("after walking every offered day");
     }
+
+    @Test(description = "DIAG: what the Earnings row actually opens")
+    public void earningsScreen() {
+        loginAsProfessional();
+        new BottomNavBar(driver).open(BottomNavBar.PRO_ACCOUNT);
+        pause();
+        dump("account tab top");
+        // Target the row by its SUBTITLE, which is unique, and click the element itself rather
+        // than scrollIntoView+click -- the latter scrolled the menu and clicked nothing.
+        org.openqa.selenium.WebElement row = null;
+        for (int i = 0; i < 6 && row == null; i++) {
+            for (org.openqa.selenium.WebElement e : driver.findElements(
+                    AppiumBy.androidUIAutomator(
+                            "new UiSelector().descriptionContains(\"Balance, payouts\")"))) {
+                row = e;
+                break;
+            }
+            if (row == null) {
+                try {
+                    driver.findElement(AppiumBy.androidUIAutomator(
+                            "new UiScrollable(new UiSelector().scrollable(true)).scrollForward()"));
+                } catch (RuntimeException e) {
+                    break;
+                }
+                pause();
+            }
+        }
+        if (row == null) {
+            DUMP.info("NO 'Balance, payouts' row found on the account tab");
+        } else {
+            DUMP.info("clicking row: {}", row.getAttribute("content-desc"));
+            row.click();
+            pause();
+            pause();
+            dump("after clicking the Earnings row");
+        }
+    }
+
+    @Test(description = "DIAG: does an Earnings row exist on the account tab at all?")
+    public void earningsRowExists() {
+        loginAsProfessional();
+        new BottomNavBar(driver).open(BottomNavBar.PRO_ACCOUNT);
+        // Wait generously: the account tab fetches payout status, and a row that depends on it
+        // will not be in the tree until that resolves.
+        for (int i = 0; i < 5; i++) {
+            pause();
+        }
+        for (int scroll = 0; scroll <= 5; scroll++) {
+            String src = driver.getPageSource();
+            DUMP.info("scroll {}: hasEarnings={} hasBalancePayouts={} hasWithdraw={} len={}",
+                    scroll, src.contains("Earnings"), src.contains("Balance, payouts"),
+                    src.contains("Withdraw"), src.length());
+            if (src.contains("Balance, payouts") || src.contains("Withdraw")) {
+                dump("scroll " + scroll + " -- money row present");
+            }
+            try {
+                driver.findElement(AppiumBy.androidUIAutomator(
+                        "new UiScrollable(new UiSelector().scrollable(true)).scrollForward()"));
+            } catch (RuntimeException e) {
+                DUMP.info("no further scroll at {}", scroll);
+                break;
+            }
+            pause();
+        }
+    }
 }
