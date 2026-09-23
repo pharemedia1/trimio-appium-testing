@@ -310,6 +310,12 @@ public class ClientAppointmentsScreen extends MobileBasePage {
     // ---- actions ------------------------------------------------------------
 
     /** Opens the cancel dialog. */
+    /** Returns from an appointment's detail page to the schedule it was opened from. */
+    public ClientAppointmentsScreen goBack() {
+        back();
+        return this;
+    }
+
     public ClientAppointmentsScreen tapCancel() {
         // TWO dialogs stand between the card and the confirmation, and the first is new.
         //

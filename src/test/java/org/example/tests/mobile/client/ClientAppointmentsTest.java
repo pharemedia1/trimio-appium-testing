@@ -75,13 +75,23 @@ public class ClientAppointmentsTest extends RoleSessionTest {
             throw new SkipException("The signed-in client has no appointments.");
         }
 
+        // Whether a booking RECURS is only stated on its detail page ("Recurring appointment" /
+        // "Pattern:"), but CANCELLING is only possible from the schedule list -- the detail ends
+        // at Payment and Mileage Tracking and carries no cancel control at all. So the check and
+        // the action happen on two different screens, and the test has to walk back between them.
+        // Cancelling straight from the detail spent 30 seconds looking for a "Cancel appointment"
+        // that is not on that page.
         appointments.openFirst();
-        if (!appointments.isRecurring()) {
+        boolean recurring = appointments.isRecurring();
+        appointments.goBack();
+        if (!recurring) {
             throw new SkipException("The first appointment is not part of a recurring series — seed "
-                    + "a series to exercise the cancellation-scope choice.");
+                    + "a series to exercise the cancellation-scope choice. Mark one with: UPDATE "
+                    + "appointments SET is_recurring = true, recurrence_pattern = 'weekly' WHERE "
+                    + "appointment_id = <the client's soonest upcoming>;");
         }
 
-        appointments.tapCancel();
+        appointments.openSchedule().tapCancel();
 
         Assert.assertTrue(appointments.showsRecurringCancelChoice(),
                 "Cancelling a series must ask whether to cancel only the next visit or all future "

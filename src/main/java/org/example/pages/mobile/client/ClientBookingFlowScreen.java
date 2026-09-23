@@ -178,8 +178,61 @@ public class ClientBookingFlowScreen extends MobileBasePage {
     }
 
     /** True when {@code serviceName} is offered in the currently selected category. */
+    /**
+     * True when the step's SERVICE LIST offers a service whose name contains {@code serviceName}.
+     *
+     * <p><b>Reads the list, not the screen.</b> This was {@code isPresentAfterScroll(name)}, which
+     * matched any node anywhere -- and step 1 carries a membership banner that names a service:
+     * "Standard member | 1 credit | Your credit covers up to $60 of Men's Haircut. | Rebook Jordan
+     * Pro this month to use it." That banner is category-independent, so after switching to Nail
+     * services -- where the list correctly showed only Classic Manicure, Classic Pedicure and Nail
+     * Repair -- the old check still found "Haircut" in the banner and reported that the filter had
+     * leaked a Hair service into Nails. The filter was right; the locator was reading the wrong
+     * part of the screen.
+     *
+     * <p>It only began failing once a client was given a membership, so the shape of the bug is
+     * worth keeping in mind: a fixture that makes the app render MORE can break an assertion that
+     * matches too broadly, in a test that has nothing to do with the fixture.
+     *
+     * <p>A service row merges its name, duration and price -- "Blowout\n45 min\n$70" -- so rows
+     * are identified by that shape and only the name line is searched.
+     */
     public boolean hasService(String serviceName) {
-        return isPresentAfterScroll(serviceName);
+        for (String row : serviceRows()) {
+            String name = row.split("\n")[0].trim();
+            if (name.toLowerCase().contains(serviceName.toLowerCase())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * The service rows currently listed, as their merged content-descs.
+     *
+     * <p>A row is recognised by carrying both a duration and a price, which is what distinguishes
+     * it from the banners and headings around it.
+     */
+    private java.util.List<String> serviceRows() {
+        java.util.List<String> rows = new java.util.ArrayList<>();
+        for (WebElement e : serviceRowElements()) {
+            rows.add(e.getAttribute("content-desc"));
+        }
+        return rows;
+    }
+
+    /** The service rows as elements, for tapping. See {@link #hasService(String)} for the shape. */
+    private java.util.List<WebElement> serviceRowElements() {
+        java.util.List<WebElement> rows = new java.util.ArrayList<>();
+        for (WebElement e : findAll(descContains(" min"))) {
+            String desc = e.getAttribute("content-desc");
+            if (desc != null && desc.contains("$") && desc.contains(" min")
+                    && desc.split("\n").length >= 2) {
+                rows.add(e);
+            }
+        }
+        LOG.debug("Booking: {} service row(s) listed", rows.size());
+        return rows;
     }
 
     /** True when the search produced no matches. */
@@ -197,7 +250,30 @@ public class ClientBookingFlowScreen extends MobileBasePage {
     private static final int MIN_TAPPABLE_CHIP_WIDTH = 80;
 
     /** Selects a service by its visible name. */
+    /**
+     * Taps the service ROW whose name contains {@code serviceName}.
+     *
+     * <p>Was {@code scrollAndTap(serviceName)}, which tapped the first node containing the text
+     * anywhere on the step. Once a client has a membership, step 1 carries a credit banner that
+     * names a service -- "Your credit covers up to $60 of Men's Haircut." -- and that banner sits
+     * ABOVE the list, so tapping "Haircut" hit the banner instead of a service. Nothing was
+     * selected, Continue stayed disabled, and four tests skipped with "the flow would not advance
+     * past step 1", blaming the service catalogue.
+     *
+     * <p>Matched against the row's name line only, the same way {@link #hasService(String)} reads
+     * it, so a banner can never stand in for a service.
+     */
     public ClientBookingFlowScreen selectService(String serviceName) {
+        for (WebElement row : serviceRowElements()) {
+            String desc = row.getAttribute("content-desc");
+            String name = desc == null ? "" : desc.split("\n")[0].trim();
+            if (name.toLowerCase().contains(serviceName.toLowerCase())) {
+                LOG.info("Booking: service '{}'", name);
+                row.click();
+                return this;
+            }
+        }
+        LOG.warn("Booking: no service row matched '{}' — falling back to a text tap", serviceName);
         scrollAndTap(serviceName);
         return this;
     }
@@ -392,6 +468,35 @@ public class ClientBookingFlowScreen extends MobileBasePage {
     }
 
     /** True when the selected day has no bookable slots. */
+    /**
+     * Walks the date strip looking for a day the flow reports as having no open times.
+     *
+     * <p>The counterpart to {@link #openFirstDayWithTimes(int)}, and needed for the same reason in
+     * reverse: the fully-booked case cannot be asserted against whichever day happens to be
+     * selected by default. Today almost always HAS times, so a test that only looked at the
+     * default day reported "no fully-booked day is present in this environment" on an environment
+     * that had one four days out.
+     *
+     * @return the day chip's label, or empty when every day within {@code maxDays} has times
+     */
+    public String openFirstDayWithoutTimes(int maxDays) {
+        java.util.List<String> days = offeredDays();
+        int limit = Math.min(maxDays, Math.max(days.size(), 1));
+        for (int i = 0; i < limit; i++) {
+            if (i > 0) {
+                String day = days.get(i);
+                scrollAndTap(day.split("\n")[1]);   // the date number
+                waitForAvailability();
+            }
+            if (showsNoOpenTimes()) {
+                String label = days.isEmpty() ? "(default day)" : days.get(i).replace("\n", " ");
+                LOG.info("Booking: '{}' has no open times", label);
+                return label;
+            }
+        }
+        return "";
+    }
+
     public boolean showsNoOpenTimes() {
         return isPresent(descContains(NO_OPEN_TIMES), Duration.ofSeconds(20));
     }

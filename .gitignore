@@ -41,4 +41,5 @@ build/
 ### Test automation generated artifacts ###
 logs/
 reports/
-test-output/.idea/encodings.xml
+test-output/
+.idea/encodings.xml

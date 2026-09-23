@@ -26,10 +26,15 @@ public class ProfessionalEarningsTest extends RoleSessionTest {
         loginAsProfessional(role);
         new BottomNavBar(driver).open(BottomNavBar.PRO_ACCOUNT);
 
+        // The Account tab is a menu, not the balance. Earnings sit behind its own row --
+        // "Earnings | Balance, payouts and history" -- and the old version expected the balance to
+        // BE the account tab, so it reported the screen unreachable while its entry point was on
+        // screen the whole time.
         ProfessionalEarningsScreen earnings = new ProfessionalEarningsScreen(driver);
+        earnings.openFromAccountTab();
         if (!earnings.isLoaded()) {
-            throw new SkipException("The balance screen was not reachable from the account tab in "
-                    + "this build.");
+            throw new SkipException("The balance screen was not reachable from the account tab's '"
+                    + ProfessionalEarningsScreen.ACCOUNT_ROW + "' row in this build.");
         }
         return earnings;
     }

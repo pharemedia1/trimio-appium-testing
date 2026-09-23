@@ -108,14 +108,40 @@ public class ProfessionalClientHubScreen extends MobileBasePage {
      *
      * @return true if a client row was found and opened
      */
+    /**
+     * Opens the first client in the list.
+     *
+     * <p>Was {@code descContains("visit")}, which matched the STATS BLOCK above the list --
+     * "served all-time | visited 2+ times | BYOC referrals" -- long before it reached a client.
+     * The tap landed on a summary panel, no profile opened, and the test skipped with "no client
+     * row could be opened" against a hub listing six clients.
+     *
+     * <p>A client row reads "C | Casey Client | Regular | Last visit: Sep 23, 2026 | Next: Sep 24
+     * | $1743 | 22 visits". "Next:" is the part only a row has -- the stats block has no such
+     * field -- so that is the anchor, with the money column as a second check.
+     */
     public boolean openFirstClient() {
-        By row = descContains("visit");
-        if (!isPresent(row, Duration.ofSeconds(10))) {
+        java.util.List<org.openqa.selenium.WebElement> rows = clientRows();
+        if (rows.isEmpty()) {
             LOG.warn("ClientHub: no client row to open");
             return false;
         }
-        tap(row);
+        LOG.info("ClientHub: opening {}", rows.get(0).getAttribute("content-desc"));
+        rows.get(0).click();
         return isPresent(descContains(NOTES), Duration.ofSeconds(15));
+    }
+
+    /** The client rows currently listed. See {@link #openFirstClient()} for the shape. */
+    private java.util.List<org.openqa.selenium.WebElement> clientRows() {
+        java.util.List<org.openqa.selenium.WebElement> rows = new java.util.ArrayList<>();
+        for (org.openqa.selenium.WebElement e : findAll(descContains("Next:"))) {
+            String desc = e.getAttribute("content-desc");
+            if (desc != null && desc.contains("$")) {
+                rows.add(e);
+            }
+        }
+        LOG.debug("ClientHub: {} client row(s) listed", rows.size());
+        return rows;
     }
 
     /** Adds a private note to the open client profile. */

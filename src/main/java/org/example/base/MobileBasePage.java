@@ -184,6 +184,12 @@ public abstract class MobileBasePage {
      * {@code GestureDetector} with no {@code Semantics} wrapper, which has no name and nothing to
      * address, so a long-press on the row is the only accessible route to the same menu.
      */
+    /** Presses the device back button. */
+    protected void back() {
+        driver.navigate().back();
+        sleepBriefly();
+    }
+
     protected void longPress(org.openqa.selenium.WebElement element) {
         driver.executeScript("mobile: longClickGesture", java.util.Map.of(
                 "elementId", ((org.openqa.selenium.remote.RemoteWebElement) element).getId(),

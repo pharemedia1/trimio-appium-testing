@@ -213,6 +213,19 @@ COMMIT;
 DELETE FROM reviews WHERE reviewer_user_id = 41501 AND status = 'draft';
 
 -- ---------------------------------------------------------------------------
+-- 10. A day with NO availability, for the fully-booked path.
+--     Unblocks: ClientBookingTest.fullyBookedDayShowsMessage
+--     Skips on "No fully-booked day is present in this environment".
+--     Sunday (weekday 0) is chosen because it is already the thin day: 2 professionals carry a
+--     Sunday schedule against 46 on every other weekday, so clearing it costs the suite nothing.
+--     Every test that needs availability calls openFirstDayWithTimes, which starts from today and
+--     walks forward, so it steps over an empty Sunday without noticing.
+--     is_available = false rather than DELETE, so the rows -- and the fact that these two
+--     professionals nominally work Sundays -- survive for whoever looks next.
+-- ---------------------------------------------------------------------------
+UPDATE professional_schedule SET is_available = false WHERE weekday = 0;
+
+-- ---------------------------------------------------------------------------
 -- RUNNING THE SUITE
 --   The mobile suite needs the database password to reset state between tests. It is deliberately
 --   NOT in config.properties -- no credentials in the repo -- so pass it in the environment:

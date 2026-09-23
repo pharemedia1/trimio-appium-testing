@@ -280,4 +280,76 @@ public class ScreenDumpTest extends RoleSessionTest {
             dump("pro booking detail scrolled " + i);
         }
     }
+
+    @Test(description = "DIAG: does switching category actually filter the service list?")
+    public void categoryFilter() {
+        org.example.pages.mobile.client.ClientHomeScreen home = loginAsProvisionedClient();
+        org.example.pages.mobile.client.ClientBookingFlowScreen flow = home.bookIndividual();
+        pause();
+        dump("booking step 1 (default category)");
+        flow.selectCategory("Hair");
+        pause();
+        dump("category Hair");
+        flow.selectCategory("Nail services");
+        pause();
+        dump("category Nail services");
+    }
+
+    @Test(description = "DIAG: the admin PENDING professionals list")
+    public void adminPendingList() {
+        org.example.pages.mobile.admin.AdminConsoleScreen console = loginAsAdmin();
+        console.openTile(org.example.pages.mobile.admin.AdminConsoleScreen.TILE_ALL_USERS);
+        pause();
+        org.example.pages.mobile.admin.AdminUsersScreen users =
+                new org.example.pages.mobile.admin.AdminUsersScreen(driver);
+        users.openProfessionals();
+        pause();
+        users.openSegment(org.example.pages.mobile.admin.AdminUsersScreen.SEGMENT_PENDING);
+        pause();
+        dump("admin pending segment");
+        scrollAndDump("admin pending segment", 2);
+    }
+
+    @Test(description = "DIAG: the client hub list rows and a client's profile")
+    public void clientHubRows() {
+        loginAsProfessional();
+        new BottomNavBar(driver).open(BottomNavBar.PRO_CLIENT_HUB);
+        pause();
+        scrollAndDump("client hub", 3);
+    }
+
+    @Test(description = "DIAG: the professional account tab, scrolled, looking for earnings")
+    public void proAccountEarnings() {
+        loginAsProfessional();
+        new BottomNavBar(driver).open(BottomNavBar.PRO_ACCOUNT);
+        pause();
+        scrollAndDump("pro account", 4);
+    }
+
+    /** Dumps the screen, then scrolls and dumps again, {@code times} times. */
+    private void scrollAndDump(String label, int times) {
+        for (int i = 1; i <= times; i++) {
+            try {
+                driver.findElement(AppiumBy.androidUIAutomator(
+                        "new UiScrollable(new UiSelector().scrollable(true)).scrollForward()"));
+            } catch (RuntimeException e) {
+                DUMP.info("{}: no further scroll ({})", label, e.getMessage());
+                return;
+            }
+            pause();
+            dump(label + " scroll " + i);
+        }
+    }
+
+    @Test(description = "DIAG: the Book tab's discovery cards and what a tap does")
+    public void bookTabDiscovery() {
+        org.example.pages.mobile.client.ClientHomeScreen home = loginAsProvisionedClient();
+        home.nav().open(BottomNavBar.CLIENT_BOOK);
+        pause();
+        dump("book tab");
+        dumpXml("book tab raw");
+        home.bookFromDiscoveryCategory();
+        pause();
+        dump("after tapping a category card");
+    }
 }

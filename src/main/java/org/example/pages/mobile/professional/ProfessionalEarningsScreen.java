@@ -18,6 +18,17 @@ import java.time.Duration;
 public class ProfessionalEarningsScreen extends MobileBasePage {
 
     // ---- copy used as assertions -------------------------------------------
+    /**
+     * The row on the professional's ACCOUNT tab that opens this screen:
+     * "Earnings | Balance, payouts and history".
+     *
+     * <p>The account tab is a menu of destinations -- verification, what clients see, earnings --
+     * not the balance itself. Treating the tab as the balance screen made every earnings test
+     * report "the balance screen was not reachable from the account tab", with the entry point
+     * sitting on screen the whole time.
+     */
+    public static final String ACCOUNT_ROW = "Earnings";
+
     public static final String WITHDRAW_ALL = "Withdraw all";
     public static final String REFRESH = "Refresh";
     public static final String PAYOUTS = "Payouts";
@@ -31,6 +42,16 @@ public class ProfessionalEarningsScreen extends MobileBasePage {
 
     public ProfessionalEarningsScreen(AndroidDriver driver) {
         super(driver);
+    }
+
+    /** Taps the account tab's "Earnings" row, if this screen is not already showing. */
+    public ProfessionalEarningsScreen openFromAccountTab() {
+        if (isLoaded()) {
+            return this;
+        }
+        LOG.info("ProEarnings: opening '{}' from the account tab", ACCOUNT_ROW);
+        scrollAndTap(ACCOUNT_ROW);
+        return this;
     }
 
     public boolean isLoaded() {

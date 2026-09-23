@@ -127,12 +127,18 @@ public class ClientBookingTest extends RoleSessionTest {
         advanceToStep(flow, 3);
         flow.waitForAvailability();
 
-        if (!flow.showsNoOpenTimes()) {
-            throw new SkipException("No fully-booked day is present in this environment — seed a day "
-                    + "with no professional availability to exercise this path.");
+        // WALK the strip. Checking only the default day meant checking today, which almost always
+        // has times, so this reported "no fully-booked day is present" while one sat four days out
+        // — Sunday, where professional_schedule carries almost no coverage.
+        String emptyDay = flow.openFirstDayWithoutTimes(MAX_DAYS_TO_TRY);
+        if (emptyDay.isEmpty()) {
+            throw new SkipException("Every day in the next " + MAX_DAYS_TO_TRY + " has open times, "
+                    + "so the fully-booked path cannot be exercised. Free up a day with: UPDATE "
+                    + "professional_schedule SET is_available = false WHERE weekday = 0;");
         }
         Assert.assertTrue(flow.isBlockedOn(3),
-                "A day with no slots must not allow the flow to advance");
+                "A day with no slots must not allow the flow to advance — " + emptyDay
+                        + " reported no open times");
     }
 
     @Test(description = "Selecting an add-on increases the subtotal")

@@ -101,19 +101,57 @@ public class AdminUsersScreen extends MobileBasePage {
         return isPresentAfterScroll(segment);
     }
 
+    /** The segment last opened, so the row matcher knows which status to expect. */
+    private String lastSegment = "";
+
     public AdminUsersScreen openSegment(String segment) {
         LOG.info("AdminUsers: opening the '{}' segment", segment);
+        lastSegment = segment;
         scrollAndTap(segment);
         return this;
     }
 
+    /**
+     * The professional rows in the open segment.
+     *
+     * <p>A row is "<name>" over its status in capitals -- "Amara Pereira | PENDING" -- with a
+     * separate "Show menu" beside it. It carries NO email and NO number, which is what the old
+     * checks looked for: {@code segmentHasEntries()} wanted "No." or "@", and
+     * {@code openFirstProfessional()} tapped "@". With 43 professionals listed under Pending, the
+     * queue reported itself empty and the test skipped asking someone to submit a profile.
+     */
+    private java.util.List<org.openqa.selenium.WebElement> professionalRows() {
+        String status = lastSegment.toUpperCase(java.util.Locale.ROOT);
+        java.util.List<org.openqa.selenium.WebElement> rows = new java.util.ArrayList<>();
+        if (status.isBlank()) {
+            return rows;
+        }
+        for (org.openqa.selenium.WebElement e : findAll(descContains(status))) {
+            String desc = e.getAttribute("content-desc");
+            // The row merges name and status; the segment CHIP is the bare word on its own.
+            if (desc != null && desc.toUpperCase(java.util.Locale.ROOT).contains(status)
+                    && desc.length() > status.length() + 1) {
+                rows.add(e);
+            }
+        }
+        LOG.debug("AdminUsers: {} row(s) in the '{}' segment", rows.size(), lastSegment);
+        return rows;
+    }
+
     /** True if the open segment lists at least one professional. */
     public boolean segmentHasEntries() {
-        return isPresentAfterScroll("No.") || isPresentAfterScroll("@");
+        return !professionalRows().isEmpty()
+                || isPresentAfterScroll("No.") || isPresentAfterScroll("@");
     }
 
     /** Opens the first professional in the list. */
     public AdminUsersScreen openFirstProfessional() {
+        java.util.List<org.openqa.selenium.WebElement> rows = professionalRows();
+        if (!rows.isEmpty()) {
+            LOG.info("AdminUsers: opening {}", rows.get(0).getAttribute("content-desc"));
+            rows.get(0).click();
+            return this;
+        }
         scrollAndTap("@");
         return this;
     }

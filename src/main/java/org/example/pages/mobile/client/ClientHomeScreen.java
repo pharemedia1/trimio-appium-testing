@@ -375,6 +375,11 @@ public class ClientHomeScreen extends MobileBasePage {
         LOG.info("ClientHome: booking from a Book-tab category card");
         scrollToDesc(CATEGORY_PRICE_HINT);
         tapWithin(descContains(CATEGORY_PRICE_HINT), 0.25, 0.80);
+        // The card DOES navigate -- it raises the venue sheet, "Where should your appointment
+        // be?", exactly as Home's own booking entry point does. Leaving it unanswered parks the
+        // flow behind a modal that is neither the booking flow nor the Home feed, which is what
+        // made this look like a tap that had done nothing at all.
+        chooseVenueIfAsked(true);
         allowLocationIfAsked();
         return new ClientBookingFlowScreen(driver);
     }

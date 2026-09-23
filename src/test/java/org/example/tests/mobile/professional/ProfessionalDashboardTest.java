@@ -44,8 +44,20 @@ public class ProfessionalDashboardTest extends RoleSessionTest {
         ProfessionalDashboardScreen dashboard = loginAsProfessional();
 
         if (!dashboard.hasOffer()) {
-            throw new SkipException("No offer is on the dashboard — the professional must be on duty "
-                    + "with a dispatched request nearby to exercise the offer card.");
+            // NOT a fixture gap, and no amount of seeding fixes it. An offer reaches the
+            // dashboard over a SOCKET, pushed by the matching service when a client actually
+            // dispatches an on-demand request (services/socket/socketAuth.js) — there is no row
+            // that can be inserted to make the card appear, because the app never polls for it.
+            // Producing one needs a second device acting as the client, which is what the PAIRED
+            // suite is for: OnDemandDispatchTest PAIR-011 dispatches a real request and asserts
+            // this very thing, pro.showsPayoutBreakdown(), on the professional's device.
+            //
+            // So this is left skipping deliberately, with the coverage living where it can
+            // actually run: mvn -o test -DsuiteXmlFile=src/test/resources/suites/paired-testng.xml
+            throw new SkipException("No offer is on the dashboard. An offer is socket-pushed by a "
+                    + "live dispatch, so a single-device run cannot create one — this assertion is "
+                    + "covered by OnDemandDispatchTest (PAIR-011) in suites/paired-testng.xml, "
+                    + "which dispatches from a second device and asserts the same payout breakdown.");
         }
 
         Assert.assertTrue(dashboard.showsPayoutBreakdown(),
