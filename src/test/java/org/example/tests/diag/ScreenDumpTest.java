@@ -352,4 +352,41 @@ public class ScreenDumpTest extends RoleSessionTest {
         pause();
         dump("after tapping a category card");
     }
+
+    @Test(description = "DIAG: the booking date strip -- which days are offered, and what an empty one shows")
+    public void dateStrip() {
+        org.example.pages.mobile.client.ClientHomeScreen home = loginAsProvisionedClient();
+        org.example.pages.mobile.client.ClientBookingFlowScreen flow = home.bookIndividual();
+        flow.selectCategory("Hair");
+        flow.selectService("Haircut");
+        flow.continueStep();
+        flow.chooseMyself();
+        flow.continueStep();
+        flow.waitForAvailability();
+        pause();
+        DUMP.info("currentStep={}", flow.currentStep());
+        dump("step 3 default day");
+
+        java.util.List<String> days = flow.offeredDays();
+        DUMP.info("===== OFFERED DAYS ({}) =====", days.size());
+        for (String d : days) {
+            DUMP.info("  day chip: {}", d.replace("\n", " | "));
+        }
+
+        // Walk every offered day and record whether it reports no open times.
+        for (int i = 1; i < days.size(); i++) {
+            String chip = days.get(i);
+            String[] parts = chip.split("\n");
+            if (parts.length < 2) {
+                continue;
+            }
+            tapDesc(parts[1]);
+            flow.waitForAvailability();
+            pause();
+            DUMP.info("day '{}' -> showsNoOpenTimes={} periodsWithTimes={}",
+                    chip.replace("\n", " "), flow.showsNoOpenTimes(),
+                    flow.openFirstPeriodWithTimes().size());
+        }
+        dump("after walking every offered day");
+    }
 }

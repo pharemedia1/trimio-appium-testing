@@ -85,8 +85,19 @@ public class ClientBookingFlowScreen extends MobileBasePage {
                     java.util.regex.Pattern.CASE_INSENSITIVE);
 
     /** Matches a day chip in the date strip, e.g. {@code "Sun\n30"}. */
+    /**
+     * A day chip in the date strip: "Sunday, September 27\nSun\n27".
+     *
+     * <p>THREE lines -- the full date for a screen reader, the short label, then the date number.
+     * This used to expect two ("Sun\n27"), so it matched nothing and {@link #offeredDays()}
+     * returned an EMPTY list on a strip showing six days. That was quiet but expensive: both day
+     * walks size their loop off it, {@code Math.min(maxDays, Math.max(days.size(), 1))}, so with
+     * zero days they collapsed to checking the DEFAULT DAY ONLY and never walked at all.
+     * openFirstDayWithTimes got away with it because today usually has times; the fully-booked
+     * search did not, and reported "every day has open times" having looked at exactly one.
+     */
     private static final java.util.regex.Pattern DAY_CHIP =
-            java.util.regex.Pattern.compile("^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\\n\\d{1,2}$");
+            java.util.regex.Pattern.compile("^[A-Z][a-z]+, [A-Z][a-z]+ \\d{1,2}\\n\\S.*\\n\\d{1,2}$");
 
     // ---- copy used as assertions -------------------------------------------
     public static final String NO_SERVICE_MATCH = "No services match that search.";
@@ -423,13 +434,46 @@ public class ClientBookingFlowScreen extends MobileBasePage {
      */
     public java.util.List<String> offeredDays() {
         java.util.List<String> days = new java.util.ArrayList<>();
-        for (WebElement e : driver.findElements(descContains("\n"))) {
+        for (WebElement e : dayChips()) {
+            days.add(e.getAttribute("content-desc").trim());
+        }
+        LOG.debug("Booking: {} day(s) offered", days.size());
+        return days;
+    }
+
+    /**
+     * The day-chip ELEMENTS in the date strip.
+     *
+     * <p>Anchored on the comma in "Sunday, September 27", because a {@code UiSelector} cannot be
+     * asked to match a newline -- the old version passed {@code descContains("\n")}, which finds
+     * nothing -- and because the raw {@code driver.findElements} it used throws rather than
+     * returning an empty list for a UiAutomator selector.
+     */
+    private java.util.List<WebElement> dayChips() {
+        java.util.List<WebElement> chips = new java.util.ArrayList<>();
+        for (WebElement e : findAll(descContains(", "))) {
             String desc = e.getAttribute("content-desc");
             if (desc != null && DAY_CHIP.matcher(desc.trim()).matches()) {
-                days.add(desc.trim());
+                chips.add(e);
             }
         }
-        return days;
+        return chips;
+    }
+
+    /**
+     * Selects a day by its chip text, clicking the chip itself.
+     *
+     * @return false when that chip is no longer on the strip
+     */
+    public boolean tapDay(String chipDesc) {
+        for (WebElement chip : dayChips()) {
+            if (chipDesc.trim().equals(chip.getAttribute("content-desc").trim())) {
+                LOG.info("Booking: day {}", chipDesc.replace("\n", " | "));
+                chip.click();
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -450,7 +494,7 @@ public class ClientBookingFlowScreen extends MobileBasePage {
             if (i > 0) {
                 String day = days.get(i);
                 LOG.info("Booking: no times left, trying {}", day.replace("\n", " "));
-                scrollAndTap(day.split("\n")[1]);   // tap the date number
+                tapDay(day);
                 waitForAvailability();
             }
             java.util.List<String> slots = openFirstPeriodWithTimes();
@@ -484,8 +528,7 @@ public class ClientBookingFlowScreen extends MobileBasePage {
         int limit = Math.min(maxDays, Math.max(days.size(), 1));
         for (int i = 0; i < limit; i++) {
             if (i > 0) {
-                String day = days.get(i);
-                scrollAndTap(day.split("\n")[1]);   // the date number
+                tapDay(days.get(i));
                 waitForAvailability();
             }
             if (showsNoOpenTimes()) {
