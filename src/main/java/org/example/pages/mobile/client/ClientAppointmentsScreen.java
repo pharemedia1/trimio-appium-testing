@@ -258,10 +258,38 @@ public class ClientAppointmentsScreen extends MobileBasePage {
      * @return false when no multi-service reviewable visit is listed
      */
     public boolean rateFirstMultiServiceVisit() {
+        // SCROLL while searching. Flutter drops the semantics of anything below the fold, so a
+        // visit that is not currently rendered does not exist as far as findAll is concerned --
+        // and the multi-service visit is rarely near the top. The payment suite books
+        // single-service appointments which complete over the following hours and arrive ABOVE
+        // it, so it sinks a little further down the history every time that suite runs. Without
+        // this the search gave up in half a second having looked at one screenful.
+        for (int screen = 0; screen < MAX_HISTORY_SCREENS; screen++) {
+            if (tapRateOnMultiServiceCard()) {
+                return true;
+            }
+            if (!scrollForwardOnce()) {
+                break;
+            }
+        }
+        LOG.warn("Appointments: no multi-service reviewable visit in {} screenful(s) of history",
+                MAX_HISTORY_SCREENS);
+        return false;
+    }
+
+    /** How far down the history to look for a multi-service visit. */
+    private static final int MAX_HISTORY_SCREENS = 8;
+
+    /**
+     * Taps "Rate your visit" on a multi-service card VISIBLE RIGHT NOW.
+     *
+     * <p>A multi-service card names its first service and then "+N more" --
+     * "Men's Haircut + Beard +1 more | $72.00 | ... | Completed".
+     */
+    private boolean tapRateOnMultiServiceCard() {
         for (org.openqa.selenium.WebElement card : findAll(descContains(" more"))) {
             String desc = card.getAttribute("content-desc");
-            if (desc == null || !desc.contains(RATE_VISIT.substring(0, 4))
-                    && !desc.contains("Completed")) {
+            if (desc == null || !desc.contains("Completed")) {
                 continue;
             }
             int cardY = card.getLocation().getY();
@@ -281,8 +309,20 @@ public class ClientAppointmentsScreen extends MobileBasePage {
                 return true;
             }
         }
-        LOG.warn("Appointments: no multi-service reviewable visit in the history");
         return false;
+    }
+
+    /** Scrolls the history one screen; false when it will not move any further. */
+    private boolean scrollForwardOnce() {
+        try {
+            driver.findElement(io.appium.java_client.AppiumBy.androidUIAutomator(
+                    "new UiScrollable(new UiSelector().scrollable(true)).scrollForward()"));
+            sleepBriefly();
+            return true;
+        } catch (RuntimeException e) {
+            LOG.debug("Appointments: history will not scroll further: {}", e.getMessage());
+            return false;
+        }
     }
 
     /** Starts the review flow for the first reviewable visit in the history. */

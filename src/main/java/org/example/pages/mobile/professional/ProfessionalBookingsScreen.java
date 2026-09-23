@@ -81,6 +81,27 @@ public class ProfessionalBookingsScreen extends MobileBasePage {
                 || isPresentAfterScroll(VIEW_DETAILS);
     }
 
+    /**
+     * Scrolls the timeline until an actionable booking is on screen, returning what is visible.
+     *
+     * <p>Returns the last screenful when none is found, so the caller can still fall back.
+     */
+    private java.util.List<org.openqa.selenium.WebElement> scrollForActionableCards() {
+        java.util.List<org.openqa.selenium.WebElement> cards = bookingCards();
+        for (int screen = 0; screen < 6 && !hasActionableCard(cards); screen++) {
+            try {
+                driver.findElement(io.appium.java_client.AppiumBy.androidUIAutomator(
+                        "new UiScrollable(new UiSelector().scrollable(true)).scrollForward()"));
+            } catch (RuntimeException e) {
+                LOG.debug("ProBookings: timeline will not scroll further: {}", e.getMessage());
+                break;
+            }
+            sleepBriefly();
+            cards = bookingCards();
+        }
+        return cards;
+    }
+
     /** True when any of {@code cards} is still actionable (not complete, cancelled or no-show). */
     private boolean hasActionableCard(java.util.List<org.openqa.selenium.WebElement> cards) {
         for (org.openqa.selenium.WebElement card : cards) {
@@ -212,7 +233,12 @@ public class ProfessionalBookingsScreen extends MobileBasePage {
                 LOG.info("ProBookings: nothing actionable in this range, trying '{}'", range);
                 scrollAndTapExact(range);
                 sleepBriefly();
-                cards = bookingCards();
+                // SCROLL the range, do not just glance at it. Flutter drops off-screen semantics,
+                // and the actionable booking is usually the LAST card: a week holds days of
+                // completed and cancelled work and at most one upcoming confirmed job. Pro 878's
+                // week is 4 complete, 1 cancelled, 1 confirmed -- with the confirmed one last, so
+                // a single screenful sees only the un-actionable ones.
+                cards = scrollForActionableCards();
                 if (hasActionableCard(cards)) {
                     break;
                 }
