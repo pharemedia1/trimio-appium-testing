@@ -48,9 +48,19 @@ public class AdminUsersScreen extends MobileBasePage {
     public static final String VIEW_DOCUMENT = "View document";
     public static final String VIEW_BACK_OF_DOCUMENT = "View back of document";
     public static final String RERUN_AUTO_CHECK = "Re-run auto-check";
-    public static final String AUTOMATED_CHECK = "Automated check";
-    public static final String AUTO_CHECK_NOT_RUN = "Automated check not run";
-    public static final String DMV_MATCH = "DMV attribute match";
+    /**
+     * The advisory provider check on a professional's verification page.
+     *
+     * <p>The page says "Auto-check", hyphenated -- "Auto-check · Persona · AAMVA (DMV match) |
+     * Not run" and "Auto-check · State board | Not run". It never says "Automated check", which
+     * is what these looked for, so the assertion failed on a page that was showing the evidence
+     * plainly. The separator is a non-ASCII middot, so the anchor stops at the hyphenated word.
+     */
+    public static final String AUTOMATED_CHECK = "Auto-check";
+    /** The result when a provider has not been consulted: rendered as a separate "Not run". */
+    public static final String AUTO_CHECK_NOT_RUN = "Not run";
+    /** The AAMVA result, rendered "(DMV match)" -- not "DMV attribute match". */
+    public static final String DMV_MATCH = "DMV match";
     public static final String RAW_RESPONSE = "Raw provider response";
     public static final String REASON_SHARED = "shared with the professional";
     public static final String REASON_SHOWN = "shown to the professional";

@@ -60,10 +60,19 @@ public class ProfessionalEarningsTest extends RoleSessionTest {
                     + "payouts_enabled = false WHERE professional_id = 881;");
         }
 
-        earnings.withdrawAll();
+        // The refusal is STRUCTURAL, not a message. A professional who has not finished Connect
+        // onboarding is never offered a withdrawal: the balance screen shows "Set up payouts"
+        // where the button would be. The old version pressed "Withdraw all" first and timed out
+        // after 30 seconds on a control the app deliberately withholds -- asserting against a
+        // design the app does not use, which is the same mistake ratingIsRequired made.
+        Assert.assertFalse(earnings.canWithdraw(),
+                "A professional without a connected payout account must not be offered '"
+                        + ProfessionalEarningsScreen.WITHDRAW_ALL + "' at all — money cannot be "
+                        + "sent anywhere, so offering the action only produces a failure later");
 
         Assert.assertTrue(earnings.isDirectedToPayoutSetup(),
-                "A withdrawal without a connected account must be refused and route the "
-                        + "professional to '" + ProfessionalEarningsScreen.SET_UP_PAYOUTS + "'");
+                "The balance screen must route them to '"
+                        + ProfessionalEarningsScreen.SET_UP_PAYOUTS + "' instead, so the "
+                        + "professional can see why they cannot be paid and what to do about it");
     }
 }

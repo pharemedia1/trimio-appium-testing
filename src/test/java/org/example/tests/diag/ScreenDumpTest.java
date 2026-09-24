@@ -501,4 +501,41 @@ public class ScreenDumpTest extends RoleSessionTest {
         dump("cart opened");
         scrollAndDump("cart", 2);
     }
+
+    @Test(description = "DIAG: why loginAsProfessional's guards fail for the no-payout pro")
+    public void noPayoutGuards() {
+        loginAs(PROFESSIONAL_NO_PAYOUTS);
+        pause();
+        dump("pro4 immediately after loginAs");
+        org.example.pages.mobile.common.BottomNavBar nav =
+                new org.example.pages.mobile.common.BottomNavBar(driver);
+        for (String tab : new String[]{BottomNavBar.PRO_DASHBOARD, BottomNavBar.PRO_BOOKINGS,
+                                       BottomNavBar.PRO_CLIENT_HUB, BottomNavBar.PRO_STORE,
+                                       BottomNavBar.PRO_ACCOUNT}) {
+            DUMP.info("hasTab({}) = {}", tab, nav.hasTab(tab));
+        }
+        DUMP.info("isProfessionalShell = {}", nav.isProfessionalShell());
+        org.example.pages.mobile.professional.ProfessionalDashboardScreen d =
+                new org.example.pages.mobile.professional.ProfessionalDashboardScreen(driver);
+        DUMP.info("isProfileIncomplete = {}", d.isProfileIncomplete());
+        DUMP.info("isLoaded = {}", d.isLoaded());
+    }
+
+    @Test(description = "DIAG: the admin view of a pending professional")
+    public void adminPendingProfessional() {
+        org.example.pages.mobile.admin.AdminConsoleScreen console = loginAsAdmin();
+        console.openTile(org.example.pages.mobile.admin.AdminConsoleScreen.TILE_ALL_USERS);
+        pause();
+        org.example.pages.mobile.admin.AdminUsersScreen users =
+                new org.example.pages.mobile.admin.AdminUsersScreen(driver);
+        users.openProfessionals();
+        pause();
+        users.openSegment(org.example.pages.mobile.admin.AdminUsersScreen.SEGMENT_PENDING);
+        pause();
+        users.openFirstProfessional();
+        pause();
+        pause();
+        dump("admin: pending professional detail");
+        scrollAndDump("admin pending pro", 3);
+    }
 }

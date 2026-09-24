@@ -83,9 +83,37 @@ public class ProfessionalEarningsScreen extends MobileBasePage {
         return openFromDashboard();
     }
 
+    /**
+     * True once the BALANCE screen is showing.
+     *
+     * <p><b>A bare "$" is not enough</b>, and accepting one caused a silent misnavigation. The
+     * professional dashboard renders an earnings widget -- "Earnings · last 14 days | $0 | ..." --
+     * so {@code descContains("$")} matched while still ON the dashboard. openFromDashboard() then
+     * believed it had already arrived, returned without tapping anything, and the caller looked
+     * for payout controls on the dashboard: withdrawalRequiresPayoutOnboarding skipped reporting
+     * that the professional "has payouts enabled after all", which was never true.
+     *
+     * <p>Anchored instead on controls that exist only on the balance screen. "Set up payouts" is
+     * included deliberately: a professional who has not finished Connect onboarding sees that
+     * INSTEAD of a withdrawal button, and they are exactly who that test signs in as.
+     */
+    /**
+     * True when a withdrawal is actually offered.
+     *
+     * <p>The app refuses a withdrawal before Connect onboarding by NOT OFFERING ONE: the balance
+     * screen shows "{@value #SET_UP_PAYOUTS}" where the withdraw button would be. So the refusal
+     * is observed as an absence, and pressing a button that is not there is not something a
+     * professional can do.
+     */
+    public boolean canWithdraw() {
+        return isPresent(descContains(WITHDRAW_ALL), SHORT_TIMEOUT);
+    }
+
     public boolean isLoaded() {
-        return isPresent(descContains(WITHDRAW_ALL), Duration.ofSeconds(25))
-                || isPresent(descContains("$"), Duration.ofSeconds(15));
+        return isPresent(descContains(WITHDRAW_ALL), Duration.ofSeconds(20))
+                || isPresent(descContains(SET_UP_PAYOUTS), SHORT_TIMEOUT)
+                || isPresent(descContains(MANAGE_PAYOUT_ACCOUNT), SHORT_TIMEOUT)
+                || isPresent(descContains(PAYOUTS), SHORT_TIMEOUT);
     }
 
     /** The headline balance as a number; -1 when unreadable. */
