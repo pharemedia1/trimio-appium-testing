@@ -34,6 +34,18 @@ public class ClientStyleMeNowScreen extends MobileBasePage {
     /** Step 2's payment eyebrow; the row beneath names the card, e.g. "VISA •••• 4242". */
     public static final String PAY_WITH = "PAY WITH";
     public static final String WHERE_PROMPT = "Where should we meet you?";
+    /**
+     * The venue question the SCHEDULED flow asks, which On-Demand must never ask.
+     *
+     * <p>Style-Me-Now is always at the client's address. style_me_now_flow_screen.dart says so in
+     * as many words -- the shop fork used to live in step 1 and was taken out, because choosing a
+     * shop left On-Demand entirely: it pushed the shop search and booked the chair as a
+     * 'Scheduled' appointment. So the screen whose promise is "a professional, now, at your
+     * address" was also a way to make a scheduled booking somewhere else.
+     */
+    public static final String VENUE_PROMPT = "Where should your appointment be?";
+    /** The shop option on that question. On-Demand must not offer it. */
+    public static final String GO_TO_SHOP = "go to a shop";
     public static final String NO_CARD = "No card on file";
     public static final String ADD_CARD_TO_BOOK = "Add one to book";
     public static final String CARD_DECLINED = "Your card was declined";
@@ -98,6 +110,42 @@ public class ClientStyleMeNowScreen extends MobileBasePage {
     public ClientStyleMeNowScreen searchService(String query) {
         type(serviceSearch, query);
         return this;
+    }
+
+    /**
+     * True if the flow is offering a venue choice at all.
+     *
+     * <p>On-Demand should never be: the professional travels to the client, and a service the
+     * Board permits only inside a licensed shop is filtered out of this catalogue rather than
+     * offered and refused at the last step.
+     */
+    public boolean offersAVenueChoice() {
+        return isPresent(descContains(VENUE_PROMPT), SHORT_TIMEOUT)
+                || isPresent(descContains(GO_TO_SHOP), SHORT_TIMEOUT);
+    }
+
+    /**
+     * The services this flow is offering, as {name, minutes} pairs.
+     *
+     * <p>Each row renders its name over "<n> min" (style_me_now_flow_screen.dart builds the
+     * subtitle from {@code approximate_duration}), so the length of every dispatchable job is
+     * readable straight off the list.
+     */
+    public java.util.Map<String, Integer> offeredServiceMinutes() {
+        java.util.Map<String, Integer> offered = new java.util.LinkedHashMap<>();
+        for (org.openqa.selenium.WebElement row : findAll(descContains(" min"))) {
+            String desc = row.getAttribute("content-desc");
+            if (desc == null) {
+                continue;
+            }
+            java.util.regex.Matcher m = java.util.regex.Pattern
+                    .compile("^(.*?)\\n.*?(\\d+) min", java.util.regex.Pattern.DOTALL)
+                    .matcher(desc.trim());
+            if (m.find()) {
+                offered.put(m.group(1).trim(), Integer.parseInt(m.group(2)));
+            }
+        }
+        return offered;
     }
 
     public ClientStyleMeNowScreen selectService(String serviceName) {
