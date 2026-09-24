@@ -480,4 +480,25 @@ public class ScreenDumpTest extends RoleSessionTest {
         dump("pro4 (no payouts) after login");
         scrollAndDump("pro4 landing", 2);
     }
+
+    @Test(description = "DIAG: the professional cart after adding from the storefront card")
+    public void proCart() {
+        loginAsProfessional();
+        new BottomNavBar(driver).open(BottomNavBar.PRO_STORE);
+        pause();
+        org.example.pages.mobile.professional.ProfessionalStoreScreen store =
+                new org.example.pages.mobile.professional.ProfessionalStoreScreen(driver);
+        store.addFirstProduct();
+        pause();
+        pause();
+        dump("store after Add");
+        String src = driver.getPageSource();
+        DUMP.info("after add: hasCart={} hasItem={} has1={}",
+                src.contains("Cart"), src.contains("item"), src.contains("1"));
+        store.openCart();
+        pause();
+        pause();
+        dump("cart opened");
+        scrollAndDump("cart", 2);
+    }
 }

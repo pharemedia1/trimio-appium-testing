@@ -179,10 +179,56 @@ public class ProfessionalStoreScreen extends MobileBasePage {
     // ---- cart ---------------------------------------------------------------
 
     /** Opens the professional store cart. */
+    /**
+     * Opens the cart.
+     *
+     * <p><b>Via the app-bar BADGE, not a "Your cart" link.</b> {@value #CART_TITLE} is the cart
+     * SCREEN's title -- it does not exist on the storefront, so tapping it found nothing and the
+     * caller then judged an empty cart. The storefront's only route is a badge beside the "trimio"
+     * wordmark whose accessible name is just the item count ("4"); there is no "Cart" text
+     * anywhere on the page, which is itself worth noting -- a screen reader announces that control
+     * as a bare number.
+     *
+     * <p>The badge is identified as a digits-only node in the app bar. The y-bound matters: the
+     * storefront also renders "0" twice in its Points/Tier/Orders strip further down, and those
+     * are not the cart.
+     */
     public ProfessionalStoreScreen openCart() {
-        scrollAndTap(CART_TITLE);
+        if (isPresent(descContains(CART_TITLE), SHORT_TIMEOUT)) {
+            scrollAndTap(CART_TITLE);
+            return this;
+        }
+        org.openqa.selenium.WebElement badge = cartBadge();
+        if (badge != null) {
+            LOG.info("ProStore: opening the cart from its badge ({} item(s))",
+                    badge.getAttribute("content-desc"));
+            badge.click();
+            return this;
+        }
+        LOG.warn("ProStore: no cart badge in the app bar and no '{}' link", CART_TITLE);
         return this;
     }
+
+    /** The app-bar cart badge -- a digits-only node near the top of the screen. */
+    private org.openqa.selenium.WebElement cartBadge() {
+        // Enumerate CLICKABLE nodes and filter in Java rather than asking UiSelector to match a
+        // regex: descriptionMatches("\\d+") returned nothing here even though a node whose
+        // content-desc is exactly "4" was on screen, and a selector that silently matches nothing
+        // is the failure mode this suite has spent the most time on.
+        for (org.openqa.selenium.WebElement e : findAll(
+                io.appium.java_client.AppiumBy.androidUIAutomator(
+                        "new UiSelector().clickable(true)"))) {
+            String desc = e.getAttribute("content-desc");
+            if (desc != null && desc.trim().matches("\\d+")
+                    && e.getLocation().getY() < APP_BAR_BOTTOM_Y) {
+                return e;
+            }
+        }
+        return null;
+    }
+
+    /** Below this y, a digits-only node is page content (Points/Tier/Orders), not the app bar. */
+    private static final int APP_BAR_BOTTOM_Y = 300;
 
     public boolean cartIsEmpty() {
         return isPresent(descContains(CART_EMPTY), Duration.ofSeconds(10));
