@@ -1,6 +1,7 @@
 package org.example.base;
 
 import io.appium.java_client.android.AndroidDriver;
+import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.example.config.ConfigReader;
@@ -116,6 +117,32 @@ public abstract class PairedDeviceTest {
                 clientDevice, proDevice);
     }
 
+    /**
+     * Clears this app's data and relaunches it, so the device is at onboarding.
+     *
+     * <p>Stronger than {@link #relaunch}, which only cold-restarts: a persisted session survives a
+     * restart and is precisely what this has to get rid of.
+     */
+    private static void resetToOnboarding(AndroidDriver driver) {
+        String pkg = ConfigReader.get("app.package", "com.trimio.trimio");
+        try {
+            driver.terminateApp(pkg);
+            driver.executeScript("mobile: clearApp", Map.of("appId", pkg));
+            driver.activateApp(pkg);
+            LOG.info("Cleared {} and relaunched it to reach onboarding", pkg);
+            // Clearing revokes every runtime grant, so the relaunch comes up behind the
+            // permission prompts again — notifications first. autoGrantPermissions does not
+            // help: it grants at INSTALL time, and nothing is being installed here. Left
+            // unanswered, onboarding is on screen but covered, and the sign-in tap below times
+            // out naming a locator that is perfectly correct.
+            new OnboardingScreen(driver).allowAllPermissionPrompts();
+        } catch (RuntimeException e) {
+            // Best-effort. If the app was already at onboarding this changes nothing, and the
+            // login-form check immediately below is the real verdict either way.
+            LOG.warn("Could not clear app data before signing in: {}", e.getMessage());
+        }
+    }
+
     /** Cold-restarts the Trimio app so the device is on its role's landing screen. */
     private static void relaunch(AndroidDriver driver, String device) {
         String pkg = ConfigReader.get("app.package", "com.trimio.trimio");
@@ -210,6 +237,21 @@ public abstract class PairedDeviceTest {
             throw new SkipException("No '" + role + "' account configured — add roleAccounts."
                     + role + " to test-accounts.json.");
         }
+        // We only get here because the shell this role needs is not on screen, and that has two
+        // causes which look nothing alike. The app may be at onboarding, which this method can
+        // drive. Or it may be signed in as a DIFFERENT role — which is exactly what a preceding
+        // single-device suite leaves behind, since those run with noReset=false and the last one
+        // to touch this emulator signs in as whoever it was testing. Onboarding never renders for
+        // a signed-in app, so driving it in that state waits 30s for a "Sign in" button that
+        // cannot appear and then fails as a TimeoutException naming the locator — which reads as
+        // a broken selector and sends the next person looking at OnboardingScreen, where nothing
+        // is wrong. Clearing this app's data collapses both cases to the one handled below.
+        //
+        // This is safe in a way that clearing during session bring-up would not be: there, both
+        // apps would be signed out with nothing to sign them back in. Here, signing in is the
+        // very next thing that happens.
+        resetToOnboarding(driver);
+
         LoginScreen form = new OnboardingScreen(driver).goToLogin();
         if (!form.isLoaded()) {
             throw new SkipException("The login form did not open on this device — it may be on an "

@@ -406,6 +406,43 @@ public abstract class MobileBasePage {
         return true;
     }
 
+    /**
+     * Allows every runtime permission prompt that is up, in sequence.
+     *
+     * <p>Broader than {@link #allowLocationIfAsked()} and needed for a different moment. Clearing
+     * app data revokes <em>every</em> grant, so the next launch raises the whole series again —
+     * notifications first, then location — and the app sits behind them with an empty semantics
+     * tree. Answering only the location prompt leaves the notification one in front of it.
+     *
+     * <p>Located by resource id rather than button text deliberately. The labels are localised,
+     * and the deny button reads "Don't allow" with a curly apostrophe (U+2019) that
+     * {@code UiSelector} cannot match at all — matching on text here would silently match nothing
+     * and look like the prompt was absent.
+     *
+     * @return how many prompts were answered
+     */
+    public int allowAllPermissionPrompts() {
+        By anyAllow = By.xpath(
+                "//*[@resource-id='com.android.permissioncontroller:id/permission_allow_button'"
+                        + " or @resource-id='com.android.permissioncontroller:id/"
+                        + "permission_allow_foreground_only_button']");
+        int answered = 0;
+        // Each answer reveals the next prompt, so keep going until the stack is empty. The first
+        // wait is the long one: the permission controller is a separate process and lags launch.
+        for (int i = 0; i < 5; i++) {
+            if (!isPresent(anyAllow, Duration.ofSeconds(i == 0 ? 10 : 3))) {
+                break;
+            }
+            tap(anyAllow);
+            answered++;
+            sleepBriefly();
+        }
+        if (answered > 0) {
+            LOG.info("Answered {} system permission prompt(s)", answered);
+        }
+        return answered;
+    }
+
     protected String getText(By by) {
         return wait.until(ExpectedConditions.presenceOfElementLocated(by)).getText();
     }
