@@ -12,6 +12,7 @@ import org.example.config.ConfigReader;
 import java.io.File;
 import java.net.URL;
 import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Owns the Appium lifecycle for the Trimio Android (Flutter) app.
@@ -83,6 +84,8 @@ public final class AppiumDriverFactory {
         // Flutter's first frame after a cold start can land on any activity.
         options.setAppWaitActivity("*");
 
+        seedLocation(ConfigReader.get("appium.udid", "emulator-5554"));
+
         LOG.info("Starting AndroidDriver on {} (app {}/{})",
                 serverUrl, options.getAppPackage().orElse("?"), options.getAppActivity().orElse("?"));
 
@@ -150,6 +153,8 @@ public final class AppiumDriverFactory {
                         ConfigReader.getInt("appium.pairedCommandTimeout", 1800)));
         options.setAppWaitActivity("*");
 
+        seedLocation(udid);
+
         LOG.info("Starting AndroidDriver on {} for device {} (systemPort {})",
                 serverUrl, udid, systemPort);
         AndroidDriver driver = new AndroidDriver(serverUrl, options);
@@ -177,6 +182,58 @@ public final class AppiumDriverFactory {
      * a permanently animating screen costs nothing. Applied as a session setting, so it survives
      * for the whole session and needs no change in any page object.
      */
+    /**
+     * Pushes a GPS fix to an emulator before the session opens.
+     *
+     * <p>Style-Me-Now needs a location: without one the app raises a manual-address dialog instead
+     * of the flow, and the tests that drive it skip with "the Style-Me-Now flow did not open from
+     * its 'Style Me Now' CTA".
+     *
+     * <p><b>Why per session, rather than once before the run.</b> {@code adb emu geo fix} sets a
+     * SINGLE fix, not a standing location, and it does not survive a long run: set once at the
+     * start of a 97-minute regression, all four Style-Me-Now tests skipped for want of a location
+     * they had had at the beginning. A session is created per test here, so this puts the fix at
+     * most a test away from the flow that reads it — which is both more reliable than a timer and
+     * cheaper than one, since it costs a single adb call per session and no background thread.
+     *
+     * <p>Best-effort and quiet about it. A device that will not take a fix is not a reason to fail
+     * a session — the tests that need it already skip with a message naming exactly this.
+     *
+     * @param udid the target device; ignored unless it is an emulator, since {@code emu} is the
+     *     emulator console and a physical phone has a real GPS.
+     */
+    private static void seedLocation(String udid) {
+        if (!ConfigReader.getBoolean("device.geoFix.enabled", true)) {
+            return;
+        }
+        if (udid == null || !udid.startsWith("emulator-")) {
+            return;
+        }
+        // Longitude first: `geo fix <lon> <lat>`. Reversed puts the client in the Indian Ocean,
+        // where every professional is correctly out of range.
+        String lon = ConfigReader.get("device.geoFix.lon", "-96.7970");
+        String lat = ConfigReader.get("device.geoFix.lat", "32.7767");
+        try {
+            Process p = new ProcessBuilder("adb", "-s", udid, "emu", "geo", "fix", lon, lat)
+                    .redirectErrorStream(true)
+                    .start();
+            if (!p.waitFor(10, TimeUnit.SECONDS)) {
+                p.destroyForcibly();
+                LOG.warn("geo fix on {} timed out", udid);
+                return;
+            }
+            if (p.exitValue() == 0) {
+                LOG.debug("geo fix on {}: {},{}", udid, lat, lon);
+            } else {
+                LOG.warn("geo fix on {} exited {}", udid, p.exitValue());
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        } catch (RuntimeException | java.io.IOException e) {
+            LOG.warn("Could not set a geo fix on {}: {}", udid, e.getMessage());
+        }
+    }
+
     private static void relaxIdleWaiting(AndroidDriver driver) {
         try {
             driver.setSetting("waitForIdleTimeout",
