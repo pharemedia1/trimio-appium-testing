@@ -172,6 +172,14 @@ public class ClientReviewScreen extends MobileBasePage {
      * @return how many rows were rated
      */
     public int rateAllAspects(int score) {
+        // Wait for the step to render before the first read. rateFirstUnratedRow uses findAll,
+        // which is immediate, so asking it as the step opens answers "no rows" for rows that are
+        // merely still arriving. When that happened this reported 0 rated, the wizard never
+        // advanced, and the failure surfaced two steps later as "Completing steps 1 and 2 should
+        // land on the per-service step" — naming a screen that was never reached, for a reason
+        // that had nothing to do with it. The same run rated 6 rows on a less loaded device.
+        isPresent(descContains(NOT_RATED), Duration.ofSeconds(15));
+
         int rated = 0;
         while (rated < 12 && rateFirstUnratedRow(score)) {
             rated++;

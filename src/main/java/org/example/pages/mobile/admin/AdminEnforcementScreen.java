@@ -46,8 +46,21 @@ public class AdminEnforcementScreen extends MobileBasePage {
                 || isPresent(descContains("Enforcement"), Duration.ofSeconds(20));
     }
 
-    /** True if at least one enforcement record is listed. */
+    /**
+     * True if at least one enforcement record is listed.
+     *
+     * <p>Waits for the register to render before answering. {@link #records()} is an immediate
+     * read, so asking it the moment the screen opens answers "empty" for a list that is merely
+     * still loading. That is not hypothetical: 90 minutes into a run, on a device slow enough
+     * that the frame had not arrived within the tap, a register holding three holds reported
+     * itself empty and the test skipped saying there were "no active enforcements in this
+     * environment" — while the console tile behind it read "Enforcements | 3 active".
+     *
+     * <p>A genuinely empty register still answers false; it just costs the wait first, which is
+     * the right trade for a question whose wrong answer is silently skipped coverage.
+     */
     public boolean hasAnyEnforcement() {
+        isPresent(descContains(RECORD_ANCHOR), Duration.ofSeconds(20));
         return !records().isEmpty() || isPresentAfterScroll(REINSTATE);
     }
 
