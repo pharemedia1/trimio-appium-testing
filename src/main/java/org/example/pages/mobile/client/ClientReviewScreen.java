@@ -34,6 +34,24 @@ public class ClientReviewScreen extends MobileBasePage {
      * the last step submits, so tapping "Submit" on step 1 found nothing.
      */
     public static final String CONTINUE = "Continue";
+
+    /**
+     * The wizard's step TITLES, which are what the tests should navigate by.
+     *
+     * <p>Step numbers were the original approach and they went stale silently. A step titled
+     * "{@value #STEP_SHOP}" was added at position 3, so "{@value #STEP_EACH_SERVICE}" moved from 3
+     * to 4 and the closing comment step from 4 to 5 -- and the two tests that asserted on those
+     * numbers began failing against the wrong screens. allServicesMustBeRated counted services on
+     * the shop step, whose rows read "Optional" rather than "{@value #NOT_RATED}", so it reported
+     * that the appointment had one service. publicReviewMinimumLength looked for the comment box
+     * on "Each service" and timed out after 30s against a step that has no text field at all.
+     *
+     * <p>Neither message named the real problem, and three fixture theories were tried and
+     * disproved before a screen dump showed "Step 2 of 5". Titles do not renumber.
+     */
+    public static final String STEP_SERVICE_ITSELF = "The service itself";
+    public static final String STEP_SHOP = "The shop";
+    public static final String STEP_EACH_SERVICE = "Each service";
     public static final String OVERALL = "Overall experience";
     /** The caption under the stars. It reads "Tap a star", not "Tap to rate". */
     public static final String TAP_TO_RATE = "Tap a star";
@@ -214,6 +232,12 @@ public class ClientReviewScreen extends MobileBasePage {
 
     /** How many rows on this step are still unrated. */
     public int unratedRowCount() {
+        // Waits first, unlike hasUnratedRows below. This answers "how many rows does this step
+        // have", asked once just after a step change, so reading before they render understates
+        // it — and the caller turns that into "the appointment has 1 service", blaming the data.
+        // hasUnratedRows deliberately does NOT wait: it asks "are we done yet" inside a loop, and
+        // there a wait on the legitimate zero would cost the wait on every rated row.
+        isPresent(descContains(NOT_RATED), Duration.ofSeconds(15));
         return findAll(descContains(NOT_RATED)).size();
     }
 
@@ -255,6 +279,31 @@ public class ClientReviewScreen extends MobileBasePage {
      * <p>"Submit" only exists on the wizard's final step; every earlier step advances with
      * "Continue", and it is that button which raises the validation messages the tests assert on.
      */
+    /**
+     * Walks forward until the step with this title is showing.
+     *
+     * <p>Rates whatever the intervening steps require, because the wizard will not advance past a
+     * step with unanswered required rows. Optional rows (the shop step) are simply skipped.
+     *
+     * @param title one of the STEP_* constants.
+     * @param score the score to give any required row on the way.
+     * @return true if the step was reached.
+     */
+    public boolean advanceToStep(String title, int score) {
+        // Bounded by the longest wizard seen plus slack, so a step that refuses to advance ends
+        // the walk rather than looping.
+        for (int hop = 0; hop < 6; hop++) {
+            if (isPresent(descContains(title), Duration.ofSeconds(hop == 0 ? 10 : 3))) {
+                LOG.info("Review: reached the '{}' step", title);
+                return true;
+            }
+            rateAllAspects(score);
+            submit();
+        }
+        LOG.warn("Review: never reached the '{}' step", title);
+        return false;
+    }
+
     public ClientReviewScreen submit() {
         hideKeyboard();
         if (isPresentAfterScroll("Submit review")) {

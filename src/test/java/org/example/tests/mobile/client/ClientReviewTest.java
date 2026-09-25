@@ -113,17 +113,15 @@ public class ClientReviewTest extends RoleSessionTest {
 
     @Test(description = "Every service received must be rated")
     public void allServicesMustBeRated() {
-        // The per-service gate is on STEP 3 of a four-step wizard ("Each service"), so step 1
-        // (overall star + "would you book them again") and step 2 (the aspect rows) have to be
-        // completed to reach it. The old version pressed submit on step 1 and read the silence as
-        // "there is only one service".
+        // Walks to the step by TITLE. It was step 3 of four; a step called "The shop" was then
+        // added at position 3 and it became step 4, so asserting on the number counted services on
+        // the shop step instead -- whose rows read "Optional", never "Not rated" -- and reported
+        // that the appointment had one service. Titles do not renumber.
         ClientReviewScreen review = openMultiServiceReviewFlow();
         review.completeStepOne(5);
-        review.rateAllAspects(5);
-        review.submit();
 
-        Assert.assertTrue(review.isOnStep(3),
-                "Completing steps 1 and 2 should land on the per-service step");
+        Assert.assertTrue(review.advanceToStep(ClientReviewScreen.STEP_EACH_SERVICE, 5),
+                "The wizard should reach the '" + ClientReviewScreen.STEP_EACH_SERVICE + "' step");
         int services = review.unratedRowCount();
         if (services < 2) {
             throw new SkipException("The appointment has " + services + " service(s), so the "
@@ -145,16 +143,15 @@ public class ClientReviewTest extends RoleSessionTest {
 
     @Test(description = "The public review must be at least 20 characters")
     public void publicReviewMinimumLength() {
-        // The public-review field is on STEP 4 ("Anything else?"), so the three steps before it
-        // have to be completed first — there is no EditText on step 1 at all, which is what the
-        // old version timed out looking for.
+        // Walks forward until the public-review field is on screen, rather than counting steps to
+        // it. It used to be step 4 of four; "The shop" was inserted at position 3 and made it step
+        // 5, so a fixed count stopped one short on "Each service" -- a step with no text field --
+        // and this failed as a 30s timeout on EditText(0), naming a field that was never there.
         ClientReviewScreen review = openReviewFlow();
         review.completeStepOne(5);
-        review.rateAllAspects(5);
-        review.submit();
-        review.rateAllAspects(5);
-        review.submit();
-        Assert.assertTrue(review.isOnStep(4), "Completing steps 1-3 should land on the final step");
+
+        Assert.assertTrue(review.advanceToStep(ClientReviewScreen.PUBLIC_REVIEW, 5),
+                "The wizard should reach the step carrying the public-review field");
 
         review.enterPublicReview("great");
 
