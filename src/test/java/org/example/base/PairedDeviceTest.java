@@ -123,13 +123,20 @@ public abstract class PairedDeviceTest {
      * <p>Stronger than {@link #relaunch}, which only cold-restarts: a persisted session survives a
      * restart and is precisely what this has to get rid of.
      */
-    private static void resetToOnboarding(AndroidDriver driver) {
+    private static void resetToOnboarding(AndroidDriver driver, String device) {
         String pkg = ConfigReader.get("app.package", "com.trimio.trimio");
         try {
             driver.terminateApp(pkg);
             driver.executeScript("mobile: clearApp", Map.of("appId", pkg));
+            // RE-GRANT BEFORE RELAUNCHING. Clearing revokes every runtime permission, undoing the
+            // grant the factory made before the session opened. Left to the prompts, the location
+            // one gets answered "Only this time" -- a single-use grant that does not survive the
+            // next relaunch, so Style-Me-Now later found no location and PAIR-011 skipped saying
+            // the flow "did not open from its Home CTA". Granting here means no prompt at all and
+            // a grant that persists.
+            AppiumDriverFactory.grantRuntimePermissions(device);
             driver.activateApp(pkg);
-            LOG.info("Cleared {} and relaunched it to reach onboarding", pkg);
+            LOG.info("Cleared {}, re-granted permissions and relaunched it", pkg);
             // Clearing revokes every runtime grant, so the relaunch comes up behind the
             // permission prompts again — notifications first. autoGrantPermissions does not
             // help: it grants at INSTALL time, and nothing is being installed here. Left
@@ -250,7 +257,7 @@ public abstract class PairedDeviceTest {
         // This is safe in a way that clearing during session bring-up would not be: there, both
         // apps would be signed out with nothing to sign them back in. Here, signing in is the
         // very next thing that happens.
-        resetToOnboarding(driver);
+        resetToOnboarding(driver, driver == clientDriver ? clientDevice : proDevice);
 
         LoginScreen form = new OnboardingScreen(driver).goToLogin();
         if (!form.isLoaded()) {

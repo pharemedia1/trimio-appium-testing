@@ -84,7 +84,9 @@ public final class AppiumDriverFactory {
         // Flutter's first frame after a cold start can land on any activity.
         options.setAppWaitActivity("*");
 
-        seedLocation(ConfigReader.get("appium.udid", "emulator-5554"));
+        String udid = ConfigReader.get("appium.udid", "emulator-5554");
+        grantRuntimePermissions(udid);
+        seedLocation(udid);
 
         LOG.info("Starting AndroidDriver on {} (app {}/{})",
                 serverUrl, options.getAppPackage().orElse("?"), options.getAppActivity().orElse("?"));
@@ -153,6 +155,7 @@ public final class AppiumDriverFactory {
                         ConfigReader.getInt("appium.pairedCommandTimeout", 1800)));
         options.setAppWaitActivity("*");
 
+        grantRuntimePermissions(udid);
         seedLocation(udid);
 
         LOG.info("Starting AndroidDriver on {} for device {} (systemPort {})",
@@ -182,6 +185,59 @@ public final class AppiumDriverFactory {
      * a permanently animating screen costs nothing. Applied as a session setting, so it survives
      * for the whole session and needs no change in any page object.
      */
+    /**
+     * Grants the runtime permissions the app asks for, before the session opens.
+     *
+     * <p>{@code autoGrantPermissions} covers a fresh INSTALL and nothing after it. Clearing app
+     * data — which {@code PairedDeviceTest.signIn} does deliberately, to get past a session left
+     * signed in as another role — revokes every grant, and the next cold start comes up behind
+     * {@code GrantPermissionsActivity}.
+     *
+     * <p>That is not merely in the way, it fails session creation outright: the foreground
+     * activity belongs to {@code com.android.permissioncontroller}, so UiAutomator2 decides the
+     * app never started and answers "Cannot start the 'com.trimio.trimio' application". The paired
+     * suite runs {@code noReset=true} and therefore inherits the cleared state from the previous
+     * run, which is why all four of its tests skipped on a device where the app launched perfectly
+     * by hand.
+     *
+     * <p>Granting up front is better than dismissing the dialog afterwards, because by the time
+     * the dialog is dismissable the session has already failed to open.
+     *
+     * @param udid the target device.
+     */
+    public static void grantRuntimePermissions(String udid) {
+        if (!ConfigReader.getBoolean("device.grantPermissions.enabled", true)) {
+            return;
+        }
+        if (udid == null || udid.isBlank()) {
+            return;
+        }
+        String pkg = ConfigReader.get("app.package", "com.trimio.trimio");
+        for (String permission : ConfigReader.get("device.grantPermissions",
+                "android.permission.POST_NOTIFICATIONS,"
+                        + "android.permission.ACCESS_FINE_LOCATION,"
+                        + "android.permission.ACCESS_COARSE_LOCATION").split(",")) {
+            String name = permission.trim();
+            if (name.isEmpty()) {
+                continue;
+            }
+            try {
+                Process p = new ProcessBuilder("adb", "-s", udid, "shell", "pm", "grant", pkg, name)
+                        .redirectErrorStream(true)
+                        .start();
+                if (!p.waitFor(10, TimeUnit.SECONDS)) {
+                    p.destroyForcibly();
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return;
+            } catch (RuntimeException | java.io.IOException e) {
+                // Best-effort: a permission this build does not declare is refused, which is fine.
+                LOG.debug("pm grant {} on {}: {}", name, udid, e.getMessage());
+            }
+        }
+    }
+
     /**
      * Pushes a GPS fix to an emulator before the session opens.
      *
