@@ -145,6 +145,58 @@ public class ClientHomeScreen extends MobileBasePage {
     }
 
     /**
+     * What is on screen instead of the Home feed, for the message when {@link #isLoaded()} is
+     * false.
+     *
+     * <p>Written because "The Home tab should render expected [true] but found [false]" says
+     * nothing about why. groupFlowShowsGroupSteps failed that way once in a 72-test run and
+     * passed three times out of three when rerun, so the cause could not be reproduced and any
+     * fix would have been a guess. This converts the next occurrence into evidence instead.
+     *
+     * <p>isLoaded() already waits 25 seconds, and the post-login dismissal loop had reported
+     * clearing every dialog it knows about, so the plausible causes are an unhandled modal, the
+     * profile gate, or a feed that genuinely had not painted. Those look identical in the current
+     * message and completely different here.
+     *
+     * <p>Diagnostic only: nothing branches on it, so it cannot change whether a test passes.
+     *
+     * @return a short account of the screen, naming any landmark it recognises.
+     */
+    public String describeInsteadOfHome() {
+        java.util.List<String> found = new java.util.ArrayList<>();
+
+        if (isPresent(descContains(PROFILE_GATE), Duration.ofSeconds(2))) {
+            found.add("the '" + PROFILE_GATE + "' profile gate (client is unprovisioned)");
+        }
+        for (String modal : new String[]{
+                "Not now", "Rate your visit", "How was your visit?", "Faster sign-in",
+                "appointment in progress", VENUE_PROMPT}) {
+            if (isPresent(descContains(modal), Duration.ofSeconds(1))) {
+                found.add("a dialog containing \"" + modal + "\"");
+            }
+        }
+
+        // Whatever the top of the tree actually holds, when nothing above matched. Flutter drops
+        // semantics for anything below the fold, so this is the visible screen and not the page.
+        if (found.isEmpty()) {
+            java.util.List<String> labels = new java.util.ArrayList<>();
+            for (org.openqa.selenium.WebElement e : findAll(
+                    io.appium.java_client.AppiumBy.androidUIAutomator(
+                            "new UiSelector().descriptionMatches(\".+\")"))) {
+                String d = e.getAttribute("content-desc");
+                if (d != null && !d.isBlank() && labels.size() < 8) {
+                    labels.add(d.replace('\n', '/').trim());
+                }
+            }
+            found.add(labels.isEmpty()
+                    ? "an EMPTY semantics tree — the app is painting, or a system dialog is over it"
+                    : "no known landmark; visible: " + String.join(" | ", labels));
+        }
+
+        return String.join("; ", found);
+    }
+
+    /**
      * True when the app is holding the client on the "Your details" profile-completion screen
      * instead of the Home feed.
      *

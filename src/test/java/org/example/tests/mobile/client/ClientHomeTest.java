@@ -21,7 +21,13 @@ public class ClientHomeTest extends RoleSessionTest {
     @Test(description = "Home search returns matching services, pros or styles")
     public void searchReturnsResults() {
         ClientHomeScreen home = loginAsProvisionedClient();
-        Assert.assertTrue(home.isLoaded(), "The Home tab should render");
+        // Only describes the screen when the assertion is about to fail: the message argument
+        // to assertTrue is built eagerly, so putting the call there would spend its waits
+        // on every passing run.
+        if (!home.isLoaded()) {
+            Assert.fail("The Home tab should render. Instead: "
+                    + home.describeInsteadOfHome());
+        }
 
         // SEARCH IS ON THE BOOK TAB, not Home. Home's search bar is commented out in
         // home_screen.dart (around the "Book trusted professionals—anytime" line) — the feed now

@@ -27,7 +27,13 @@ public class ClientGroupBookingTest extends RoleSessionTest {
 
     private ClientBookingFlowScreen openGroupFlow() {
         ClientHomeScreen home = loginAsProvisionedClient();
-        Assert.assertTrue(home.isLoaded(), "The Home tab should render");
+        // Only describes the screen when the assertion is about to fail: the message argument
+        // to assertTrue is built eagerly, so putting the call there would spend its waits
+        // on every passing run.
+        if (!home.isLoaded()) {
+            Assert.fail("The Home tab should render. Instead: "
+                    + home.describeInsteadOfHome());
+        }
 
         // planGroupBooking(), NOT startBooking(). The two CTAs build the SAME widget in different
         // modes, so which one you tap decides the titles, the steps and the payload — and the

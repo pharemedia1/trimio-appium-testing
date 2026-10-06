@@ -40,7 +40,13 @@ public class ClientStyleMeNowTest extends RoleSessionTest {
     /** As {@link #openFlow()}, signed in as a named client role. */
     private ClientStyleMeNowScreen openFlow(String role) {
         ClientHomeScreen home = loginAsProvisionedClient(role);
-        Assert.assertTrue(home.isLoaded(), "The Home tab should render");
+        // Only describes the screen when the assertion is about to fail: the message argument
+        // to assertTrue is built eagerly, so putting the call there would spend its waits
+        // on every passing run.
+        if (!home.isLoaded()) {
+            Assert.fail("The Home tab should render. Instead: "
+                    + home.describeInsteadOfHome());
+        }
 
         ClientStyleMeNowScreen flow = home.styleMeNow();
         if (!flow.isLoaded() || !flow.showsTwoSteps()) {

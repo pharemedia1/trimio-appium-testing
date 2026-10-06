@@ -33,7 +33,13 @@ public class ClientBookingTest extends RoleSessionTest {
     /** Opens the booking flow from the Home tab, skipping if it never appears. */
     private ClientBookingFlowScreen openBookingFlow() {
         ClientHomeScreen home = loginAsProvisionedClient();
-        Assert.assertTrue(home.isLoaded(), "The Home tab should render");
+        // Only describes the screen when the assertion is about to fail: the message argument
+        // to assertTrue is built eagerly, so putting the call there would spend its waits
+        // on every passing run.
+        if (!home.isLoaded()) {
+            Assert.fail("The Home tab should render. Instead: "
+                    + home.describeInsteadOfHome());
+        }
 
         // bookIndividual(), NOT the deprecated startBooking(). Home carries three separate entry
         // points — "Book Individual", "Plan Group Booking" and "Style Me Now" — and startBooking()
