@@ -36,6 +36,25 @@ public class ClientReviewTest extends RoleSessionTest {
      */
     @org.testng.annotations.BeforeMethod(alwaysRun = true)
     public void clearReviewDrafts() {
+        // The reset is not optional, so a missing database is not something to carry on past.
+        //
+        // DbHelper.clearReviewDrafts() returns 0 and says nothing when db.password is unset, and
+        // there is no db.* key in config.properties -- so for as long as this hook has existed it
+        // has been a silent no-op, and these three tests have been running against each other's
+        // leftovers. It stayed invisible because the drafts usually resumed on a step whose gate
+        // was closed anyway.
+        //
+        // It surfaced when allServicesMustBeRated left a draft carrying overall_score = 1 at
+        // step_progress = 3. ratingIsRequired then reopened the flow, the app restored that
+        // draft, step one already had a star, and "Continue must not be pressable" failed against
+        // last run's answer rather than against the app. The same mechanism can hide a real
+        // defect just as easily as invent one, which is why this skips rather than warns.
+        if (!org.example.utils.DbHelper.isConfigured()) {
+            throw new SkipException("No -Ddb.password configured, so the review draft left by the "
+                    + "previous test cannot be cleared. These tests resume a saved draft and would "
+                    + "assert against the previous test's answers instead of the app -- which "
+                    + "passes and fails for the wrong reasons. Pass -Ddb.password=… to run them.");
+        }
         org.example.utils.DbHelper.clearReviewDrafts(REVIEWER_USER_ID);
     }
 

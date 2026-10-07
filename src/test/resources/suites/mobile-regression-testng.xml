@@ -9,7 +9,20 @@
   anything without credentials SKIPS with an explanatory message rather than failing.
 
   Run:
-    mvn test -DsuiteXmlFile=src/test/resources/suites/mobile-regression-testng.xml -DretryCount=0
+    mvn test -DsuiteXmlFile=src/test/resources/suites/mobile-regression-testng.xml -DretryCount=0 \
+             -Ddb.password=…
+
+  -Ddb.password IS NOT OPTIONAL, despite everything else here degrading to a skip without
+  credentials. ClientReviewTest resets the saved review draft between its tests, and
+  DbHelper.clearReviewDrafts() returns 0 and says nothing when the password is unset. There is no
+  db.* key in config.properties, so copying the Run line above without it meant the reset never
+  happened and the three review tests ran against each other's leftovers.
+
+  That is not a skip, it is a wrong answer: allServicesMustBeRated left a draft holding
+  overall_score = 1 at step_progress = 3, ratingIsRequired resumed it, and "with no star chosen
+  Continue must not be pressable" failed against the previous test's star. The same mechanism
+  hides a real defect as readily as it invents one. The hook now skips rather than pretending,
+  so a run without the password reports three honest skips instead of one false failure.
 
   Prerequisites:
     - an Android emulator booted (e.g. `emulator -avd Pixel_7_API_35`)
