@@ -218,6 +218,19 @@ public abstract class PairedDeviceTest {
                     + "— the app routes it to ProfessionalNotCreatedHomePage, so it can never be "
                     + "offered a job. Approve " + TestAccounts.emailFor("professional") + ".");
         }
+        if (dashboard.hasActiveJob()) {
+            // Checked BEFORE the generic message, which used to send people to look at
+            // user_type_id — the wrong place entirely, and it cost an afternoon. An accepted
+            // on-demand job holds the pro on a full-screen navigation view with no bottom nav, so
+            // the symptom is identical to never having reached the shell.
+            throw new SkipException("The professional on " + proDevice + " is on an active job, "
+                    + "not the dashboard: the app is showing the navigation view for an "
+                    + "appointment already in progress. PAIR-012 in this very suite creates one "
+                    + "by accepting a live offer, so a rerun inside the job's duration lands here. "
+                    + "Nothing to repair — jobs/appointmentStatusJob.js completes the appointment "
+                    + "a minute after its scheduled end and the device is free again. Finishing or "
+                    + "cancelling it by hand moves real money, so this skips instead.");
+        }
         if (!dashboard.isLoaded()) {
             throw new SkipException("The app on " + proDevice + " did not reach the professional "
                     + "dashboard. Check that its account's user_type_id is 2.");

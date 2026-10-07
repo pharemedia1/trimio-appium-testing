@@ -121,6 +121,18 @@ public class OnDemandDispatchTest extends PairedDeviceTest {
                 "The offer reached the professional but does not show what they would earn. The "
                         + "payout is the whole basis on which they accept or decline within the "
                         + "offer's lifetime.");
+        LOG.info("PAIR-011: the offer discloses a payout of {}", pro.payoutAmount());
+
+        // Asserted HERE rather than on the single-device dashboard test, which is the only other
+        // place that claimed to check it and which can never run: an offer is socket-pushed by a
+        // live dispatch, so a one-device suite has no offer to inspect and skips every time. That
+        // left the composition note — the line telling the professional the figure is service pay
+        // plus mileage and that the convenience fee is Trimio's — asserted nowhere that executes.
+        Assert.assertTrue(pro.showsPayoutNote(),
+                "The offer shows a payout figure but does not say how it is composed. Without "
+                        + "'service pay + mileage, convenience fee goes to Trimio' the "
+                        + "professional cannot tell whether the number is their take-home or the "
+                        + "client's total, which is the difference they are accepting on.");
 
         // Leave nothing behind: this test proves delivery, not acceptance.
         pro.declineOffer();

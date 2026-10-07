@@ -44,6 +44,14 @@ public class ProfessionalDashboardScreen extends MobileBasePage {
      */
     public static final String DUTY_STATUS_HINT = "Status";
 
+    /**
+     * The payout figure as the card formats it — {@code toStringAsFixed(2)}, so always two
+     * decimals. Deliberately not a bare "$": the card also lists per-service prices, and the
+     * point of this pattern is to find a disclosed payout rather than any money on screen.
+     */
+    private static final java.util.regex.Pattern MONEY =
+            java.util.regex.Pattern.compile("\\$\\d+\\.\\d{2}");
+
     public ProfessionalDashboardScreen(AndroidDriver driver) {
         super(driver);
     }
@@ -58,6 +66,27 @@ public class ProfessionalDashboardScreen extends MobileBasePage {
     }
 
     /**
+     * True when the pro is locked into an active job instead of the dashboard.
+     *
+     * <p>Accepting an on-demand offer puts the professional on a full-screen navigation view —
+     * "Navigation Map", "Call Client", "Message Client", "Completed" — and that view has no bottom
+     * nav, so {@link #isLoaded()} is false and every dashboard test looks like a sign-in failure.
+     * Minimising it does not help: it collapses to an "On the way to your client" banner that is
+     * still full-screen. The only exits are finishing the job or cancelling it, both of which
+     * write and move money, so no test may take them on its own initiative.
+     *
+     * <p>It resolves itself. {@code jobs/appointmentStatusJob.js} runs every minute and
+     * {@code update_appointment_statuses()} completes an appointment once its scheduled end time
+     * passes, which releases the device. So the right response is to say so and skip, not to
+     * repair anything.
+     */
+    public boolean hasActiveJob() {
+        return isPresent(descContains("Navigation Map"), Duration.ofSeconds(5))
+                || isPresent(descContains("On the way to your client"), Duration.ofSeconds(3))
+                || isPresent(descContains(IN_PROGRESS), Duration.ofSeconds(3));
+    }
+
+    /**
      * True when the app rerouted to the "profile not created / pending approval" screen instead of
      * the dashboard. Tests should skip rather than fail on this — it is an account-state problem,
      * not a defect in the screen under test.
@@ -69,19 +98,69 @@ public class ProfessionalDashboardScreen extends MobileBasePage {
 
     // ---- offers -------------------------------------------------------------
 
-    /** True if an offer card is on screen. */
+    /**
+     * True if an offer card is on screen.
+     *
+     * <p>Keyed on the Decline button, which the card renders unconditionally. It used to key on
+     * {@link #YOU_EARN}, and that label is <b>conditional in the app</b>:
+     * {@code dashboard_screen.dart} renders {@code '+$N bonus'} <em>instead of</em> "you earn"
+     * whenever a bonus is attached to the offer. So an offer carrying a bonus — a real, ordinary
+     * offer — reported as no offer at all, and the caller skipped saying the dashboard was empty
+     * while an offer sat on it.
+     */
     public boolean hasOffer() {
-        return isPresentAfterScroll(YOU_EARN);
+        return isPresentAfterScroll(DECLINE);
     }
 
-    /** True when the offer explains the payout composition. */
+    /**
+     * True when the offer discloses what the professional takes home.
+     *
+     * <p>What that means in the app: {@code if (payout != null)} renders the figure
+     * {@code '$x.xx'} and then <em>either</em> a {@code '+$N bonus'} chip <em>or</em> the words
+     * "you earn". When {@code payout} is null the whole block is absent — figure and both labels —
+     * and that is the defect worth catching, because the professional is then asked to accept a
+     * job without being told the pay.
+     *
+     * <p>So the figure is the assertion and the label is secondary. The previous version asserted
+     * {@code isPresentAfterScroll(YOU_EARN) && isPresentAfterScroll("earn")}, which is the same
+     * condition twice — "earn" is a substring of "you earn" — so it never checked an amount at
+     * all, and it returned false for every bonus-bearing offer.
+     */
     public boolean showsPayoutBreakdown() {
-        return isPresentAfterScroll(YOU_EARN) && isPresentAfterScroll("earn");
+        if (payoutAmount() == null) {
+            return false;
+        }
+        return isPresentAfterScroll(YOU_EARN) || isPresentAfterScroll("bonus");
+    }
+
+    /**
+     * The payout figure on the offer card ({@code "$42.50"}), or null when none is shown.
+     *
+     * <p>Matched in Java rather than through a {@code UiSelector} regex: the card frequently
+     * merges into a single accessibility node whose content-desc is newline-joined, and
+     * {@code descriptionContains} cannot match across a newline.
+     */
+    public String payoutAmount() {
+        scrollToDesc(DECLINE);
+        for (WebElement e : findAll(descContains("$"))) {
+            String desc = e.getAttribute("content-desc");
+            if (desc == null || desc.isBlank()) {
+                desc = e.getText();
+            }
+            if (desc == null) {
+                continue;
+            }
+            java.util.regex.Matcher m = MONEY.matcher(desc);
+            if (m.find()) {
+                return m.group();
+            }
+        }
+        return null;
     }
 
     /** True when the offer carries the mileage/convenience-fee explanation. */
     public boolean showsPayoutNote() {
-        return isPresentAfterScroll("convenience fee goes to Trimio");
+        return isPresentAfterScroll(PAYOUT_NOTE);
     }
 
     /** True when a bonus is attached to the offer ("+$x bonus"). */
