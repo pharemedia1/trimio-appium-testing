@@ -186,6 +186,104 @@ public final class AppiumDriverFactory {
      * for the whole session and needs no change in any page object.
      */
     /**
+     * Frees space on an emulator before a long run, and says how much it found.
+     *
+     * <p>Not housekeeping. A regression creates one session per test — seventy-odd — and each
+     * clears app data and relaunches, so the residue accumulates across runs. At 92% full,
+     * session creation stopped working: UiAutomator2 installs and launches its instrumentation
+     * server as part of opening a session, and with 523MB free that hung for <b>2022 seconds</b>
+     * before failing with "Could not start a new session".
+     *
+     * <p>That failure is expensive out of proportion to its cause. It lands in
+     * {@code @BeforeMethod}, so TestNG counts it as an extra test and reports a failure with no
+     * test behind it — 73 run, 1 failed, and nothing in the log naming what broke, because the
+     * listener never got a session to run on. It skipped the rest of its class as collateral and
+     * added 34 minutes to the run.
+     *
+     * <p>Trimming reclaimed 129MB on one device and 152MB on the other, which is enough headroom
+     * for a run. It is NOT a fix for the trend: the data partition is 6GB and the residue is
+     * monotonic, so a device that needs this every time needs a bigger partition instead. Hence
+     * the log line — a number that keeps shrinking is the warning.
+     *
+     * <p>Best-effort: a device that refuses to trim is not a reason to fail a suite that has not
+     * started yet.
+     *
+     * @param udid the target device; ignored unless it is an emulator.
+     */
+    public static void reclaimDeviceStorage(String udid) {
+        if (!ConfigReader.getBoolean("device.trimCaches.enabled", true)) {
+            return;
+        }
+        if (udid == null || !udid.startsWith("emulator-")) {
+            return;
+        }
+        long before = freeKbOn(udid);
+        runAdb(udid, 60, "shell", "pm", "trim-caches", "9999999999");
+        long after = freeKbOn(udid);
+
+        if (before > 0 && after > 0) {
+            LOG.info("{}: {} MB free after trimming caches ({} MB reclaimed)",
+                    udid, after / 1024, (after - before) / 1024);
+            long floorMb = ConfigReader.getInt("device.trimCaches.warnBelowMb", 800);
+            if (after / 1024 < floorMb) {
+                LOG.warn("{} has only {} MB free. Session creation starts failing near this "
+                        + "point -- UiAutomator2 installs its server when a session opens. "
+                        + "Grow the AVD data partition rather than trimming harder.",
+                        udid, after / 1024);
+            }
+        }
+    }
+
+    /**
+     * Free kilobytes on the device's data partition, or 0 when it cannot be read.
+     *
+     * @param udid the device.
+     * @return free space in KB.
+     */
+    private static long freeKbOn(String udid) {
+        String out = runAdb(udid, 20, "shell", "df", "/data");
+        if (out == null) {
+            return 0L;
+        }
+        String[] lines = out.strip().split("\n");
+        String[] cols = lines[lines.length - 1].trim().split("\\s+");
+        // Filesystem 1K-blocks Used Available Use% Mounted
+        try {
+            return cols.length > 3 ? Long.parseLong(cols[3]) : 0L;
+        } catch (NumberFormatException e) {
+            return 0L;
+        }
+    }
+
+    /**
+     * Runs an adb command and returns its output, or null when it fails.
+     *
+     * @param udid the device.
+     * @param timeoutSeconds how long to wait.
+     * @param args the adb arguments after {@code -s <udid>}.
+     * @return stdout, or null.
+     */
+    private static String runAdb(String udid, int timeoutSeconds, String... args) {
+        java.util.List<String> cmd = new java.util.ArrayList<>(java.util.List.of("adb", "-s", udid));
+        cmd.addAll(java.util.List.of(args));
+        try {
+            Process p = new ProcessBuilder(cmd).redirectErrorStream(true).start();
+            String out = new String(p.getInputStream().readAllBytes());
+            if (!p.waitFor(timeoutSeconds, TimeUnit.SECONDS)) {
+                p.destroyForcibly();
+                return null;
+            }
+            return p.exitValue() == 0 ? out : null;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return null;
+        } catch (RuntimeException | java.io.IOException e) {
+            LOG.debug("adb {} on {}: {}", String.join(" ", args), udid, e.getMessage());
+            return null;
+        }
+    }
+
+    /**
      * Grants the runtime permissions the app asks for, before the session opens.
      *
      * <p>{@code autoGrantPermissions} covers a fresh INSTALL and nothing after it. Clearing app

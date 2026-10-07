@@ -82,6 +82,11 @@ public abstract class PairedDeviceTest {
                     + "one side's action is observed on the other.");
         }
 
+        // Both devices, for the reason in reclaimDeviceStorage: a paired run opens sessions on
+        // two emulators and either one running out of disk fails the class in @BeforeClass.
+        AppiumDriverFactory.reclaimDeviceStorage(clientDevice);
+        AppiumDriverFactory.reclaimDeviceStorage(proDevice);
+
         try {
             AppiumDriverFactory.startServer();
         } catch (RuntimeException e) {

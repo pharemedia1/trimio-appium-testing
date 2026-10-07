@@ -3,6 +3,7 @@ package org.example.base;
 import io.appium.java_client.android.AndroidDriver;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.example.config.ConfigReader;
 import org.example.data.TestAccounts;
 import org.example.factory.AppiumDriverFactory;
 import org.example.pages.mobile.OnboardingScreen;
@@ -54,6 +55,13 @@ public abstract class MobileBaseTest {
     @BeforeSuite(alwaysRun = true)
     public void beforeSuite() {
         LOG.info("==== @BeforeSuite: starting Appium server + loading test data ====");
+
+        // Before anything else: a run creates one session per test, and session creation needs
+        // disk because UiAutomator2 installs its instrumentation server as part of opening one.
+        // At 92% full that hung for 2022 seconds and failed with "Could not start a new
+        // session", which TestNG reported as a 73rd test failing with nothing behind it.
+        AppiumDriverFactory.reclaimDeviceStorage(
+                ConfigReader.get("appium.udid", "emulator-5554"));
         // A failure here is NOT fatal: autostart may be off, or a server may already be running at
         // appium.url, and createDriver() falls back to it. Letting this throw would fail the whole
         // suite in @BeforeSuite — a configuration error that reports as neither pass, fail nor a
