@@ -226,12 +226,9 @@ public class LoginScreen extends MobileBasePage {
      * the caller did not ask for.
      */
     public boolean dismissAppointmentAlertIfPresent() {
-        if (isPresent(descContains(APPOINTMENT_ALERT), Duration.ofSeconds(8))) {
-            LOG.info("Login: acknowledging the '{}' reminder", APPOINTMENT_ALERT);
-            tap(descOrText(APPOINTMENT_ALERT_DISMISS));
-            return true;
-        }
-        return false;
+        return dismissModal(descContains(APPOINTMENT_ALERT),
+                descOrText(APPOINTMENT_ALERT_DISMISS),
+                "acknowledging the '" + APPOINTMENT_ALERT + "' reminder");
     }
 
     /**
@@ -242,12 +239,48 @@ public class LoginScreen extends MobileBasePage {
      * recognise.
      */
     public boolean dismissReviewPromptIfPresent() {
-        if (isPresent(descContains(REVIEW_PROMPT), Duration.ofSeconds(8))) {
-            LOG.info("Login: declining the rate-and-tip sheet for a completed visit");
-            tap(accId(REVIEW_PROMPT_DECLINE));
-            return true;
+        return dismissModal(descContains(REVIEW_PROMPT),
+                accId(REVIEW_PROMPT_DECLINE),
+                "declining the rate-and-tip sheet for a completed visit");
+    }
+
+    /**
+     * Answers a modal only when its own control is there to answer it.
+     *
+     * <p><b>Why the control and not the words.</b> Each of these dismissers used to recognise its
+     * modal by a phrase and then tap a button on faith. That holds only while the phrase is unique
+     * to the dialog, and it stops holding the moment the account has history: once an appointment
+     * exists, "Appointment in 2 hours" is also the text of a dashboard card and of a row in the
+     * notification list. The phrase then matches with no dialog on screen, {@link #tap} waits its
+     * full thirty seconds for a button that was never there, and the sign-in fails — reported as
+     * the test's own failure, several frames away from the cause. Observed exactly that way: a
+     * paired run created a real appointment, and the next sign-in died on
+     * {@code descriptionContains("Got it")}.
+     *
+     * <p>It also matters to {@link #dismissPostLoginModals()}, which loops until a pass dismisses
+     * nothing. A method that reports "dismissed" because prose is on screen never stops reporting
+     * it, so the loop ran its full ten passes tapping at nothing.
+     *
+     * <p>Returning false for "the words are there but the control is not" is the honest answer:
+     * there is no modal in the way, which is what the caller is really asking.
+     *
+     * @param modal   what identifies the modal.
+     * @param control the button that answers it.
+     * @param what    for the log, phrased as a continuation of "Login: ".
+     * @return true only if a control was found and tapped.
+     */
+    private boolean dismissModal(By modal, By control, String what) {
+        if (!isPresent(modal, Duration.ofSeconds(8))) {
+            return false;
         }
-        return false;
+        if (!isPresent(control, Duration.ofSeconds(5))) {
+            LOG.debug("Login: matched a modal phrase but its control is absent — not a dialog, "
+                    + "leaving it alone ({})", what);
+            return false;
+        }
+        LOG.info("Login: {}", what);
+        tap(control);
+        return true;
     }
 
     /** How many modals to clear before giving up. Six unreviewed visits fit inside this. */
