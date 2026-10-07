@@ -68,10 +68,22 @@
         </classes>
     </test>
 
-    <!-- 5. LAST: the tests that deliberately trip the limiter. See the header. -->
-    <test name="SEC-05/06 — enumeration, brute force and rate limiting">
+    <!-- 5. LAST: the tests that deliberately trip the limiter. See the header.
+
+         AccountEnumerationTest used to sit here and does not belong: it does not trip the
+         limiter, it is starved by it. ONE credentialLimiter instance (10 per 15 min per IP) is
+         mounted by both authRoutes and passwordRoutes, so the 9 /auth/login calls this suite
+         makes before reaching this block leave /password/forgotPassword arriving as request 12
+         of 10. It answered 429 twice and skipped every run this week, because a test comparing
+         a known address against an unknown one cannot work when both answers are "Too many
+         attempts".
+
+         Moved to suites/security-enumeration-testng.xml, which runs against a freshly started
+         backend: the limiter is in memory, so a restart zeroes it. Caps are NOT raised there.
+         Reordering was not an option: four enumeration calls plus nine logins is still 13
+         against a cap of 10, which only moves the 429s onto SEC-01..07. -->
+    <test name="SEC-06 — brute force and rate limiting">
         <classes>
-            <class name="org.example.tests.security.AccountEnumerationTest"/>
             <class name="org.example.tests.security.RateLimitAndLockoutTest"/>
         </classes>
     </test>

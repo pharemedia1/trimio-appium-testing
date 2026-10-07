@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+
+<!--
+  Trimio ACCOUNT-ENUMERATION suite — the endpoints that must answer identically whether or not
+  an address has an account.
+
+  Run, AGAINST A FRESHLY STARTED BACKEND:
+    cd ~/StudioProjects/trimio/backend && (restart node server.js)
+    mvn test -DsuiteXmlFile=src/test/resources/suites/security-enumeration-testng.xml \
+             -Dfirebase.webApiKey=… -Ddb.password=… -DretryCount=0
+
+  WHY THIS IS NOT IN security-testng.xml ANY MORE.
+
+  It was, filed in the block commented "LAST: the tests that deliberately trip the limiter" —
+  next to its own opposite. These tests do not trip the limiter, they are starved by it, and the
+  arithmetic makes that unavoidable inside the main suite.
+
+  middleware/authRateLimit.js builds ONE credentialLimiter instance, keyed per IP, 10 requests
+  per 15 minutes, and routes/authRoutes.js and routes/passwordRoutes.js BOTH mount it. So every
+  /auth/login in the suite spends budget that /password/forgotPassword needs. Measured on a full
+  run: 9 /auth/login calls land before this block starts, checkUserExists adds 2 more (the
+  limiter sits in front of firebaseAuth, so even its 401s count), and forgotPassword arrives as
+  request 12 of a 10-request allowance. Both of its calls returned 429, the test cannot compare
+  a known address against an unknown one when every answer is "Too many attempts", and it
+  skipped — in every run this week.
+
+  Reordering does not fix it. Put this first and the four calls it makes plus the suite's nine
+  logins is still 13 against a cap of 10, so the 429s simply move onto SEC-01 through SEC-07
+  instead. One skip becomes several.
+
+  A separate suite against a fresh process is the fix, because the limiter is in memory: a
+  restart zeroes it, and these four calls then sit comfortably inside the shipped allowance.
+  NOTE WHAT IS *NOT* DONE HERE — the caps are not raised and no limiter is bypassed. The suite
+  runs against the shipped 10-per-15-minutes exactly as production has it. Verified: with a
+  fresh limiter all three pass, and forgotPassword answers 200 for a registered address and 200
+  for an unknown one, which is the indistinguishability being asserted.
+
+  The brute-force and lockout tests stay in security-testng.xml. They SHOULD exhaust the budget;
+  that is their subject.
+-->
+<suite name="Trimio Account-Enumeration Suite" parallel="false" verbose="1">
+
+    <listeners>
+        <listener class-name="org.example.listeners.TestListener"/>
+    </listeners>
+
+    <test name="SEC-05 — account enumeration">
+        <classes>
+            <class name="org.example.tests.security.AccountEnumerationTest"/>
+        </classes>
+    </test>
+
+</suite>
