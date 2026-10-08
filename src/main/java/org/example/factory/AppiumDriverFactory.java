@@ -186,51 +186,157 @@ public final class AppiumDriverFactory {
      * for the whole session and needs no change in any page object.
      */
     /**
-     * Frees space on an emulator before a long run, and says how much it found.
+     * Frees space on an emulator before a run, by rebooting it when it is low.
      *
-     * <p>Not housekeeping. A regression creates one session per test — seventy-odd — and each
-     * clears app data and relaunches, so the residue accumulates across runs. At 92% full,
-     * session creation stopped working: UiAutomator2 installs and launches its instrumentation
-     * server as part of opening a session, and with 523MB free that hung for <b>2022 seconds</b>
-     * before failing with "Could not start a new session".
+     * <p>Not housekeeping. A regression opens one session per test — seventy-odd — and each one
+     * clears app data and relaunches, so residue accumulates. Session creation needs disk because
+     * UiAutomator2 installs and launches its instrumentation server as part of opening a session,
+     * and at 92% full that stopped working: with 523MB free it hung for <b>2022 seconds</b> and
+     * then failed with "Could not start a new session". The failure lands in {@code @BeforeMethod},
+     * so TestNG counts it as an extra test and reports a failure with no test behind it, names
+     * nothing in the log, and takes the rest of the class with it.
      *
-     * <p>That failure is expensive out of proportion to its cause. It lands in
-     * {@code @BeforeMethod}, so TestNG counts it as an extra test and reports a failure with no
-     * test behind it — 73 run, 1 failed, and nothing in the log naming what broke, because the
-     * listener never got a session to run on. It skipped the rest of its class as collateral and
-     * added 34 minutes to the run.
+     * <p><b>IT DOES NOT RECLAIM SPACE, AND NEITHER DID WHAT IT REPLACED.</b> Both measurements are
+     * recorded here because both were tempting to believe. {@code pm trim-caches}, which used to
+     * run instead, reclaimed 0MB, 0MB, 1MB and 1MB across four consecutive regressions. A reboot
+     * then appeared to reclaim 435MB — but that reading was taken minutes after the app had been
+     * uninstalled and a failed 220MB install had left its staging behind, and the reboot was
+     * clearing THAT. Measured properly on a steady-state device, a reboot reclaims
+     * <b>-12MB</b>: nothing.
      *
-     * <p>Trimming reclaimed 129MB on one device and 152MB on the other, which is enough headroom
-     * for a run. It is NOT a fix for the trend: the data partition is 6GB and the residue is
-     * monotonic, so a device that needs this every time needs a bigger partition instead. Hence
-     * the log line — a number that keeps shrinking is the warning.
+     * <p><b>What it is actually for is the instrumentation.</b> A reboot has twice revived a
+     * UiAutomator2 server that had stopped working — sessions failing with "the instrumentation
+     * process cannot be initialized", and then {@code ECONNREFUSED} on the system port, on a
+     * device with the app installed and permissions granted. Nothing short of a reboot fixed
+     * either occasion; uninstalling the UiAutomator2 server APKs so Appium reinstalled them was
+     * tried first and did not. Each occasion cost a whole suite, which is worth far more than the
+     * 35 seconds this takes.
      *
-     * <p>Best-effort: a device that refuses to trim is not a reason to fail a suite that has not
-     * started yet.
+     * <p>So the threshold is a proxy, not a cause: low free space is the condition under which
+     * that instrumentation failure has shown up, so it is the condition under which the device
+     * gets a clean boot before a run. Above the threshold nothing happens at all.
+     *
+     * <p><b>The space problem itself is not solved here and cannot be.</b> Neither tool shrinks
+     * what is actually stored, so a partition this full stays this full — see the warning below.
+     *
+     * <p><b>Why this is safe here and nowhere else.</b> Both callers run before any session
+     * exists — {@code @BeforeSuite} for a single device, and before the two sessions open for a
+     * paired class. Rebooting with a session open would strand the driver. Do not call it from
+     * {@code @BeforeMethod}.
+     *
+     * <p>Runtime permission grants survive a reboot (verified with {@code dumpsys package}). The
+     * GPS position does NOT: {@code adb emu geo fix} is one-shot, and a reboot leaves the provider
+     * with nothing, which makes the Style-Me-Now CTA fall through to its manual-address dialog and
+     * skip. So a fix is pushed after boot, repeatedly — the first one after boot is dropped before
+     * the provider is listening.
+     *
+     * <p>Best-effort throughout: a device that will not reboot is not a reason to fail a suite
+     * that has not started yet.
      *
      * @param udid the target device; ignored unless it is an emulator.
      */
+    /** How long to wait for a rebooted emulator to report sys.boot_completed. */
+    private static final int REBOOT_WAIT_SECONDS = 180;
+
+    /**
+     * How many times to push a GPS fix after a reboot.
+     *
+     * <p>One is not enough: the first fix after boot is accepted by the emulator console but the
+     * location provider is not yet listening, so nothing holds it. Observed as Style-Me-Now
+     * skipping with "with GPS denied the app raises a manual-address dialog" on a device whose
+     * location permissions were all granted.
+     */
+    private static final int GEO_FIX_PUSHES_AFTER_BOOT = 3;
+
     public static void reclaimDeviceStorage(String udid) {
-        if (!ConfigReader.getBoolean("device.trimCaches.enabled", true)) {
+        if (!ConfigReader.getBoolean("device.reclaim.enabled", true)) {
             return;
         }
         if (udid == null || !udid.startsWith("emulator-")) {
             return;
         }
-        long before = freeKbOn(udid);
-        runAdb(udid, 60, "shell", "pm", "trim-caches", "9999999999");
-        long after = freeKbOn(udid);
+        long beforeMb = freeKbOn(udid) / 1024;
+        long rebootBelowMb = ConfigReader.getInt("device.reclaim.rebootBelowMb", 700);
+        if (beforeMb <= 0) {
+            LOG.debug("{}: could not read free space; leaving the device alone", udid);
+            return;
+        }
+        if (beforeMb >= rebootBelowMb) {
+            LOG.info("{}: {} MB free, above the {} MB reboot threshold — left alone",
+                    udid, beforeMb, rebootBelowMb);
+            return;
+        }
 
-        if (before > 0 && after > 0) {
-            LOG.info("{}: {} MB free after trimming caches ({} MB reclaimed)",
-                    udid, after / 1024, (after - before) / 1024);
-            long floorMb = ConfigReader.getInt("device.trimCaches.warnBelowMb", 800);
-            if (after / 1024 < floorMb) {
-                LOG.warn("{} has only {} MB free. Session creation starts failing near this "
-                        + "point -- UiAutomator2 installs its server when a session opens. "
-                        + "Grow the AVD data partition rather than trimming harder.",
-                        udid, after / 1024);
+        LOG.info("{}: {} MB free, below the {} MB threshold — rebooting for a clean "
+                + "instrumentation before the suite starts (this does NOT reclaim space)",
+                udid, beforeMb, rebootBelowMb);
+        if (!rebootAndWait(udid)) {
+            LOG.warn("{} did not come back from a reboot in time. Continuing anyway: a suite that "
+                    + "has not started is not worth failing over this, but expect session "
+                    + "creation to be slow or to fail at {} MB free.", udid, beforeMb);
+            return;
+        }
+        long afterMb = freeKbOn(udid) / 1024;
+        // Logged as a delta rather than a claim: on a steady-state device this is about zero,
+        // and a figure that suddenly looks generous means something was uninstalled, not fixed.
+        LOG.info("{}: {} MB free after rebooting ({} MB change)",
+                udid, afterMb, afterMb - beforeMb);
+
+        // A reboot clears the GPS position, and several tests are gated on having one.
+        for (int i = 0; i < GEO_FIX_PUSHES_AFTER_BOOT; i++) {
+            seedLocation(udid);
+            sleepQuietly(2);
+        }
+
+        long warnBelowMb = ConfigReader.getInt("device.reclaim.warnBelowMb", 500);
+        if (afterMb < warnBelowMb) {
+            LOG.warn("{} still has only {} MB free. NOTHING HERE CAN FIX THAT -- neither a reboot "
+                    + "nor pm trim-caches shrinks what is stored, and both have been measured at "
+                    + "roughly zero. GROW THE AVD DATA PARTITION, or install the 147MB release APK "
+                    + "instead of the 220MB debug one. Until then expect session creation to fail "
+                    + "on installing the UiAutomator2 server.", udid, afterMb);
+        }
+    }
+
+    /**
+     * Reboots the device and waits for it to finish booting.
+     *
+     * <p>Waits on {@code sys.boot_completed} rather than {@code adb wait-for-device}: the latter
+     * returns as soon as adb can talk to the device, which is minutes before the package manager
+     * will install anything.
+     *
+     * @param udid the device.
+     * @return true if it came back and finished booting.
+     */
+    private static boolean rebootAndWait(String udid) {
+        if (runAdb(udid, 30, "reboot") == null) {
+            return false;
+        }
+        runAdb(udid, REBOOT_WAIT_SECONDS, "wait-for-device");
+        long deadline = System.currentTimeMillis() + REBOOT_WAIT_SECONDS * 1000L;
+        while (System.currentTimeMillis() < deadline) {
+            String booted = runAdb(udid, 10, "shell", "getprop", "sys.boot_completed");
+            if (booted != null && booted.strip().equals("1")) {
+                // The package manager lags boot_completed slightly; installing into it too early
+                // is how a first session fails on an otherwise healthy device.
+                sleepQuietly(5);
+                return true;
             }
+            sleepQuietly(3);
+        }
+        return false;
+    }
+
+    /**
+     * Sleeps without making the caller handle an interrupt it cannot act on.
+     *
+     * @param seconds how long to wait.
+     */
+    private static void sleepQuietly(int seconds) {
+        try {
+            TimeUnit.SECONDS.sleep(seconds);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }
 
