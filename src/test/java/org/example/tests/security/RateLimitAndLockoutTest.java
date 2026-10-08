@@ -113,33 +113,20 @@ public class RateLimitAndLockoutTest extends ApiBaseTest {
                         + "check.");
     }
 
-    /**
-     * SEC-062 — the limiter covers the rest of the unauthenticated auth surface, not just login.
-     *
-     * <p>Login is the obvious target and the one that gets protected first. The endpoints that
-     * matter nearly as much are the ones that answer questions about accounts —
-     * {@code checkUserExists} and the reset-OTP senders — because unthrottled they turn into a
-     * bulk enumeration tool and, for the OTP senders, into a way to have Trimio send mail to
-     * arbitrary addresses.
-     */
-    @Test(description = "SEC-062: the unauthenticated auth surface is throttled, not just login")
-    public void authSurfaceBeyondLoginIsThrottled() {
-        int throttledAt = -1;
-        for (int attempt = 1; attempt <= 40; attempt++) {
-            ApiClient.Response response = api.anonymous().post("/auth/checkUserExists",
-                    Map.of("email", "enum-probe-" + attempt + "-" + UUID.randomUUID() + "@example.com"));
-            if (response.status() == 429) {
-                throttledAt = attempt;
-                break;
-            }
-        }
-        LOG.info("SEC-062: checkUserExists throttled at attempt {}", throttledAt);
-        Assert.assertTrue(throttledAt > 0,
-                "ENUMERATION AT SCALE: 40 consecutive POSTs to /auth/checkUserExists — a public "
-                        + "endpoint that reports whether an address is registered, plus its user id "
-                        + "and role — were all answered. Unthrottled, that is a bulk directory of "
-                        + "Trimio's users.");
-    }
+    // SEC-062 moved to AuthSurfaceThrottlingTest, and out of this suite entirely.
+    //
+    // It asserted that /auth/checkUserExists gets throttled, but it ran AFTER SEC-060, which
+    // deliberately exhausts the per-IP credential budget -- and authRateLimit.js mounts ONE
+    // credentialLimiter across both /auth/login and /auth/checkUserExists, so there is one
+    // counter between them. The log said so every run:
+    //
+    //   SEC-062: checkUserExists throttled at attempt 1
+    //   <<< PASS: authSurfaceBeyondLoginIsThrottled
+    //
+    // A 429 on the first request is what any endpoint returns on a spent budget, including one
+    // carrying no limiter at all, which is the very defect the test exists to catch. Only one
+    // test per 15-minute window can measure this limiter engaging, and for THIS class that test
+    // is SEC-060, whose subject is exhausting it.
 
     /**
      * Clears whatever this class created, whether it passed or failed.

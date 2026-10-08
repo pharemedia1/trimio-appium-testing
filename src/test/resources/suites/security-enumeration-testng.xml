@@ -45,9 +45,23 @@
         <listener class-name="org.example.listeners.TestListener"/>
     </listeners>
 
+    <!-- Enumeration FIRST: these need answers to compare, so they must run before anything
+         spends the allowance. Four credential requests. -->
     <test name="SEC-05 — account enumeration">
         <classes>
             <class name="org.example.tests.security.AccountEnumerationTest"/>
+        </classes>
+    </test>
+
+    <!-- SEC-062 SECOND, and last: it spends whatever allowance is left on purpose, to show
+         checkUserExists answers for a while and is then throttled. It belongs here rather than in
+         security-testng.xml because it shares its limiter with the login-throttling tests there:
+         one credentialLimiter instance, one counter, so whichever ran second measured nothing.
+         Running after the four enumeration requests still leaves it room to answer several times
+         before the 429, which is what it asserts. -->
+    <test name="SEC-062 — the auth surface beyond login">
+        <classes>
+            <class name="org.example.tests.security.AuthSurfaceThrottlingTest"/>
         </classes>
     </test>
 
