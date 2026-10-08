@@ -33,6 +33,10 @@ REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 BACKEND="${TRIMIO_BACKEND:-$HOME/StudioProjects/trimio/backend}"
 FRONTEND="${TRIMIO_FRONTEND:-$HOME/StudioProjects/trimio/frontend}"
 HEALTH_URL="${TRIMIO_HEALTH_URL:-http://localhost:3000/health}"
+# Derived from HEALTH_URL so the port used to STOP the backend cannot drift from the
+# one used to check it is up.
+PORT="$(printf '%s' "$HEALTH_URL" | sed -E 's#^[a-z]+://[^:/]+:?([0-9]*)/.*#\1#')"
+PORT="${PORT:-3000}"
 
 [ -d "$BACKEND" ] || { echo "ERROR: backend not found at $BACKEND (set TRIMIO_BACKEND)" >&2; exit 1; }
 
@@ -70,9 +74,19 @@ LOGDIR="$REPO/logs"; mkdir -p "$LOGDIR"
 # throttling tests, it PASSES them against a limiter that never fires.
 restart_backend() {
   local tag="$1"
-  if pgrep -f 'node server.js' >/dev/null 2>&1; then
-    pkill -f 'node server.js' || true
+  # Stop it by LISTENING PORT, never by command-line pattern.
+  #
+  # This used to be `pkill -f 'node server.js'`, and that string appears in the command line of
+  # any script that mentions it -- including other runner scripts waiting to start. pkill -f
+  # matched those siblings and SIGTERM'd them: a regression finished, its restore step ran, and
+  # it killed the three jobs queued behind it. A port cannot be impersonated by script text.
+  local pid
+  pid="$(lsof -ti "tcp:$PORT" -sTCP:LISTEN 2>/dev/null || true)"
+  if [ -n "$pid" ]; then
+    kill $pid 2>/dev/null || true
     sleep 3
+    pid="$(lsof -ti "tcp:$PORT" -sTCP:LISTEN 2>/dev/null || true)"
+    [ -n "$pid" ] && { kill -9 $pid 2>/dev/null || true; sleep 1; }
   fi
   # disown so the shell stops tracking it as a job: without that, the next restart prints
   # "Terminated: 15" against the process this one just killed, which reads like a failure in the
