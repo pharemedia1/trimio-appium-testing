@@ -104,38 +104,91 @@ reseed() {
   ( cd "$BACKEND" && node "$FIXTURES" ) 2>&1 | grep -E '✗|→|all invariants|unmet' || true
 }
 
-# Verified, not assumed: the repair above can be undone by wall-clock drift or by a booking the
-# previous suite left, and "Nobody's free right now" is a correct app answer that looks like a
-# harness bug.
+# Verified, not assumed: "Nobody's free right now" is a correct app answer that reads like a
+# harness bug, so the dispatchability the reseed just claimed gets checked independently.
+#
+# IT REPAIRS RATHER THAN WAITS, and that distinction cost two runs. The first version polled
+# --check every 60s for 21 minutes and gave up, twice, on the theory that something would clear
+# on its own. Nothing can: a booking inside the 135-minute exclusion window only leaves it when
+# something MOVES it, and the only thing that moves it is the repair. Polling was waiting for an
+# event that had no cause.
+#
+# Observed the second time with the reseed reporting ZERO repairs -- "all invariants hold", so
+# the fixture script's own check saw a dispatchable professional -- and the identical check
+# reporting excluded one minute later. I could not identify what changed in between: the
+# wall-clock slide I first assumed does not fit (the nearest booking was 236 minutes out, and
+# 105 minutes of drift would be needed to reach the window). Rather than guess further, this now
+# does the thing that is correct whatever the cause, and PRINTS what each repair moved so the
+# next occurrence leaves evidence instead of 21 identical lines.
+# Captures the output and matches it as a STRING. Never `node ... | grep -q`.
+#
+# THAT PIPELINE CANNOT SUCCEED UNDER `set -o pipefail`, which this script sets. grep -q exits the
+# instant it matches, closing the pipe; node then dies with SIGPIPE, and pipefail reports the
+# pipeline as failed even though the pattern WAS found. Demonstrated directly:
+#
+#   node ... --check | grep -q '✓ ...'                  -> status 0
+#   set -o pipefail; node ... --check | grep -q '✓ ...'  -> status 141
+#
+# That single line cost two full runs. Both spent 21 minutes reporting "professional still
+# excluded by their calendar" while the professional was dispatchable the whole time, and the
+# paired suite skipped all three of its tests afterwards. It also sent me after the fixture
+# script for "reporting a repair that did not work" -- it had reported correctly throughout.
+dispatchable() {
+  local out
+  out="$( ( cd "$BACKEND" && node "$FIXTURES" --check ) 2>&1 || true )"
+  [[ "$out" == *"✓ the professional is dispatchable"* ]]
+}
+
 wait_until_dispatchable() {
-  local t=0
-  until ( cd "$BACKEND" && node "$FIXTURES" --check ) 2>&1 \
-        | grep -q '✓ the professional is dispatchable'; do
-    sleep 60; t=$((t + 1))
-    echo "  professional still excluded by their calendar (${t}m)"
-    if [ "$t" -gt 20 ]; then
-      echo "  WARNING: still excluded after ${t}m. The paired suite will skip, and that skip is" >&2
-      echo "           the app behaving correctly -- not a harness failure." >&2
+  local t
+  for t in 1 2 3; do
+    if dispatchable; then
+      printf '  professional is dispatchable\n'
       return 0
     fi
+    echo "  professional is excluded by their calendar; repairing (attempt ${t}/3)"
+    ( cd "$BACKEND" && node "$FIXTURES" ) 2>&1 \
+      | grep -E '✗|→|CONFIRMED|STILL|unmet' | sed 's/^/    /' || true
   done
-  printf '  professional is dispatchable\n'
+
+  if dispatchable; then
+    printf '  professional is dispatchable\n'
+    return 0
+  fi
+  echo "  WARNING: still excluded after 3 repair attempts. The paired suite will skip, and that" >&2
+  echo "           skip is the app behaving correctly -- not a harness failure. Two invariants" >&2
+  echo "           fighting over one appointment is the usual reason a repair cannot converge." >&2
+  return 0
 }
+
+# --paired-only runs the second half alone. Added because verifying a change to the paired half
+# otherwise costs a 96-minute regression first, which is how a broken dispatchability check
+# survived two full runs before being understood.
+PAIRED_ONLY=0
+[ "${1:-}" = "--paired-only" ] && PAIRED_ONLY=1
 
 overall=0
 
+if [ "$PAIRED_ONLY" = 0 ]; then
+# NOTE: every grep over a suite log passes -a. Appium writes ANSI colour codes into
+# these logs, so without it grep calls the file binary and prints "Binary file ...
+# matches" instead of the results -- which it did, hiding a paired run's outcome.
 printf '\n===== 1/2  mobile regression =====\n'
 start_backend regression
 reseed
 ( cd "$REPO" && mvn test -o \
     -DsuiteXmlFile=src/test/resources/suites/mobile-regression-testng.xml \
     -DretryCount=0 -Ddb.password="$DBPASS" ) > "$LOGDIR/mobile-regression.log" 2>&1 || overall=1
-grep -E 'Tests run:.*Skipped' "$LOGDIR/mobile-regression.log" | tail -1 || true
+grep -a -E 'Tests run:.*Skipped' "$LOGDIR/mobile-regression.log" | tail -1 || true
 printf '  failures=%s skips=%s   log: %s\n' \
-  "$(grep -coE '<<< FAIL: ' "$LOGDIR/mobile-regression.log" || true)" \
-  "$(grep -coE '<<< SKIP: ' "$LOGDIR/mobile-regression.log" || true)" \
+  "$(grep -acoE '<<< FAIL: ' "$LOGDIR/mobile-regression.log" || true)" \
+  "$(grep -acoE '<<< SKIP: ' "$LOGDIR/mobile-regression.log" || true)" \
   "$LOGDIR/mobile-regression.log"
-grep -hoE '<<< (FAIL|SKIP): \w+' "$LOGDIR/mobile-regression.log" | sort -u | sed 's/^/    /' || true
+grep -a -hoE '<<< (FAIL|SKIP): \w+' "$LOGDIR/mobile-regression.log" | sort -u | sed 's/^/    /' || true
+else
+  printf '\n===== --paired-only: skipping the regression =====\n'
+  start_backend paired
+fi
 
 printf '\n===== 2/2  paired, on fixtures reseeded after the regression =====\n'
 reseed
@@ -145,8 +198,8 @@ wait_until_dispatchable
     -DretryCount=0 -Ddb.password="$DBPASS" \
     -Ddevices.client="$CLIENT_DEVICE" -Ddevices.professional="$PRO_DEVICE" ) \
   > "$LOGDIR/mobile-paired.log" 2>&1 || overall=1
-grep -E 'Tests run:.*Skipped' "$LOGDIR/mobile-paired.log" | tail -1 || true
-grep -hoE '<<< (PASS|FAIL|SKIP): \w+|the offer discloses a payout of .*' "$LOGDIR/mobile-paired.log" \
+grep -a -E 'Tests run:.*Skipped' "$LOGDIR/mobile-paired.log" | tail -1 || true
+grep -a -hoE '<<< (PASS|FAIL|SKIP): \w+|the offer discloses a payout of .*' "$LOGDIR/mobile-paired.log" \
   | sed 's/^/    /' || true
 
 # The paired suite has just written an appointment that breaks the invariants again. Leaving the
