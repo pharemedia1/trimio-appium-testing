@@ -121,6 +121,65 @@ public class SocialRegistrationTest {
     }
 
     /**
+     * The account a social sign-up creates must be able to AUTHENTICATE.
+     *
+     * <p>Everything above asserts that registration answers success and returns a userId. It
+     * always did. What nothing checked was whether the row it created could then be used, and for
+     * a long time it could not: {@code insertSocialUser} stored NULL in {@code users.firebase_id},
+     * while {@code middleware/firebaseAuth.js} resolves every caller with
+     * {@code WHERE u.firebase_id = $1} against the uid in their token. The account matched no
+     * token, so every authenticated request answered 401 "User not recognized" — and a 401 signs
+     * the app out. A Google sign-up produced an account that could not be used.
+     *
+     * <p>It went unseen because the two halves were never joined: these tests register and stop,
+     * and the tests that authenticate use accounts seeded directly in SQL, which do have a
+     * firebase_id. The symptom only appears when the SAME identity does both. It was eventually
+     * found by signing in with Google by hand on an emulator, where the app printed
+     * "No Trimio account for this sign-in (401)" and offered to register an account that already
+     * existed.
+     *
+     * <p>{@code checkUserExists} is the endpoint under test because it is the one the app calls
+     * next, and it sits behind {@code firebaseAuth}. 401 here is the regression; 200 means the
+     * registration stored an identity the backend can resolve.
+     */
+    @Test(description = "An account made by social sign-up can authenticate with the same token")
+    public void socialAccountCanAuthenticateAfterRegistration() {
+        SocialIdentity id = newIdentity();
+
+        ApiClient.Response created = register(payload(id, CLIENT, GOOGLE));
+        Assert.assertTrue(created.isSuccess(),
+                "Social sign-up should succeed before this test can check anything else, got "
+                        + created.status() + ": " + created.body());
+
+        ApiClient.Response authenticated = api.postJson(
+                "/auth/checkUserExists",
+                Map.of("email", id.email()),
+                Map.of("Authorization", "Bearer " + id.idToken()));
+
+        if (authenticated.status() == 429) {
+            throw new SkipException("The backend is rate-limiting /auth (429), so this request "
+                    + "never reached firebaseAuth. Re-run this class on its own.");
+        }
+
+        Assert.assertNotEquals(authenticated.status(), 401,
+                "THE ACCOUNT CANNOT AUTHENTICATE. Social sign-up reported success and returned a "
+                        + "userId, but the very next authenticated call with the SAME token was "
+                        + "refused: " + authenticated.body() + ". firebaseAuth resolves callers by "
+                        + "users.firebase_id, so this means the registration did not store the uid "
+                        + "its token proves. Every request this account makes will be a 401, and a "
+                        + "401 signs the app out — the person is left re-registering an account "
+                        + "they already have.");
+        Assert.assertEquals(authenticated.status(), 200,
+                "The registered identity should be recognised by firebaseAuth, got "
+                        + authenticated.status() + ": " + authenticated.body());
+        Assert.assertEquals(
+                authenticated.json().path("userId").asText(""),
+                created.json().path("userId").asText("ABSENT"),
+                "checkUserExists should resolve to the account registration just created, not to "
+                        + "a different one: " + authenticated.body());
+    }
+
+    /**
      * The same person signing in again must be adopted, not duplicated.
      *
      * <p>Social sign-in is the one flow with no "already registered" screen — the app calls this
